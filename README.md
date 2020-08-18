@@ -1,3 +1,3 @@
 # FullStackDevelopmentProject
 
-Our team plans to make a online bookshop with handlebar templates.
+This is the continuation of the project done by my group, all changes from in this repository will be done by myself
