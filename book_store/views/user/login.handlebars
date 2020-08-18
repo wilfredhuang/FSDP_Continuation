@@ -1,0 +1,49 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/">Home</a>
+        <span class="breadcrumb-item active">Login</span>
+    </div>
+</div>
+<section class="static about-sec">
+    <div class="container">
+        <h1>Login</h1>
+        <h3></h3>
+        <div class="form">
+            <div class="row">
+                <div class="col-3">
+                </div>
+                <div class="col-md-6">
+                    <form method="POST" action="/user/login">
+                        <!--- add in forms here--->
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" name="email" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" name="password" class="form-control">
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <h5>Not Registered? <a href="/user/register">Register here</a></h5>
+                                <h5>Forgot password? <a href="/user/forgetPassword">Click here</a></h5>
+                            </div>
+                            <div>
+                                <button class="btn black" type="submit">Sign in</button>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="row">
+                        <div class="col-2">
+                         </div>
+                            <div class="col-2">
+                                <a class="btn black"style="background-color:#3b5998;border-color:#3b5998;" href="/user/auth/facebook">
+                                    <i class="fab fa-facebook-f"></i> Sign in with facebook
+                                </a>
+                            </div>
+                       </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,111 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/">Home</a>
+        <a class="breadcrumb-item" href="/user/admin">Admin Page</a>
+        <a class="breadcrumb-item" href="/product/discountmenu">Discount Menu</a>
+        <span class="breadcrumb-item active">Create Discount</span>
+    </div>
+</div>
+
+<div class="container">
+    <form method="POST" action="#">
+        <div class="row mt-2">
+            <div class="col-8">
+                <h2 id="discount_header"> Create Discount </h2>
+            </div>
+            <div class="col-4 mt-2">
+            </div>
+        </div>
+        <br>
+        <div id="discount_form">
+            <div class="form-group">
+                <label for="coupon_code">Products:</label>
+                <select name="target_id">
+                    {{#each products}}
+                    <option value="{{id}}"> ID: {{id}} {{product_name}} </option>
+                    {{/each}}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="product_discount">Discount Rate:</label>
+                <input type="number" step="0.01" max="0.99" min="0.01" value="0.10" class="qty" size="4"
+                    name="product_discount" id="product_discount" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="min_qty">Minimum Quantity before discount :</label>
+                <input type="number" step="1" max="100" min="1" value="1" class="qty" size="4" name="min_qty"
+                    id="min_qty" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="discount_msg">Message:</label>
+                <textarea class="form-control" name="discount_msg" id="discount_msg"></textarea>
+            </div>
+            <div class="form-group">
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <label class="font-italic">Discount Expiry Date</label>
+                            <input id="datepicker" width="200" name="discount_expire_date"
+                                value="{{formatDate currentDate 'DD/MM/YYYY'}}" readonly required />
+                        </div>
+                        <div class="col-lg-6">
+                            <label class="font-italic">Coupon Expiry Time</label>
+                            <input id="timepicker" width="200" name="discount_expire_time" value="{{currentTime}}"
+                                readonly required />
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <button id="submit" class="btn btn-danger"> Proceed </button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    /*
+    $(document).ready(function () {
+        $("#coupon_form").slideDown();
+        $("#discount_form").slideUp();
+        $('#create_option').on('change', function () {
+            if (this.value == 'Coupon')
+            //.....................^.......
+            {
+                $("#discount_form").slideUp();
+                $("#coupon_form").slideDown();
+                $("#coupon_header").removeAttr("hidden")
+                $("#discount_header").attr("hidden", true)
+            }
+            else {
+                $("#coupon_form").slideUp();
+                $("#discount_form").slideDown();
+                $("#discount_header").removeAttr("hidden")
+                $("#coupon_header").attr("hidden", true)
+            }
+        });
+    });
+    */
+
+    $('#datepicker').datepicker({
+        format: 'dd/mm/yyyy',
+        value: new Date().toLocaleDateString('en-SG'),
+        uiLibrary: 'bootstrap4',
+    });
+
+    $('#timepicker').timepicker({
+        uiLibrary: 'bootstrap4'
+    });
+
+    /*
+        timeFormat: 'h:mm p',
+        interval: 60,
+        minTime: '10',
+        maxTime: '6:00pm',
+        defaultTime: '11',
+        startTime: '10:00',
+        dynamic: false,
+        dropdown: true,
+        scrollbar: true
+    */
+
+
+</script>

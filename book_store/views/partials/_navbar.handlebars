@@ -1,0 +1,87 @@
+<header>
+    <!---<div class="header-top">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-3"><a href="#" class="web-url">www.bookstore.com</a></div>
+                    <div class="col-md-6">
+                        <h5>Free Shipping Over $99 + 3 Free Samples With Every Order</h5></div>
+                    <div class="col-md-3">
+                        <span class="ph-number">Call : 800 1234 5678</span>
+                    </div>
+                </div>
+            </div>
+        </div>--->
+    <div class="main-menu">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-light">
+                <a class="navbar-brand" href="/"><img src="/images/logo.png" alt="logo"></a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="navbar-item {{navStatusHome}}">
+                            <a href="/index" class="nav-link">Home</a>
+                        </li>
+                        <li class="navbar-item {{navStatusProduct}}">
+                            <a href="/product/listProduct" class="nav-link">Shop</a>
+                        </li>
+                        <li class="navbar-item {{navStatusAbout}}">
+                            <a href="/about" class="nav-link">About</a>
+                        </li>
+                        <li class="navbar-item {{navStatusFAQ}}">
+                            <a href="/faq" class="nav-link">FAQ</a>
+                        </li>
+                        {{#if (adminCheck user)}}
+                        <li class="navbar-item dropdown">
+                            <a href="/user/admin" class="nav-link dropdown-toggle" data-toggle="dropdown">User Page</a>
+                            <div class="dropdown-menu">
+                                <a href="/user/userpage" class="dropdown-item">User Page</a>
+                                <a href="/user/admin" class="dropdown-item">Admin Menu</a>
+                            </div>
+                        </li>
+                        {{!-- <li class="nav-item dropdown">
+                            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" id="navbarDropdownMenuLink"> Admin </a>
+                            <div class="dropdown-menu">
+                                <a href="#" class="dropdown-item">My Account</a>
+                                <a href="/products/cart" class="dropdown-item">Cart</a>
+                                <a href="/admin/createProduct" class="dropdown-item">Create Product</a>
+                            </div>
+					    </li> --}}
+                        <li class="navbar-item">
+                            <a href="/user/logout" class="nav-link">Logout</a>
+                        </li>
+                        {{else if user}}
+                        <li class="navbar-item">
+                            <a href="/user/userpage" class="nav-link">User Page</a>
+                        </li>
+                        <li class="navbar-item">
+                            <a href="/user/logout" class="nav-link">Logout</a>
+                        </li>
+                        {{else}}
+                        <li class="navbar-item {{navStatusLogin}}">
+                            <a href="/user/login" class="nav-link">Login</a>
+                        </li>
+                        <li class="navbar-item {{navStatusRegister}}">
+                            <a href="/user/register" class="nav-link">Register</a>
+                        </li>
+                        {{/if}}
+                    </ul>
+                    <form id="cart-form" method="POST" action="/product/goToCart"></form>
+                        <div class="cart my-2 my-lg-0">
+                            <span>
+                                <i class="fa fa-shopping-cart" aria-hidden="true" onclick="document.getElementById('cart-form').submit();" style=
+                                "cursor:pointer;"></i></span>
+                                <span class="quntity"></span>
+                            <span class="quntity">{{cartQty UC}}</span>
+                        </div>
+                        </form>
+                    
+                </div>
+        </div>
+        </nav>
+    </div>
+    </div>
+</header>

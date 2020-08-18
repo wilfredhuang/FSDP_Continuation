@@ -1,0 +1,86 @@
+const nodemailer = require("nodemailer");
+
+let name = "John";
+let ordernumber = "feshzujrfnsioez";
+let orderdate = "29/7/2020"
+let emailMessage = `<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <!-- CSS only -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <!-- FontAwesome (Using for Some UI) - W -->
+    <script src="https://kit.fontawesome.com/af00ae0421.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <section>
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <a href="https://localhost:5000/index"></a><img src="/book_store/public/images/logo.png"
+                        alt="Company Logo" class="card-img">
+                    <!-- <h4 class="card-title">Card title</h4> -->
+                </div>
+                <div class="card-body">
+                    <h1 class="text-center card-title">Thank You! ${name}</h1>
+                    <div class="text-center"><svg width="5em" height="5em" viewBox="0 0 16 16" class="bi bi-truck"
+                            fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5v7h-1v-7a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5v1A1.5 1.5 0 0 1 0 10.5v-7zM4.5 11h6v1h-6v-1z" />
+                            <path fill-rule="evenodd"
+                                d="M11 5h2.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5h-1v-1h1a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4.5h-1V5zm-8 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 1a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                            <path fill-rule="evenodd"
+                                d="M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 1a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                        </svg></div>
+                        <br>
+                    <h4 class="card-text">Order No: ${ordernumber}</h4>
+                    <h4 class="card-text">Order Date: ${orderdate}</h4>
+                </div>
+                <div class="card-footer">
+                    hello
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+<!-- JS, Popper.js, and jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+    integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+    crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+    integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+    crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
+    integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI"
+    crossorigin="anonymous"></script>
+
+</html>`;
+let message = ``;
+
+//nodemailer
+let transporter = nodemailer.createTransport({
+  host: "smtp.googlemail.com",
+  port: 465,
+  secure: true, // true for 465, false for other ports
+  auth: {
+    user: "superlegitemail100percent@gmail.com", // generated ethereal user
+    pass: "Passw0rdyes", // generated ethereal password
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+let info = transporter.sendMail({
+  from: '"Book Store Support"superlegitemail100percent@gmail.com', // sender address
+  to: "cilipadi270@gmail.com", // list of receivers
+  subject: "Contact Us", // Subject line
+  //text: "Hello world?", // plain text body
+  html: emailMessage, // html body
+});
+console.log(info);

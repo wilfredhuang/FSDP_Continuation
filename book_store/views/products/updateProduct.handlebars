@@ -1,0 +1,65 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/product/listProductAdmin">Product Page Admin</a>
+        <span class="breadcrumb-item active">Update Product</span>
+    </div>
+</div>
+<section class="product-sec">
+<div class="container ">
+    <h1 class="display-4">Update Product</h1>
+    <br>
+    <form method="POST" action="/product/updateProductAdmin/{{product.id}}?_method=PUT" id="updateProductAdmin">
+        <input type="hidden" name="_method" value="PUT">
+            <div class="form-group col-lg-12 col-sm-3">
+            <label for="product_name" onclick="getBook()">Product Name:</label>
+            <a href="#" onclick="getBook()" tabindex="-1" class="card-link">
+						<i class="fas fa-book"></i>
+						Get Book
+					</a>
+            
+            <textarea type="text" name="product_name" class="form-control" id="product_name">{{product.product_name}}</textarea>
+        </div>
+        
+        <div class="form-group col-lg-12 col-sm-3">
+            <label for="product_image">Product_image:</label>
+            <textarea type="text" name="product_image" class="form-control" id="product_image">{{product.product_image}}</textarea>
+        </div>
+        
+        <div class="form-group col-lg-12 col-sm-3">
+            <label for="author">Author:</label>
+            <textarea type="text" name="author" class="form-control" id="author">{{product.author}}</textarea>
+        </div>
+        <div class="form-group col-lg-12 col-sm-3">
+            <label for="publisher">Publisher:</label>
+            <textarea type="text" name="publisher" class="form-control" id="publisher">{{product.publisher}}</textarea>
+        </div>
+        <div class="form-group col-lg-12 col-sm-3">
+            <label for="genre">Genre:</label>
+            <textarea type="text" name="genre" class="form-control" id="genre">{{product.genre}}</textarea>
+        </div>
+        <div class="form-group col-lg-12 col-sm-3">
+            <label for="price">Pricing ($):</label>
+            <textarea type="text" name="price" class="form-control" id="price">{{product.price}}</textarea>
+        </div>
+        <div class="form-group col-lg-12 col-sm-3">
+            <label for="stock">Stocks:</label>
+            <textarea type="text" name="stock" class="form-control" id="stock">{{product.stock}}</textarea>
+        </div>
+        <div class="form-group col-lg-12 col-sm-3">
+            <label for="weight">Weight:</label>
+            <textarea class="form-control" name="weight" id="weight">{{product.weight}}</textarea>
+        </div>
+        <div class="form-group col-lg-12 col-sm-3">
+            <label for="rating">Rating:</label>
+            <textarea class="form-control" name="rating" id="rating">{{product.rating}}</textarea>
+        </div>
+        <div class="form-group col-lg-12 col-sm-3">
+            <label for="details">Product Details:</label>
+            <textarea class="form-control" name="details" id="details">{{product.details}}</textarea>
+        </div>
+
+        <br>
+        <button type="submit" value="Submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+</section>

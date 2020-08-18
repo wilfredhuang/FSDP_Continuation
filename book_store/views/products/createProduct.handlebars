@@ -1,0 +1,64 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/">Home</a>
+        <a class="breadcrumb-item" href="/user/admin">Admin Page</a>
+        <a class="breadcrumb-item" href="/product/listProductAdmin">Product Page Admin</a>
+        <span class="breadcrumb-item active">Add product</span>
+    </div>
+</div>
+<section class="product-sec">
+    <div class="container ">
+        <h1 class="display-4">Create Product</h1>
+        <br>
+        <form method="POST" action="/product/addProductAdmin" id="addProductAdmin">
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="product_name" onclick="getBook()">Product Name:</label>
+                <a href="#" onclick="getBook()" tabindex="-1" class="card-link">
+                    <i class="fas fa-book"></i>
+                    Get Book
+                </a>
+                <input type="text" name="product_name" class="form-control" id="product_name">
+            </div>
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="product_image">Product_image:</label>
+                <input type="text" name="product_image" class="form-control" id="product_image">
+            </div>
+
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="author">Author:</label>
+                <input type="text" name="author" class="form-control" id="author">
+            </div>
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="publisher">Publisher:</label>
+                <input type="text" name="publisher" class="form-control" id="publisher">
+            </div>
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="genre">Genre:</label>
+                <input type="text" name="genre" class="form-control" id="genre">
+            </div>
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="price">Pricing ($):</label>
+                <input type="text" name="price" class="form-control" id="price">
+            </div>
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="stock">Stocks:</label>
+                <input type="text" name="stock" class="form-control" id="stock">
+            </div>
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="weight">Weight:</label>
+                <textarea class="form-control" name="weight" id="weight"></textarea>
+            </div>
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="rating">Rating:</label>
+                <textarea class="form-control" name="rating" id="rating"></textarea>
+            </div>
+            <div class="form-group col-lg-12 col-sm-3">
+                <label for="details">Product Details:</label>
+                <textarea class="form-control" name="details" id="details"></textarea>
+            </div>
+
+            <br>
+            <button type="submit" value="Submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+</section>

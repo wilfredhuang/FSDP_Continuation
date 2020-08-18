@@ -1,0 +1,57 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/user/userpage">User Page</a>
+        <span class="breadcrumb-item active">Change Infomation</span>
+    </div>
+</div>
+<section class="static about-sec">
+    <div class="container">
+        <div class="row">
+            <div class="tab col-md-2 col-11">
+                <button class="tab navi">Navigation</button>
+                <a href="/user/userPage">
+                    <button class="inactive-tab">User Page</button>
+                </a>
+                <a href="/user/userPage/changeinfo">
+                    <button class="active-tab">Change Info</button>
+                </a>
+                <a href="/user/userPage/changeaddress">
+                    <button class="inactive-tab">Set Address</button>
+                </a>
+                <a href="/user/orderHistory">
+                    <button class="inactive-tab">Order History</button>
+                </a>
+            </div>
+            <div class="col-md-10">
+                <br>
+                <h2>Change Information</h2>
+                <br>
+                <div class="form">
+                    <form method="POST" action="/user/userpage/changeinfo">
+                        <div class="col-md-8">
+                            <label for="name">Name:</label><br>
+                            <input class="form-control" name="name" placeholder="{{name}}">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="email">Email:</label><br>
+                            <input class="form-control" name="email" type="email" placeholder="{{email}}">
+                        </div>
+                        <div class="col-md-8">
+                            <label for="password">Old password:</label><br>
+                            <input class="form-control" name="password" type="password" placeholder="old password"
+                                required>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="password">New password:</label><br>
+                            <input class="form-control" name="password2" type="password" placeholder="new password">
+                        </div>
+                        <div class="col-lg-8 col-md-12">
+                            <button class="btn black" type="submit">Change</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-3">
+            </div>
+        </div>
+    </div>
+</section>

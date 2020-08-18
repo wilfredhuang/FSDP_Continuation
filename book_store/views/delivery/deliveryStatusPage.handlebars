@@ -1,0 +1,41 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/index">Home</a>
+        <span class="breadcrumb-item active">Check Delivery</span>
+    </div>
+</div>
+<section class="static about-sec">
+    <div class="container">
+        <h1>Shipping Information</h1>
+        <h3>Delivery Status - <span class="{{progressColourText}}">{{deliveryStatusResult}}</span></h3>
+        <br>
+        <div class="progress">
+            <div class="progress-bar {{progressColour}}" style="width: {{progressPercentage}}%" role="progressbar"
+                aria-valuenow="{{progressPercentage}}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+        <br>
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Tracking Information</h4>
+                <br>
+                <p>Tracking ID: {{trackingId}}</p>
+                <p>Created On: {{formatDate createdAt 'DD MMM YYYY hh:mm:ss'}}</p>
+                <p>Last Updated On: {{formatDate updatedAt 'DD MMM YYYY hh:mm:ss'}}</p>
+                <p>Delivery Information: {{statusDetail}}</p>
+                <p>Carrier Provider: {{carrierType}}</p>
+                <p>Carrier Service: {{carrierService}}</p>
+                <p>Click <a href="{{URL}}">here</a> to check your delivery information</p>
+            </div>
+            <div class="col-md-6">
+                <h4>QR Code</h4>
+                <br>
+                <div class="center">
+                    <img src={{showQRCODE}} class="img-fluid" alt="QRCODE" width="400" height="400">
+                </div>
+            </div>
+        </div>
+        <hr>
+        <p>Click <a href="/delivery/checkDelivery">here</a> to continue checking delivery.</p>
+    </div>
+</section>

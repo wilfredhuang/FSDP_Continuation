@@ -1,0 +1,110 @@
+<div class="breadcrumb">
+        <div class="container">
+            <a class="breadcrumb-item" href="/index">Home</a>
+            <span class="breadcrumb-item active">Products</span>
+        </div>
+    </div>
+{{!-- <form id="addProduct"> --}}
+<section class="product-sec">
+        <div class="container">
+            <h1>{{product.product_name}}</h1>
+            <div class="row">
+                <div class="col-md-6 slider-sec">
+                    <img src="{{product.product_image}}" class="img-fluid" width="360" length="192">
+                    
+                    <!-- main slider carousel 
+
+                    <div id="myCarousel" class="carousel slide">
+                        main slider carousel items 
+                        <div class="carousel-inner">
+                            <div class="active item carousel-item" data-slide-number="0">
+                                <img src="http://books.google.com/books/content?id=4LqdDwAAQBAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api" class="img-fluid" width="360" length="192">
+                            </div>
+                            <div class="item carousel-item" data-slide-number="1">
+                                <img src="../images/product2.jpg" class="img-fluid">
+                            </div>
+                            <div class="item carousel-item" data-slide-number="2">
+                                <img src="../images/product3.jpg" class="img-fluid">
+                            </div>
+                        </div>
+                        main slider carousel nav controls 
+                        <ul class="carousel-indicators list-inline">
+                            <li class="list-inline-item active">
+                                <a id="carousel-selector-0" class="selected" data-slide-to="0" data-target="#myCarousel">
+                                <img src="../images/product1.jpg" class="img-fluid">
+                            </a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a id="carousel-selector-1" data-slide-to="1" data-target="#myCarousel">
+                                <img src="../images/product2.jpg" class="img-fluid">
+                            </a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a id="carousel-selector-2" data-slide-to="2" data-target="#myCarousel">
+                                <img src="../images/product3.jpg" class="img-fluid">
+                            </a>
+                            </li>
+                        </ul>
+                        
+                    </div>
+                    
+                    /main slider carousel-->
+                </div>
+                <div class="col-md-6 slider-content">
+                    <p>{{product.details}}</p>
+                    <p>Author: {{product.author}}</p>
+                    <p>Publisher: {{product.publisher}}</p>
+                    <p style="color:red;">{{disc.message}}</p>
+                    <ul>
+                        <!---
+                        <li>
+                            <span class="name">Price</span><span class="clm">:</span>
+                            <span class="price">{{product.price}}</span>
+                        </li>
+                        
+                        <li>
+                            <span class="name">Print List Price</span><span class="clm">:</span>
+                            <span class="price">$10.99</span>
+                        </li>
+                        --->
+                        <li>
+                            <span class="name">Price</span><span class="clm">:</span>
+                            <span class="price final">${{product.price}}</span>
+                        </li>
+                    </ul>
+                    <div class="btn-sec">
+                        <form id="atcform" action="/product/individualProduct/{{product.id}}" method="POST">
+                        <button name="atc" class="btn" type="submit" value="{{product.id}}" href="#">Add To cart</button>
+                        <button class="btn black">Buy Now</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            /*
+                $(function () {
+                    $('#atcform').on('submit', function (e) {
+
+                        $.ajax({
+                            type: 'post',
+                            url: '/',
+                            data: $('#atcform').serialize(),
+                            success: function () {
+                                alert("Email has been sent!");
+                            }
+                        });
+                        e.preventDefault();
+                    });
+                });
+                */
+            //document.getElementById('atcform').addEventListener("submit", async function (ev) {
+    //ev.preventDefault();
+    //await fetch(ev.target.getAttribute("action"), {credentials: "include"});
+    //$.post("/product/individualProduct/{{product.id}}")
+    //$.post('/product/individualProduct/{{product.id}}', {  });
+//});
+            </script>
+    </section>
+{{!-- </form> --}}
+    

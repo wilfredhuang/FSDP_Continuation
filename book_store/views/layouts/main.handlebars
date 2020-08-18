@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<!-- Old Project scripts -->
+	<meta name="theme-color" content="#03a6f3" name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="/css/bootstrap.min.css">
+	<link href="https://fonts.googleapis.com/css?family=Montserrat:200,300,400,500,600,700,800,900" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link rel="stylesheet" type="text/css" href="/css/owl.carousel.min.css">
+	<link rel="stylesheet" type="text/css" href="/css/styles.css">
+	<link rel="stylesheet" type="text/css" href="/css/stripe.css">
+
+	<!-- Required meta tags -->
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<!---Favicon --->
+	<link rel="icon" href="https://img.icons8.com/emoji/48/000000/orange-book.png" />
+
+	<!-- FontAwesome (Using for Some UI) - W -->
+	<script src="https://kit.fontawesome.com/af00ae0421.js" crossorigin="anonymous"></script>
+
+	{{!-- Stripe --}}
+	<script src="https://js.stripe.com/v3/"></script>
+
+	<!---Google Recaptcha --->
+	<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+	<!---Animate CSS --->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.0.0/animate.min.css" />
+
+	<!-- Bootstrap CSS -->
+	<!---
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+		  integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="stylesheet" href="/css/style.css">
+--->
+	<!--For Bootstrap datepicker-->
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"
+		integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous">
+		</script>
+	<link href="https://unpkg.com/gijgo@1.9.11/css/gijgo.min.css" rel="stylesheet" type="text/css" />
+	<script src="https://unpkg.com/gijgo@1.9.11/js/gijgo.min.js" type="text/javascript"></script>
+
+	{{!--Font Awesome icons --}}
+	<!--- exclude this since already have Google Fonts
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+		  integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous"
+	>
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css"
+		  integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous"
+	>
+	--->
+	{{!--Google fonts Icon--}}
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+	{{!-- Lightbox --}}
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.css"
+		integrity="sha256-HAaDW5o2+LelybUhfuk0Zh2Vdk8Y2W2UeKmbaXhalfA=" crossorigin="anonymous" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.min.js"
+		integrity="sha256-Y1rRlwTzT5K5hhCBfAFWABD4cU13QGuRN6P5apfWzVs=" crossorigin="anonymous"></script>
+	<title>{{title}}</title>
+</head>
+
+<body>
+	<div class="navbar-white sticky-top bg-white border-bottom">
+		{{>_navbar}}
+	</div>
+	{{#if (checkPromo public_coupon)}}
+	{{>_coupon_promo}}
+	{{else}}
+	{{/if}}
+	<div class="container">
+		{{>_msg}}
+		{{>_errors}}
+		{{>_flashmsg}}
+	</div>
+	<div class="page-wrap">
+		{{{body}}}
+
+		<!---Top button function --->
+		<button onclick="topFunction()" id="myBtn" title="Go to top"><svg width="1em" height="1em" viewBox="0 0 16 16"
+				class="bi bi-chevron-up" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+				<path fill-rule="evenodd"
+					d="M7.646 4.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1-.708.708L8 5.707l-5.646 5.647a.5.5 0 0 1-.708-.708l6-6z" />
+			</svg></button>
+	</div>
+	{{>_footer}}
+	<script src="/js/main.js"></script>
+	<script src="/js/jquery.min.js"></script>
+	<script src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/js/owl.carousel.min.js"></script>
+	<script src="/js/custom.js"></script>
+	<script src="/js/searchOrderID.js"></script>
+	<script src="/js/product_searchbook.js"></script>
+	<script src="/js/cart_functions.js"></script>
+	<script src="/js/easypostAPI.js"></script>
+	<script src="/js/topButton.js"></script>
+	<script src="/js/main.js"></script>
+	<!--- JS Files from video jotter --->
+	<!---
+    <script src="/js/main.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2/dist/bootstrap-confirmation.min.js"></script>
+	--->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+		integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+		crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap-confirmation2/dist/bootstrap-confirmation.min.js"></script>
+	<script>
+		$('[data-toggle=confirmation]').confirmation({
+			rootSelector: '[data-toggle=confirmation]',
+		});
+	</script>
+	<script>
+		function submitUserForm() {
+			var response = grecaptcha.getResponse();
+			console.log(response)
+			if (response.length == 0) {
+				document.getElementById('g-recaptcha-error').innerHTML = '<p style="color:red;">Please complete the recaptcha</p>';
+				return false;
+			}
+			return true;
+		}
+		function verifyCaptcha() {
+			document.getElementById('g-recaptcha-error').innerHTML = '';
+		}
+	</script>
+</body>
+
+</html>

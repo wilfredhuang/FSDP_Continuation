@@ -1,0 +1,68 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/">Home</a>
+        <a class="breadcrumb-item" href="/user/admin">Admin Page</a>
+        <a class="breadcrumb-item active" href="/product/listProductAdmin">Product Page Admin</a>
+        <a class="breadcrumb-item" href="/product/createProduct">Add product</a>
+    </div>
+</div>
+<section class="product-sec">
+    {{!-- <div class="wrap", style="text-align: center">
+   <div class="search">
+      <input class="form-control" type="text" id="myInput" onkeyup="search_admin()" placeholder="Search by name" title="Type in a category">
+      <button type="submit" class="searchButton">
+        <i class="fa fa-search"></i>
+     </button>
+   </div>
+</div> --}}
+    <div class="container">
+        <h1 class="display-4">Product List</h1>
+        <br>
+        <div class="search">
+            <div class="row">
+                <div class="col-md-3">
+                    <input class="form-control" type="text" id="myInput" onkeyup="search_admin()"
+                        placeholder="Search by name" title="Type in a category">
+                    {{!-- <button type="submit" class="searchButton">
+            <i class="fa fa-search"></i>
+     </button> --}}
+                </div>
+                <div class="col-md-9"></div>
+            </div>
+        </div>
+        <br>
+        {{!-- <ul id="myMenu"> --}}
+        <table class="table table-striped" id="myTable">
+            <thead>
+                <tr>
+                    <th>Product ID</th>
+                    <th>Product Name</th>
+                    <th>Author</th>
+                    <th>Publisher</th>
+                    <th>Genre</th>
+                    <th>Rating</th>
+                    <th>Price</th>
+                    <th>Stocks</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each productadmin}}
+                <tr>
+                    <td>{{id}}</a></td>
+
+                    <td>{{product_name}}</td>
+                    <td>{{author}}</td>
+                    <td>{{publisher}}</td>
+                    <td>{{genre}}</td>
+                    <td>{{rating}}</td>
+                    <td>{{price}}</td>
+                    <td>{{stock}}</td>
+                    <td><a href="/product/detailsProductAdmin/{{id}}">View More <i class="fa fa-chevron-right"
+                                aria-hidden="true"></i></a></td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</section>

@@ -1,0 +1,30 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/index">Home</a>
+        <span class="breadcrumb-item active">Check Delivery</span>
+    </div>
+</div>
+<section class="static about-sec">
+    <div class="container">
+        <h1>Shipment Tracking</h1>
+        <form method="POST" action="/delivery/checkingDelivery" id="checkDeliveryForm"
+            onsubmit="return submitUserForm();">
+            <p>Tracking is done using <a href="https://www.easypost.com/">Easypost</a> and we use USPS as our carrier.
+            </p>
+            <p>Enter your tracking ID below.</p>
+            <div class="form-group control-label">
+                <label for="deliveryId">Tracking ID:</label>
+                <div class="input-group mb-3">
+                    <input type="text" name="trackingIdInput" class="form-control" placeholder="trk_" required>
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-secondary" type="submit" value="Submit">Track</button>
+                    </div>
+                </div>
+                <p>E.g. trk_f10a3961f7c4419184aca1dabc09e4f8</p>
+                <div class="g-recaptcha" data-sitekey="6Le367IZAAAAAPdbALKH99mQXdhrk7FhIhgzIwkw"
+                    data-callback="verifyCaptcha"></div>
+                <div id="g-recaptcha-error"></div>
+            </div>
+        </form>
+    </div>
+</section>

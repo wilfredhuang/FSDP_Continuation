@@ -1,0 +1,50 @@
+<div class="breadcrumb">
+  <div class="container">
+    <a class="breadcrumb-item" href="/index">Home</a>
+    <a class="breadcrumb-item" href="/product/cart">Cart</a>
+    <a class="breadcrumb-item" href="/product/checkout">Checkout</a>
+    <a class="breadcrumb-item" href="/product/selectPayment"> Select Payment</a>
+    <span class="breadcrumb-item active"> PayNow</span>
+  </div>
+</div>
+
+<div class="container">
+<br>
+<div class="d-flex justify-content-center"><p> Here is your generated PayNow Payment Code</p></div>
+<div class="d-flex justify-content-center"> <p> Make sure you have paid before proceeding as the order will be placed</p> </div>
+<div class="d-flex justify-content-center">
+<img src="{{url}}">
+</div>
+  <br>
+  <br>
+  <br>
+    <div class="d-flex justify-content-center">
+        <button class="btn" value="I have paid, proceed" data-toggle="modal" data-target="#exampleModal"> I have paid, proceed</button>
+    </div>
+    {{!-- <input type="submit" class="btn" value="I have paid, proceed" data-toggle="modal" data-target="#exampleModal"> --}}
+    <!-- Modal, to confirm if user want to proceed -->
+<form method="POST">
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Confirm Order?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Make sure you have paid or order willl be <strong> cancelled</strong>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <input type="submit" class="btn btn-default" value="Proceed" formaction="/product/paynow"> 
+        {{!-- <button type="button" class="btn btn-primary">Save changes</button> --}}
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+
+
+</div>

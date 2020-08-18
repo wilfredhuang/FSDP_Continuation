@@ -1,0 +1,11 @@
+<div class="container">
+    <div class="d-flex justify-content-center bg-dark">
+        <div class="align-content-center">
+            <div class="d-flex justify-content-center bg-dark"><span class="text-white" style="display:block" ;>
+                    {{public_coupon.message}} </span></div>
+            <span class="bg-dark text-white"> <i class="fas fa-bullhorn" aria-hidden="true"></i> USE CODE
+                '{{public_coupon.code}}' to get {{convertDiscount public_coupon.discount}}% discount off {{displayCouponType public_coupon.type}} (Capped at
+                ${{public_coupon.limit}})</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,171 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/">Home</a>
+        <a class="breadcrumb-item" href="/user/admin">Admin Page</a>
+        <a class="breadcrumb-item" href="/product/discountmenu">Discount Menu</a>
+        <span class="breadcrumb-item active">View Discounts & Coupons</span>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mt-2">
+        <div class="col-8">
+            <h2 id="coupon_header"> View Coupons </h2>
+            <h2 id="discount_header" hidden> View Discounts </h2>
+        </div>
+        <div class="col-4 mt-2 mb-5">
+            <span> View </span>
+            <select name="create_option" id="create_option">
+                <option value="Coupon">Coupon</option>
+                <option value="Discount">Discount</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="discount_form">
+    {{#if discounts}}
+    <div class="row mt-2">
+        <div class="col-lg-1">
+            <p><strong>ID</strong></p>
+        </div>
+        <div class="col-lg-2">
+            <p><strong>Minimum Quantity</strong></p>
+        </div>
+        <div class="col-lg-3">
+            <p><strong>Discount Rate</strong></p>
+        </div>
+        <div class="col-lg-3">
+            <p><strong>Expiry Date</strong></p>
+        </div>
+        <div class="col-lg-3">
+            <p><strong>Message</strong></p>
+        </div>
+    </div>
+    {{#each discounts}}
+    <div class="row">
+        <div class="col-lg-1">
+            <p>{{target_id}}</p>
+        </div>
+        <div class="col-lg-2">
+            <p>{{min_qty}}</p>
+        </div>
+        <div class="col-lg-3">
+            <p>{{discount_rate}}</p>
+        </div>
+        <div class="col-lg-3">
+            <p>{{expiry}}</p>
+        </div>
+        <div class="col-lg-3">
+            <div class="row">
+                <div class="col-9 message">
+                    <p>{{message}}</p>
+                </div>
+                <div class="col-3">
+                    {{!-- <button class="btn-danger" value="{{target_id}}">Delete</button> --}}
+                    <a href="/product/deleteDiscount/{{target_id}}" class="card-link" data-toggle="confirmation"
+                        data-title="Confirm delete?">
+                        <i class="far fa-trash-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{/each}}
+    {{else}}
+        <p> Seems like got no discounts at this time</p>
+{{/if}}
+</div>
+
+<div class="container" id="coupon_form">
+    {{#if coupons}}
+    <div class="row mt-2">
+        <div class="col-lg-1">
+            <p><strong>ID</strong></p>
+        </div>
+        <div class="col-lg-1">
+            <p><strong>Code</strong></p>
+        </div>
+        <div class="col-lg-1">
+            <p><strong>Type</strong></p>
+        </div>
+        <div class="col-lg-2">
+            <p><strong>Discount Rate</strong></p>
+        </div>
+        <div class="col-lg-1">
+            <p><strong>Limit</strong></p>
+        </div>
+        <div class="col-lg-3">
+            <p><strong>Expiry Date </strong></p>
+        </div>
+        <div class="col-lg-3">
+            <p><strong>Message</strong></p>
+        </div>
+    </div>
+    {{#each coupons}}
+    <div class="row">
+        <div class="col-lg-1">
+            <p>{{id}}</p>
+        </div>
+        <div class="col-lg-1">
+            <p>{{code}}</p>
+        </div>
+        <div class="col-lg-1">
+            <p>{{type}}</p>
+        </div>
+        <div class="col-lg-2">
+            <p>{{discount}}</p>
+        </div>
+        <div class="col-lg-1">
+            <p>{{limit}}</p>
+        </div>
+        <div class="col-lg-3">
+            <p>{{expiry}}</p>
+        </div>
+        <div class="col-lg-3">
+            <div class="row">
+                <div class="col-9 message">
+                    <p>{{message}}</p>
+                </div>
+                <div class="col-3">
+                    {{!-- <button class="btn-danger" value="{{target_id}}">Delete</button> --}}
+                    <a href="/product/deleteCoupon/{{id}}" class="card-link" data-toggle="confirmation"
+                        data-title="Confirm delete?">
+                        <i class="far fa-trash-alt"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{/each}}
+    {{else}}
+        <p> Seems like got no coupons at this time</p>
+{{/if}}
+</div>
+<script>
+    $(document).ready(function () {
+        $("#coupon_form").slideDown();
+        $("#discount_form").slideUp();
+        $('#create_option').on('change', function () {
+            if (this.value == 'Coupon')
+            //.....................^.......
+            {
+                $("#discount_form").slideUp();
+                $("#coupon_form").slideDown();
+                $("#coupon_header").removeAttr("hidden")
+                $("#discount_header").attr("hidden", true)
+            }
+            else {
+                $("#coupon_form").slideUp();
+                $("#discount_form").slideDown();
+                $("#discount_header").removeAttr("hidden")
+                $("#coupon_header").attr("hidden", true)
+            }
+        });
+    });
+</script>
+<style>
+    .message {
+        word-wrap: break-word;
+    }
+</style>

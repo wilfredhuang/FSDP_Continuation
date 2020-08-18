@@ -1,0 +1,132 @@
+<div class="breadcrumb">
+    <div class="container">
+        <a class="breadcrumb-item" href="/">Home</a>
+        <a class="breadcrumb-item" href="/user/admin">Admin Page</a>
+        <a class="breadcrumb-item" href="/product/discountmenu">Discount Menu</a>
+        <span class="breadcrumb-item active">Create Coupon</span>
+    </div>
+</div>
+<div class="container">
+    <form method="POST" action="#">
+        <div class="row mt-2">
+            <div class="col-8">
+                <h2 id="coupon_header"> Create Coupon </h2>
+                {{!-- <h2 id="discount_header" hidden> Create Discount </h2> --}}
+            </div>
+            {{!-- <div class="col-4 mt-2">
+                <select name="create_option" id="create_option">
+                    <option value="Coupon">Coupon</option>
+                    <option value="Discount">Discount</option>
+                </select>
+            </div> --}}
+        </div>
+        <br>
+        <div id="coupon_form">
+            <div class="form-group">
+                <label for="coupon_code">Coupon Code:</label>
+                <input type="text" name="coupon_code" class="form-control" id="coupon_code" required>
+            </div>
+            <div class="form-group">
+                <label for="coupon_type">Coupon Type:</label>
+                <select id="coupon_type" name="coupon_type">
+                    <option value="OVERALL">Overall</option>
+                    <option value="SHIP">Shipping Only</option>
+                    <option value="SUB">Subtotal Only</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="coupon_discount">Coupon Discount Rate:</label>
+                {{!-- <input type="text" name="coupon_discount" class="form-control" id="coupon_discount" required> --}}
+                <input type="number" step="0.01" max="0.99" min="0.01" value="0.10" class="qty" size="4"
+                    name="coupon_discount" id="coupon_discount" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="coupon_limit">Coupon Limit ($) :</label>
+                {{!-- <input type="text" name="coupon_limit" class="form-control" id="coupon_limit" required> --}}
+                <input type="number" step="1" max="100" min="1" value="1" class="qty" size="4" name="coupon_limit"
+                    id="coupon_limit" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="coupon_public">Make Coupon Public?:</label>
+                <select id="coupon_public" name="coupon_public">
+                    <option value="YES">Yes</option>
+                    <option value="NO" selected>No</option>
+                </select>
+            </div>
+            {{!-- <div class="form-group">
+            <label for="coupon_expiry">Coupon Expiry:</label>
+            <input type="text" name="coupon_expiry" class="form-control" id="coupon_expiry" required>
+        </div> --}}
+            <div class="form-group">
+                <label for="coupon_msg">Coupon Message (Leave blank if not public):</label>
+                <textarea class="form-control" name="coupon_msg" id="coupon_msg"></textarea>
+            </div>
+            <div class="form-group">
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <label class="font-italic">Coupon Expiry Date</label>
+                            <input id="datepicker" width="200" name="coupon_expire_date"
+                                value="{{formatDate currentDate 'DD/MM/YYYY'}}" readonly required />
+                        </div>
+                        <div class="col-lg-6">
+                            <label class="font-italic">Coupon Expiry Time</label>
+                            <input id="timepicker" width="200" name="coupon_expire_time" value="{{currentTime}}"
+                                readonly required />
+                        </div>
+                    </div>
+                </div>
+                <br>
+                <button id="submit" class="btn btn-danger"> Proceed </button>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+    /*
+    $(document).ready(function () {
+        $("#coupon_form").slideDown();
+        $("#discount_form").slideUp();
+        $('#create_option').on('change', function () {
+            if (this.value == 'Coupon')
+            //.....................^.......
+            {
+                $("#discount_form").slideUp();
+                $("#coupon_form").slideDown();
+                $("#coupon_header").removeAttr("hidden")
+                $("#discount_header").attr("hidden", true)
+            }
+            else {
+                $("#coupon_form").slideUp();
+                $("#discount_form").slideDown();
+                $("#discount_header").removeAttr("hidden")
+                $("#coupon_header").attr("hidden", true)
+            }
+        });
+    });
+    */
+
+    $('#datepicker').datepicker({
+        format: 'dd/mm/yyyy',
+        value: new Date().toLocaleDateString('en-SG'),
+        uiLibrary: 'bootstrap4',
+    });
+
+    $('#timepicker').timepicker({
+        uiLibrary: 'bootstrap4'
+    });
+
+    /*
+        timeFormat: 'h:mm p',
+        interval: 60,
+        minTime: '10',
+        maxTime: '6:00pm',
+        defaultTime: '11',
+        startTime: '10:00',
+        dynamic: false,
+        dropdown: true,
+        scrollbar: true
+    */
+
+
+</script>
