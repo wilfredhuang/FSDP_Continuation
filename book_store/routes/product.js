@@ -1835,7 +1835,160 @@ router.get('/deleteCoupon/:id', ensureAdminAuthenticated, async (req, res) => {
     res.redirect(url)
 })
 
+router.get('/testing', (req, res) => {
+    let title = "Testing 123"
+    var obj2 = {0: {'num':1}, 1:{'num':2}, 2:{'num':3}, 3:{'num':4}}
 
+    const page = parseInt(req.query.page)
+    const limit = parseInt(req.query.limit)
+
+    // page - 1 because index start on 0
+    const startIndex = (page - 1) * limit
+    const endIndex = page * limit
+
+    // we want to let user know if there is a page after or before
+    const results = {}
+
+    // Retrieve next page data
+    if (endIndex < (Object.keys(obj2)).length) {
+        results.next = {
+            page: page + 1,
+            limit: limit
+        }
+    }
+
+
+    // Retrieve previous page data
+    if (startIndex > 0) {
+
+    results.previous = {
+        page: page - 1,
+        limit:limit
+    }}
+
+    var obj = {0: 'zero', 1: 'one', 2: 'two', 3: 'three', 4: 'four'};
+    // results.results = Object.keys(cart_items).slice(startIndex,endIndex).map(key => ({[key]:cart_items[key]}));
+    results.results = Object.keys(obj2).slice(startIndex,endIndex).map(key => ({[key]:obj2[key]}));
+
+    // test that it works with this
+    // https://localhost:5000/product/getjson?page=2&limit=5
+
+    console.log(results)
+
+    res.render('checkout/testing123', {
+        title,
+        results
+    })
+    // res.json(results)
+    // https://localhost:5000/product/testing?page=1&limit=5
+})
+
+
+router.get('/testing2', (req, res) => {
+    title = "Pagination"
+    const cart_items = req.session.userCart
+    // user cart is an object that stores product ids as key containing all value (product object) e.g
+    // {1:{Name:cab}, 2:{Name: abc}}
+    // the inputs
+    const page = parseInt(req.query.page)
+    const limit = 3
+    // const limit = parseInt(req.query.limit)
+
+    // page - 1 because index start on 0
+    // e.g page 1 start index (0* 5 = 0 , end index = 1 * 5 = 5)
+    // page 2 start: (2-1) * 5 = 5 , end: 2*5 = 10
+    const startIndex = (page - 1) * limit
+    const endIndex = page * limit
+
+    // we want to let user know if there is a page after or before
+    const results = {}
+
+    // Retrieve next page data
+    // if statement to check if there should be a 'next', when the end index is lesser than the length of object
+    if (endIndex < (Object.keys(cart_items)).length) {
+        results.next = {
+            page: page + 1,
+            limit: limit
+        }
+    }
+
+
+    // Retrieve previous page data
+    // works similary for the next
+    if (startIndex > 0) {
+
+    results.previous = {
+        page: page - 1,
+        limit:limit
+    }}
+
+    results.pages = Math.ceil((Object.keys(cart_items)).length / limit)
+    console.log("")
+    // console.log("=== PAGES ===", results.pages)
+    // console.log("=== PREVIOUS === ", results.previous.page)
+    // The line with the magic happening
+    // Object.keys(cart_items) will return an array of the product ids in the cart
+    // Then we slice it based on the input for the page & limit,
+    // finally we apply map() on it to retrieve the cart_items with the segmented product ids
+    results.results = Object.keys(cart_items).slice(startIndex,endIndex).map(key => ({[key]:cart_items[key]}));
+
+    console.log(results.results)
+    res.render('checkout/testing1234', {
+        title,
+        results
+    })
+    // https://localhost:5000/product/testing2?page=1&limit=5
+})
+
+
+// Testing new stuff 18 Aug 
+
+router.get('/getjson', (req, res) => {
+    // const myusers = await User.findAll({})
+    // res.json(myusers)
+    const cart_items = req.session.userCart
+    const page = parseInt(req.query.page)
+    const limit = parseInt(req.query.limit)
+
+    // page - 1 because index start on 0
+    const startIndex = (page - 1) * limit
+    const endIndex = page * limit
+
+    // we want to let user know if there is a page after or before
+    const results = {}
+
+    // Retrieve next page data
+    if (endIndex < (Object.keys(cart_items)).length) {
+        results.next = {
+            page: page + 1,
+            limit: limit
+        }
+    }
+
+
+    // Retrieve previous page data
+    if (startIndex > 0) {
+
+    results.previous = {
+        page: page - 1,
+        limit:limit
+    }}
+
+    var obj = {0: 'zero', 1: 'one', 2: 'two', 3: 'three', 4: 'four'};
+    var obj2 = {0: {'num':1}, 1:{'num':2}, 2:{'num':3}, 3:{'num':4}}
+    results.results = Object.keys(cart_items).slice(startIndex,endIndex).map(key => ({[key]:cart_items[key]}));
+
+    // test that it works with this
+    // https://localhost:5000/product/getjson?page=2&limit=5
+
+    // Object.keys() returns array of an object's internal properties
+    // var result = Object.keys(obj).slice(0,2).map(key => ({[key]:obj[key]}));
+    // console.log(result);
+    console.log(results.results)
+    res.json(results)
+    // res.render('checkout/json')
+
+})
 
 
 module.exports = router;

@@ -125,6 +125,37 @@ module.exports = {
     return msg;
   },
 
+  // Pagination Helpers
+
+  // Take in the number of pages available as input
+  // Push them to the array n times for the input size n
+  // We use the array to help us loop display the number of pages available 
+  // as well as their respective values (pg 1, 2, 3 etc)
+  loop_n_times: function(pages) {
+    console.log('num pages is' + pages)
+    the_array = [];
+    if (pages > 0) {
+      for (i = 1; i<pages+1; i++) {
+        console.log('Adding page')
+        the_array.push(i);
+      }
+      console.log("ARRAY IS ", the_array)
+      return the_array
+    }
+  },
+
+  // Checks whether the input exists and is greater than 0 allowing us to display 'previous' and 'next' options for the pages
+  check_page: function(page_value) {
+    if (page_value > 0) {
+      return true
+    }
+    else {
+      return false
+    }
+  },
+
+  // Pagination end
+  
   formatDeliveryStatus: function (deliveryStatus) {
     if (deliveryStatus == "unknown") {
       return "Unknown";

@@ -110,6 +110,8 @@ const {
   check_subtotal,
   check_for_discount_msg,
   formatDeliveryStatus,
+  loop_n_times,
+  check_page
 } = require("./helpers/hbs");
 const { when } = require("./helpers/for_loop");
 
@@ -136,7 +138,9 @@ app.engine(
       check_subtotal: check_subtotal,
       check_for_discount_msg: check_for_discount_msg,
       formatDeliveryStatus: formatDeliveryStatus,
-      when: when,
+	  when: when,
+	  loop_n_times:  loop_n_times,
+	  check_page: check_page
     },
     handlebars: allowInsecurePrototypeAccess(Handlebars),
   })

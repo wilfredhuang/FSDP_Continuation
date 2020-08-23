@@ -1,0 +1,25 @@
+<div class="container">
+  <h2>Pagination</h2>
+  <p>To create a basic pagination, add the .pagination class to an ul element. Then add the .page-item to each li element and a .page-link class to each link inside li:</p>                  
+{{#each results.results}}
+{{#each this}}
+<p> {{Name}} </p>
+{{/each}}
+{{/each}}
+
+  <ul class="pagination">
+    {{#if (check_page results.previous.page)}}
+    <li class="page-item"><a class="page-link" href="https://localhost:5000/product/testing2?page={{results.previous.page}}">Previous</a></li>
+    {{/if}}
+    {{#each (loop_n_times results.pages)}}
+    <li class="page-item"><a class="page-link" href="https://localhost:5000/product/testing2?page={{this}}">Page {{this}} </a></li>
+    {{!-- <li class="page-item"><a class="page-link" href="#">2</a></li>
+    <li class="page-item"><a class="page-link" href="#">3</a></li> --}}
+    {{/each}}
+    {{#if (check_page results.next.page)}}
+    <li class="page-item"><a class="page-link" href="https://localhost:5000/product/testing2?page={{results.next.page}}">Next</a></li>
+    {{/if}}
+  </ul>
+
+
+</div>
