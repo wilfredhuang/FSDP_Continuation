@@ -599,8 +599,12 @@ router.post('/cart', async (req, res) => {
         for (ID in req.session.userCart) {
             // Make sure to parseInt the updated qty or it will become a string!!
             let query = parseInt(req.body["Q" + ID])
-            console.log("Queried Quantity is " + query)
-            req.session.userCart[ID].Quantity = query
+            // update 23/08/20, need to check if query value > 0 as when items on page n is updated
+            // items on other pages will have their quantities updated with undefined values
+            if (query > 0) {
+                console.log("Updating, Queried Quantity is " + query)
+                req.session.userCart[ID].Quantity = query
+            }
             // newSubTotal = query * req.session.userCart[ID].SubtotalPrice
             // console.log("Q is" + req.body["Q" + ID])
         }
@@ -1131,7 +1135,7 @@ router.post('/stripepayment', async (req, res) => {
         name: "George Costanza",
         company: "Vandelay Industries",
         street1: "1 E 161st St.",
-        phone: "+6590257144",
+        phone: "+6587558054",
         city: "Bronx",
         state: "NY",
         //zip: "10451", //Actual zipcode
@@ -1218,17 +1222,17 @@ router.post('/stripepayment', async (req, res) => {
                   api.Tracker.retrieve(trackingCode).then((t) => {
                       console.log(t.public_url);
                       let trackingURL = t.public_url;
-                      // client.messages
-                      //   .create({
-                      //     body:
-                      //       "Thank you for your purchase from the Book Store. Your tracking code is " +
-                      //       trackingCode +
-                      //       " and check your delivery here!\n" +
-                      //       trackingURL,
-                      //     from: "+12059461964",
-                      //     to: "+6590251744",
-                      //   })
-                      //   .then((message) => console.log(message.sid));
+                      client.messages
+                        .create({
+                          body:
+                            "Thank you for your purchase from the Book Store. Your tracking code is " +
+                            trackingCode +
+                            " and check your delivery here!\n" +
+                            trackingURL,
+                          from: "+14242066417",
+                          to: "+6587558054",
+                        })
+                        .then((message) => console.log(message.sid));
                     
                     
                     console.log("hello")

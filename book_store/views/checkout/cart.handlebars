@@ -18,6 +18,25 @@
         {{!-- <div class="card-header d-flex">
     </div> --}}
         <h3> <i class="fa fa-shopping-cart pr-2 mt-0 mb-0 pt-0" aria-hidden="true"></i> Shopping Cart</h3>
+                      <ul class="pagination">
+    {{#if (check_page results.previous.page)}}
+    <li class="page-item"><a class="page-link" href="https://localhost:5000/product/cart?page={{results.previous.page}}">Previous</a></li>
+    {{/if}}
+    {{#unless (check_page results.previous.page)}}
+    <li class="page-item"><a class="page-link" style="cursor:no-drop">Previous</a></li>
+    {{/unless}}
+    {{#each (loop_n_times results.pages)}}
+    <li class="page-item"><a class="page-link pg-{{this}}" href="https://localhost:5000/product/cart?page={{this}}">Page {{this}} </a></li>
+    {{!-- <li class="page-item"><a class="page-link" href="#">2</a></li>
+    <li class="page-item"><a class="page-link" href="#">3</a></li> --}}
+    {{/each}}
+    {{#if (check_page results.next.page)}}
+    <li class="page-item"><a class="page-link" href="https://localhost:5000/product/cart?page={{results.next.page}}">Next</a></li>
+    {{/if}}
+    {{#unless (check_page results.next.page)}}
+    <li class="page-item"><a class="page-link" style="cursor:no-drop">Next</a></li>
+    {{/unless}}
+  </ul>
         {{!-- <h3>Your Cart Information</h3> --}}
         <form method="POST" action="">
             <!-- End of First Section -->
@@ -68,19 +87,6 @@
             </div>
             {{/each}}
             {{/each}}
-              <ul class="pagination">
-    {{#if (check_page results.previous.page)}}
-    <li class="page-item"><a class="page-link" href="https://localhost:5000/product/cart?page={{results.previous.page}}">Previous</a></li>
-    {{/if}}
-    {{#each (loop_n_times results.pages)}}
-    <li class="page-item"><a class="page-link pg-{{this}}" href="https://localhost:5000/product/cart?page={{this}}">Page {{this}} </a></li>
-    {{!-- <li class="page-item"><a class="page-link" href="#">2</a></li>
-    <li class="page-item"><a class="page-link" href="#">3</a></li> --}}
-    {{/each}}
-    {{#if (check_page results.next.page)}}
-    <li class="page-item"><a class="page-link" href="https://localhost:5000/product/cart?page={{results.next.page}}">Next</a></li>
-    {{/if}}
-  </ul>
             <!-- End of Second Section -->
             <!-- Third Session Fee Calculation -->
             <hr>
