@@ -586,7 +586,7 @@ router.post('/goToCart', (req, res) => {
         req.session.full_total_price = (parseFloat(req.session.full_subtotal_price) + parseFloat(req.session.shipping_fee)).toFixed(2)
     }
 
-    res.redirect('cart')
+    res.redirect('cart?page=1')
 })
 
 
@@ -790,7 +790,7 @@ router.get('/deleteCartItem/:id', async (req, res) => {
     console.log(req.session.userCart)
     console.log(req.session.full_subtotal_price)
     alertMessage(res, 'success', "An item has been removed from the cart", 'fas fa-sign-in-alt', true)
-    res.redirect(307, '/product/cart');
+    res.redirect(307, '/product/cart?page=1');
 });
 
 // Retrieve Cart
@@ -832,11 +832,42 @@ router.get('/cart', (req, res) => {
     // Round up to next number regardless of decimal value with ceil function
     total_weight_oz = Math.ceil((total_weight * 0.035274))
 
+    const cart_items = req.session.userCart
+
+    const page = parseInt(req.query.page)
+    const limit = 3
+
+    const startIndex = (page - 1) * limit
+    const endIndex = page * limit
+
+    const results = {}
+
+    if (endIndex < (Object.keys(cart_items)).length) {
+        results.next = {
+            page: page + 1,
+            limit: limit
+        }
+    }
+
+    if (startIndex > 0) {
+
+    results.previous = {
+        page: page - 1,
+        limit:limit
+    }}
+
+    results.pages = Math.ceil((Object.keys(cart_items)).length / limit)
+    console.log("")
+    results.results = Object.keys(cart_items).slice(startIndex,endIndex).map(key => ({[key]:cart_items[key]}));
+
+    console.log(results.results)
+
     res.render('checkout/cart', {
         total_weight,
         total_weight_oz,
         discounts,
-        title
+        title,
+        results
     })
 });
 
@@ -923,7 +954,7 @@ router.post('/applyCoupon', (req, res) => {
 
                 .catch(() => {
                     alertMessage(res, 'danger', 'code ' + req.body.coupon + ' is invalid', 'fas fa-exclamation-circle', true)
-                    res.redirect("cart")
+                    res.redirect("cart?page=1")
                 })
 
         })
@@ -931,7 +962,7 @@ router.post('/applyCoupon', (req, res) => {
 
         .catch(() => {
             alertMessage(res, 'danger', 'No coupons are available at the moment', 'fas fa-exclamation-circle', true)
-            res.redirect("cart")
+            res.redirect("cart?page=1")
         })
 });
 

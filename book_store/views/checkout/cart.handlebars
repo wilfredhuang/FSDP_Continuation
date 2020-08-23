@@ -28,7 +28,9 @@
                 <div class="col-lg-3"></div>
                 <div class="col-lg-3 quantity"> <strong> Subtotal Price </strong></div>
             </div>
-            {{#each UC}}
+            {{!-- {{#each UC}} --}}
+            {{#each results.results}}
+{{#each this}}
             <hr class="mt-0 mb-0">
             <div class="card-body d-flex flex-row row mb-0 mt-0 mb-0 pt-3 pb-0">
                 <div class="col-lg-3">
@@ -44,8 +46,6 @@
                     <hr>
                     <p class="card-text"> By {{Author}}</p>
                     <p class="card-text"> Genre: {{Genre}}</p>
-                    {{!-- <p class="card-text"> By {{Author}} | {{Genre}}</p> --}}
-                    {{!-- <p> Weight: {{Weight}}g </p> --}}
                 </div>
                 <div class="col-lg-3 quantity">
                     <div class="form-group row">
@@ -67,6 +67,20 @@
                 </div>
             </div>
             {{/each}}
+            {{/each}}
+              <ul class="pagination">
+    {{#if (check_page results.previous.page)}}
+    <li class="page-item"><a class="page-link" href="https://localhost:5000/product/cart?page={{results.previous.page}}">Previous</a></li>
+    {{/if}}
+    {{#each (loop_n_times results.pages)}}
+    <li class="page-item"><a class="page-link pg-{{this}}" href="https://localhost:5000/product/cart?page={{this}}">Page {{this}} </a></li>
+    {{!-- <li class="page-item"><a class="page-link" href="#">2</a></li>
+    <li class="page-item"><a class="page-link" href="#">3</a></li> --}}
+    {{/each}}
+    {{#if (check_page results.next.page)}}
+    <li class="page-item"><a class="page-link" href="https://localhost:5000/product/cart?page={{results.next.page}}">Next</a></li>
+    {{/if}}
+  </ul>
             <!-- End of Second Section -->
             <!-- Third Session Fee Calculation -->
             <hr>
@@ -177,3 +191,58 @@
     {{/unless}}
     </div>
 </section>
+
+<script>
+
+// Feature to let user know which page they are on right now
+
+    //$( ".pg-1" ).addClass("active");
+
+// gets a location object
+let searchParams = new URLSearchParams(window.location.search)
+// alert(searchParams)
+// alert(typeof searchParams)
+if (searchParams.has('page')) {
+    // convert it to string
+    var url_param_string = searchParams.toString()
+    // take the last character of the url param (page value)
+    // find the page number it is on and make it active
+
+    // Update: Solution in case of triple, double-digit pages (not tested)
+
+    // Check whether the last n position of the string url returned is a number
+    if (Number.isInteger(parseInt(url_param_string.slice(-3)) )) {
+        console.log(url_param_string.slice(-3))
+        $(".pg-" + url_param_string.slice(-3)).addClass("active")
+    }
+
+    else if (Number.isInteger(parseInt(url_param_string.slice(-2)) )) {
+        console.log(url_param_string.slice(-2))
+        $(".pg-" + url_param_string.slice(-2)).addClass("active")
+    }
+
+    else if (Number.isInteger(parseInt(url_param_string.slice(-1)) )) {
+        $(".pg-" + url_param_string.slice(-1)).addClass("active")
+    } 
+
+} 
+
+</script>
+
+<style>
+.pagination a {
+  color: black;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background-color .3s;
+}
+
+.pagination a.active {
+  background-color: dodgerblue;
+  color: white;
+}
+
+.pagination a:hover:not(.active) {background-color: #ddd;}
+</style>
+

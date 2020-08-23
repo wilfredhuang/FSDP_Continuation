@@ -132,14 +132,14 @@ module.exports = {
   // We use the array to help us loop display the number of pages available 
   // as well as their respective values (pg 1, 2, 3 etc)
   loop_n_times: function(pages) {
-    console.log('num pages is' + pages)
+    //console.log('num pages is' + pages)
     the_array = [];
     if (pages > 0) {
       for (i = 1; i<pages+1; i++) {
-        console.log('Adding page')
+        //console.log('Adding page')
         the_array.push(i);
       }
-      console.log("ARRAY IS ", the_array)
+      //console.log("ARRAY IS ", the_array)
       return the_array
     }
   },
