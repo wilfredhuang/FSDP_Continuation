@@ -1,6 +1,30 @@
 const express = require('express');
 const router = express.Router();
 const moment = require('moment');
+const alertMessage = require('../helpers/messenger');
+
+// Event Emitter
+
+// const EventEmitter = require('events');
+
+// class EMT extends EventEmitter {
+//     notify_user(message) {
+//         this.emit('notify_user')
+//     }
+
+//     nothing(message) {
+//         console.log("Nothing happens")
+//     }
+// }
+
+// const EMT_obj = new EMT();
+
+// EMT_obj.on('notify_user', (arg, req, res) => {
+//     alertMessage(res, 'success', `You are at the event emitter page! + ${arg}`, 'fas fa-sign-in-alt', true);
+// });
+
+// The . is the current directory, while .. signifies the parent directory.
+const EMT = require('../public/js/EMT')
 
 //Models
 const product = require('../models/Product');
@@ -11,7 +35,7 @@ const User = require('../models/User');
 const Pending_Order = require('../models/Pending_Orders');
 const Pending_OrderItem = require('../models/Pending_OrderItem');
 
-const alertMessage = require('../helpers/messenger');
+const ProductAdmin = require('../models/ProductAdmin');
 const Coupon = require('../models/coupon');
 const Discount = require('../models/Discount');
 
@@ -25,10 +49,10 @@ const stripe = require('stripe')('sk_test_ns9DyHTray5Wihniw93C2ANH00IMJTVjKw', {
     apiVersion: '2020-03-02',
 });
 
+// PayNow
 const paynow = require('paynow-generator').paynowGenerator
 const QRCode = require('qrcode');
 const { CheckboxRadioContainer } = require('admin-bro');
-const ProductAdmin = require('../models/ProductAdmin');
 
 // twilo API - Send SMS
 const accountSid = 'AC583c7d4bc97864b67d16d8430ad9da88';
@@ -2025,5 +2049,24 @@ router.get('/getjson', (req, res) => {
 
 })
 
+router.get('/event', (req,res) => {
+    title = "Event Emitter Test"
+    // EMT_obj.nothing();
+    // EMT_obj.notify_user("Foo", req, res);
+    new_emt_obj = new EMT();
+    // DONT PUT RES AND REQ IN THE PARAMETERS, WILL MAKE THEM UNDEFINED
+    new_emt_obj.on('notify_user', () => {
+        console.log("Notify User")
+        req.session.userCart = {3: {"ID":3, "Name": 'Eloquent JavaScript', "Author": 'Marijn Haverbeke',
+        "Publisher": 'No Starch Press', "Genre": 'COMPUTERS', "Price": '20.00',  "Stock": '30', "Weight": '1008', 
+        "Image": 'http://books.google.com/books/content?id=9U5I_tskq9MC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
+        "Quantity": 1, "SubtotalPrice": '69.00', "SubtotalWeight": '1008'}}
+        alertMessage(res, 'success', `You are at the event emitter page!`, 'fas fa-sign-in-alt', true);
+    })
+
+    new_emt_obj.notify_user(); 
+
+    res.render('checkout/event')
+})
 
 module.exports = router;
