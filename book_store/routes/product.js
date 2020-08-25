@@ -2051,8 +2051,10 @@ router.get('/getjson', (req, res) => {
 
 router.get('/event', (req,res) => {
     title = "Event Emitter Test"
-    // EMT_obj.nothing();
-    // EMT_obj.notify_user("Foo", req, res);
+    // We import the EMT class from EMT.js, create a new object with it
+    // the object inherits the EventEmitter methods like 'on' and 'emit'
+    // 'on' is an alias for 'addEventListener'
+    // Note that the 'on' method has to placed before the method tahht calls the event.
     new_emt_obj = new EMT();
     // DONT PUT RES AND REQ IN THE PARAMETERS, WILL MAKE THEM UNDEFINED
     new_emt_obj.on('notify_user', () => {

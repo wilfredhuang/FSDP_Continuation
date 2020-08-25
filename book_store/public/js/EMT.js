@@ -1,8 +1,18 @@
 // Event Emitter
 
+const path = require('path');
+
+var pathObj = path.parse(__filename)
+
 const EventEmitter = require('events');
-const alertMessage = require('../../helpers/messenger');
-// const alertMessage = require('../helpers/messenger');
+
+
+// cannot use \ must use /
+const alertMessage = require(pathObj.root + "FSDP_Continuation/book_store/helpers/messenger");
+// same as
+// const alertMessage = require('../../helpers/messenger');
+
+
 
 
 /*
