@@ -45,7 +45,8 @@ const apiKey = "EZTK29b55ab4ee7a437890e19551520f5dd0uaJjPiW9XsVqXYFNVI0kog";
 const api = new EasyPost(apiKey);
 
 // Stripe Payment - secret key
-const stripe = require('stripe')('sk_test_ns9DyHTray5Wihniw93C2ANH00IMJTVjKw', {
+const keys = require("/FSDP_Continuation/book_store/config/keys");
+const stripe = require('stripe')(keys.stripeSecretKey, {
     apiVersion: '2020-03-02',
 });
 

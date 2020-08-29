@@ -1,7 +1,8 @@
 // Set your publishable key: remember to change this to your live publishable key in production
 
 // See your keys here: https://dashboard.stripe.com/account/apikeys
-var stripe123 = Stripe('pk_test_Ef7sYvL8k3tWVTxjADPpT4T700HuZCROoX');
+var keys = require('/FSDP_Continuation/book_store/config/keys');
+var stripe123 = Stripe(keys.stripePublishableKey);
 var elements = stripe123.elements();
 
 var style = {

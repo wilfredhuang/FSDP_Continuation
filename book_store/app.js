@@ -55,7 +55,8 @@ const AdminBroExpress = require("admin-bro-expressjs");
 
 // Stripe Payment System
 // Set your secret key. Remember to switch to your live secret key in production!
-const stripe = require("stripe")("sk_test_ns9DyHTray5Wihniw93C2ANH00IMJTVjKw", {
+const keys = require('./config/keys');
+const stripe = require("stripe")(keys.stripeSecretKey, {
   apiVersion: "2020-03-02",
 });
 
