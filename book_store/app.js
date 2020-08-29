@@ -25,7 +25,7 @@ const authToken = "f5ac6a9439b75395ce54e9783d0f8877";
 const client = require("twilio")(accountSid, authToken);
 
 //Models
-const order = require("../book_store/models/Order");
+const order = require("../models/Order");
 
 //nodemailer
 let transporter = nodemailer.createTransport({
