@@ -24,7 +24,7 @@ const alertMessage = require('../helpers/messenger');
 // });
 
 // The . is the current directory, while .. signifies the parent directory.
-const EMT = require('../public/js/EMT')
+//const EMT = require('../public/js/EMT')
 
 //Models
 const product = require('../models/Product');

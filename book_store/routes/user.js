@@ -266,15 +266,21 @@ router.get("/login", (req, res) => {
 router.post("/login", function (req, res, next) {
   passport.authenticate("local", function (err, user, info) {
     if (err) {
+      console.log("Authenticate failed")
+      console.log(err)
       return next(err);
     }
     if (!user) {
+      console.log("Authenticate failed, not user??")
+      console.log(err)
       return res.redirect("/login");
     }
     req.logIn(user, function (err) {
       if (err) {
+        console.log("User..???")
         return next(err);
       } else if (user.isadmin == true) {
+        console.log("Admin..???")
         return res.redirect("/user/admin");
       }
       return res.redirect("/");

@@ -11,7 +11,7 @@ const ensureAdminAuthenticated = (req,res,next) => {
         // which indicates admin user and allow access
         // otherwise we deny access and show error flash msg
         if (req.user.isadmin == true) {
-            // console.log("Admin User Found")
+            console.log("Admin User Found")
             return next();
         }
 
