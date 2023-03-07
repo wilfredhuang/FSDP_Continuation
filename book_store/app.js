@@ -126,7 +126,7 @@ const app = express();
 // Handlebars Middleware
 app.engine(
 	"handlebars",
-	exphbs.engine({
+	exphbs({
 		defaultLayout: "main", // Specify default template views/layout/main.handlebar
 		helpers: {
 			convertUpper: convertUpper,
