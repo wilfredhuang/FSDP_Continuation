@@ -1,2 +1,2 @@
-./book_store/config/keys_dev.js
-./book_store/node_modules
+node_modules
+.env
