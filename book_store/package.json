@@ -1,5 +1,5 @@
 {
-  "name": "vidjot",
+  "name": "BookStore",
   "version": "1.0.0",
   "description": "Video Jotter",
   "main": "app.js",
@@ -7,15 +7,18 @@
     "start": "node app.js"
   },
   "keywords": [],
-  "author": "Chew Phuay Hern",
+  "author": "Wilfred Huang",
   "license": "ISC",
   "dependencies": {
+    "@adminjs/express": "^5.1.0",
+    "@adminjs/sequelize": "^3.0.0",
     "@easypost/api": "^3.11.2",
     "@handlebars/allow-prototype-access": "^1.0.5",
     "@thiagoelg/node-printer": "^0.5.6",
     "admin-bro": "^2.9.0",
     "admin-bro-expressjs": "^2.1.1",
     "admin-bro-sequelizejs": "^0.5.1",
+    "adminjs": "^6.8.7",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
     "book-api": "^4.0.3",
