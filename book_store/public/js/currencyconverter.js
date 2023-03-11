@@ -1,6 +1,8 @@
-const request = require('request');
-const fetch = require('node-fetch');
+// const request = require("request");
+// const fetch = require("node-fetch");
 
+import request from "request";
+import fetch from "node-fetch";
 // fetch('https://github.com/')
 //     .then(res => res.text())
 //     .then(body => console.log(body));
@@ -12,12 +14,12 @@ const fetch = require('node-fetch');
 //         return body
 //       });
 // }
-function currencyConverter (){
-    fetch('https://api.exchangeratesapi.io/latest?symbols=USD,GBP')
-    .then(res => res.json())
-    .then(json => console.log(json));
+function currencyConverter() {
+	fetch("https://api.exchangeratesapi.io/latest?symbols=USD,GBP")
+		.then((res) => res.json())
+		.then((json) => console.log(json));
 }
-console.log(currencyConverter())
+console.log(currencyConverter());
 
 // function thisthat(){
 //     return 5

@@ -58,7 +58,7 @@ export default {
 
 	cartQty: function (userCart) {
 		let totalqty = 0;
-		for (z in userCart) {
+		for (var z in userCart) {
 			let qty = userCart[z].Quantity;
 			totalqty = parseInt(totalqty) + parseInt(qty);
 		}
@@ -102,7 +102,7 @@ export default {
 	},
 
 	get_old_subtotal: function (qty, price, new_sub) {
-		og_subtotal = (qty * price).toFixed(2);
+		var og_subtotal = (qty * price).toFixed(2);
 		if (og_subtotal != new_sub) {
 			return og_subtotal;
 		} else {
@@ -134,9 +134,9 @@ export default {
 	// as well as their respective values (pg 1, 2, 3 etc)
 	loop_n_times: function (pages) {
 		//console.log('num pages is' + pages)
-		the_array = [];
+		var the_array = [];
 		if (pages > 0) {
-			for (i = 1; i < pages + 1; i++) {
+			for (var i = 1; i < pages + 1; i++) {
 				//console.log('Adding page')
 				the_array.push(i);
 			}

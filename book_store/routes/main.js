@@ -112,7 +112,7 @@ router.get("/index", (req, res) => {
 		req.session.userCart = {};
 		// ssn = req.session.userCart;
 	}
-	count = [5, 4, 3, 2, 1];
+	var count = [5, 4, 3, 2, 1];
 	console.log(req.session);
 	productadmin
 		.findAll({

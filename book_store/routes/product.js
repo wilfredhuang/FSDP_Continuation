@@ -41,6 +41,9 @@ const api = new EasyPost(apiKey);
 
 // Stripe Payment - secret key
 
+import * as dotenv from "dotenv";
+dotenv.config();
+
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 	apiVersion: "2020-03-02",
@@ -362,7 +365,7 @@ router.get("/listproduct/:id", async (req, res, next) => {
 
 	var check = false;
 
-	for (z in req.session.userCart) {
+	for (var z in req.session.userCart) {
 		if (disc_object != null && z == id) {
 			console.log("FOUND EXISTING PRODUCT IN CART");
 			console.log("Quantity is " + req.session.userCart[z].Quantity);
@@ -515,7 +518,7 @@ router.post("/individualProduct/:id", async (req, res, next) => {
 
 	var check = false;
 
-	for (z in req.session.userCart) {
+	for (var z in req.session.userCart) {
 		if (disc_object != null && z == id) {
 			console.log("FOUND EXISTING PRODUCT IN CART");
 			console.log("Quantity is " + req.session.userCart[z].Quantity);
@@ -649,7 +652,7 @@ router.post("/goToCart", (req, res) => {
 		console.log("Coupon TYPE IS OVERALL");
 		// Updated by wilfred on 14/08/20 for display purposes
 		req.session.deducted = (0).toFixed(2);
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			// console.log("CART IS")
 			console.log(req.session.userCart);
 			// check for any special discount applied, for display only
@@ -703,7 +706,7 @@ router.post("/goToCart", (req, res) => {
 		console.log("Coupon TYPE IS SHIP");
 		// Updated by wilfred on 14/08/20 for display purposes
 		req.session.deducted = (0).toFixed(2);
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			// console.log("LE CART IS")
 			console.log(req.session.userCart);
 			// check for any special discount applied, for display only
@@ -762,7 +765,7 @@ router.post("/goToCart", (req, res) => {
 		console.log("Coupon TYPE IS SUB");
 		// Updated by wilfred on 14/08/20 for display purposes
 		req.session.deducted = (0).toFixed(2);
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			// console.log("LE CART IS")
 			console.log(req.session.userCart);
 			// check for any special discount applied, for display only
@@ -824,15 +827,15 @@ router.post("/goToCart", (req, res) => {
 		req.session.discounted_price = (0).toFixed(2);
 		// Updated by wilfred on 14/08/20 for display purposes
 		req.session.deducted = (0).toFixed(2);
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			// console.log("LE CART IS")
 			console.log(req.session.userCart);
 			// check for any special discount applied, for display only
-			original_price =
+			var original_price =
 				req.session.userCart[z].Quantity * req.session.userCart[z].Price;
 			// Subtotal price is already modified when discount is applied so
 			// we check by comparing original and special price
-			special_price = req.session.userCart[z].SubtotalPrice;
+			var special_price = req.session.userCart[z].SubtotalPrice;
 			if (special_price != original_price) {
 				product_discounted_value = (
 					parseFloat(original_price) - parseFloat(special_price)
@@ -865,7 +868,7 @@ router.post("/goToCart", (req, res) => {
 
 router.post("/cart", async (req, res) => {
 	if (req.body.checkoutButton == "Update") {
-		for (ID in req.session.userCart) {
+		for (var ID in req.session.userCart) {
 			// Make sure to parseInt the updated qty or it will become a string!!
 			let query = parseInt(req.body["Q" + ID]);
 			// update 23/08/20, need to check if query value > 0 as when items on page n is updated
@@ -879,7 +882,7 @@ router.post("/cart", async (req, res) => {
 		}
 
 		req.session.deducted = (0).toFixed(2);
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			var product = await productadmin.findOne({
 				where: { id: req.session.userCart[z].ID },
 			});
@@ -944,7 +947,7 @@ router.post("/cart", async (req, res) => {
 			}
 		}
 
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			req.session.userCart[z].SubtotalWeight =
 				req.session.userCart[z].Quantity * req.session.userCart[z].Weight;
 		}
@@ -976,7 +979,7 @@ router.get("/deleteCartItem/:id", async (req, res) => {
 	console.log("After Delete" + req.session.userCart);
 
 	req.session.deducted = (0).toFixed(2);
-	for (z in req.session.userCart) {
+	for (var z in req.session.userCart) {
 		var product = await productadmin.findOne({
 			where: { id: req.session.userCart[z].ID },
 		});
@@ -1040,7 +1043,7 @@ router.get("/deleteCartItem/:id", async (req, res) => {
 		}
 	}
 
-	for (z in req.session.userCart) {
+	for (var z in req.session.userCart) {
 		req.session.userCart[z].SubtotalWeight =
 			req.session.userCart[z].Quantity * req.session.userCart[z].Weight;
 	}
@@ -1048,7 +1051,7 @@ router.get("/deleteCartItem/:id", async (req, res) => {
 	req.session.full_subtotal_price = 0;
 	if (req.session.coupon_type == "OVERALL") {
 		console.log("Coupon TYPE IS OVERALL");
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			req.session.full_subtotal_price = (
 				parseFloat(req.session.full_subtotal_price) +
 				parseFloat(req.session.userCart[z].SubtotalPrice)
@@ -1079,7 +1082,7 @@ router.get("/deleteCartItem/:id", async (req, res) => {
 		}
 	} else if (req.session.coupon_type == "SHIP") {
 		console.log("Coupon TYPE IS SHIP");
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			req.session.full_subtotal_price = (
 				parseFloat(req.session.full_subtotal_price) +
 				parseFloat(req.session.userCart[z].SubtotalPrice)
@@ -1116,7 +1119,7 @@ router.get("/deleteCartItem/:id", async (req, res) => {
 		}
 	} else if (req.session.coupon_type == "SUB") {
 		console.log("Coupon TYPE IS SUB");
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			req.session.full_subtotal_price = (
 				parseFloat(req.session.full_subtotal_price) +
 				parseFloat(req.session.userCart[z].SubtotalPrice)
@@ -1156,7 +1159,7 @@ router.get("/deleteCartItem/:id", async (req, res) => {
 		}
 	} else {
 		req.session.discounted_price = 0.0;
-		for (z in req.session.userCart) {
+		for (var z in req.session.userCart) {
 			req.session.full_subtotal_price = (
 				parseFloat(req.session.full_subtotal_price) +
 				parseFloat(req.session.userCart[z].SubtotalPrice)
@@ -1185,7 +1188,7 @@ router.get("/deleteCartItem/:id", async (req, res) => {
 
 router.get("/cart", (req, res) => {
 	let title = "Shopping Cart";
-	for (z in req.session.userCart) {
+	for (var z in req.session.userCart) {
 		req.session.userCart[z].SubtotalWeight =
 			req.session.userCart[z].Quantity * req.session.userCart[z].Weight;
 	}
@@ -1199,7 +1202,7 @@ router.get("/cart", (req, res) => {
 	let total_weight = 0;
 	let total_weight_oz = 0;
 
-	for (z in req.session.userCart) {
+	for (var z in req.session.userCart) {
 		total_weight = total_weight + req.session.userCart[z].SubtotalWeight;
 	}
 
@@ -1386,7 +1389,7 @@ router.post("/applyCoupon", (req, res) => {
 
 // Checkout Form
 router.get("/checkout", checkCart, (req, res) => {
-	title = "Checkout";
+	var title = "Checkout";
 	if (req.user) {
 		let user_name = req.user.name;
 		let user_phone = req.user.PhoneNo;
@@ -1485,7 +1488,7 @@ router.get("/stripepayment", checkCart, async (req, res) => {
 		current_user.save();
 	}
 
-	title = "Stripe Payment";
+	var title = "Stripe Payment";
 	console.log("Full total price is " + req.session.full_total_price);
 	const paymentIntent = stripe.paymentIntents
 		.create({
@@ -1610,17 +1613,17 @@ router.post("/stripepayment", async (req, res) => {
 							})
 
 							.then((order) => {
-								for (oi in req.session.userCart) {
-									//   let id = req.session.userCart[oi].ID;
-									let product_name = req.session.userCart[oi].Name;
-									let author = req.session.userCart[oi].Author;
-									let publisher = req.session.userCart[oi].Publisher;
-									let genre = req.session.userCart[oi].Genre;
-									let price = req.session.userCart[oi].SubtotalPrice;
-									let stock = req.session.userCart[oi].Quantity;
+								for (var i in req.session.userCart) {
+									//   let id = req.session.userCart[i].ID;
+									let product_name = req.session.userCart[i].Name;
+									let author = req.session.userCart[i].Author;
+									let publisher = req.session.userCart[i].Publisher;
+									let genre = req.session.userCart[i].Genre;
+									let price = req.session.userCart[i].SubtotalPrice;
+									let stock = req.session.userCart[i].Quantity;
 									let details = "";
-									let weight = req.session.userCart[oi].SubtotalWeight;
-									let product_image = req.session.userCart[oi].Image;
+									let weight = req.session.userCart[i].SubtotalWeight;
+									let product_image = req.session.userCart[i].Image;
 									let orderId = order.id;
 									total_weight_oz = (
 										parseFloat(total_weight_oz) + parseFloat(weight)
@@ -1711,7 +1714,7 @@ router.post("/stripepayment", async (req, res) => {
 });
 
 router.get("/paynow", checkCart, (req, res) => {
-	title = "PayNow Payment";
+	var title = "PayNow Payment";
 	// let payNowString = paynow('proxyType','proxyValue','edit',price,'merchantName','additionalComments')
 	let payNowString = paynow.paynowGenerator(
 		"mobile",
@@ -1760,18 +1763,18 @@ router.post("/paynow", async (req, res) => {
 	});
 
 	// Store unconfirmed order's order items
-	for (oi in req.session.userCart) {
-		let product_name = req.session.userCart[oi].Name;
-		let author = req.session.userCart[oi].Author;
-		let publisher = req.session.userCart[oi].Publisher;
-		let genre = req.session.userCart[oi].Genre;
-		let price = req.session.userCart[oi].SubtotalPrice;
-		let stock = req.session.userCart[oi].Quantity;
+	for (var i in req.session.userCart) {
+		let product_name = req.session.userCart[i].Name;
+		let author = req.session.userCart[i].Author;
+		let publisher = req.session.userCart[i].Publisher;
+		let genre = req.session.userCart[i].Genre;
+		let price = req.session.userCart[i].SubtotalPrice;
+		let stock = req.session.userCart[i].Quantity;
 		let details = "";
-		let weight = req.session.userCart[oi].SubtotalWeight;
-		let product_image = req.session.userCart[oi].Image;
+		let weight = req.session.userCart[i].SubtotalWeight;
+		let product_image = req.session.userCart[i].Image;
 		let PorderId = new_pending_order.id;
-		const new_poi = await Pending_OrderItem.create({
+		const new_pi = await Pending_OrderItem.create({
 			product_name,
 			author,
 			publisher,
@@ -1824,14 +1827,14 @@ router.post("/paynow", async (req, res) => {
 });
 
 router.get("/stripetxn_end", (req, res) => {
-	title = "Thank you!";
+	var title = "Thank you!";
 	res.render("checkout/thankYouStripe", {
 		title,
 	});
 });
 
 router.get("/paynowtxn_end", (req, res) => {
-	title = "Thank you!";
+	var title = "Thank you!";
 	res.render("checkout/thankYouPayNow", {
 		title,
 	});
@@ -1840,7 +1843,7 @@ router.get("/paynowtxn_end", (req, res) => {
 // Admin Side
 
 router.get("/discountmenu", ensureAdminAuthenticated, (req, res) => {
-	title = "Discount & Coupon Menu";
+	var title = "Discount & Coupon Menu";
 	res.render("checkout/discountmenu", {
 		title,
 	});
@@ -1868,7 +1871,7 @@ router.get("/viewPendingOrders", ensureAdminAuthenticated, async (req, res) => {
 		ensureAdminAuthenticated,
 		async (req, res) => {
 			const PO = await Pending_Order.findOne({ where: { id: req.params.id } });
-			const POI = await Pending_OrderItem.findAll({
+			const Pi = await Pending_OrderItem.findAll({
 				where: { pendingOrderId: PO.id },
 			});
 
@@ -1907,7 +1910,7 @@ router.get("/viewPendingOrders", ensureAdminAuthenticated, async (req, res) => {
 				name: "George Costanza",
 				company: "Vandelay Industries",
 				street1: "1 E 161st St.",
-				phone: process.env.DEV_PHONENO,
+				phone: PO.phoneNumber,
 				city: "Bronx",
 				state: "NY",
 				//zip: "10451", //Actual zipcode
@@ -1972,17 +1975,17 @@ router.get("/viewPendingOrders", ensureAdminAuthenticated, async (req, res) => {
 									})
 
 									.then((order) => {
-										for (oi in POI) {
-											//   let id = req.session.userCart[oi].ID;
-											let product_name = POI[oi].product_name;
-											let author = POI[oi].author;
-											let publisher = POI[oi].publisher;
-											let genre = POI[oi].genre;
-											let price = POI[oi].price;
-											let stock = POI[oi].stock;
+										for (var i in Pi) {
+											//   let id = req.session.userCart[i].ID;
+											let product_name = Pi[i].product_name;
+											let author = Pi[i].author;
+											let publisher = Pi[i].publisher;
+											let genre = Pi[i].genre;
+											let price = Pi[i].price;
+											let stock = Pi[i].stock;
 											let details = "";
-											let weight = POI[oi].weight;
-											let product_image = POI[oi].product_image;
+											let weight = Pi[i].weight;
+											let product_image = Pi[i].product_image;
 											let orderId = order.id;
 											order_item.create({
 												product_name,
@@ -1998,11 +2001,11 @@ router.get("/viewPendingOrders", ensureAdminAuthenticated, async (req, res) => {
 											});
 										}
 										console.log(order);
-										// Delete pending orders and pois since order confirmed already
+										// Delete pending orders and pis since order confirmed already
 										PO.destroy();
-										for (i in POI) {
+										for (i in Pi) {
 											console.log(`Deleting Product ${i}`);
-											POI[i].destroy();
+											Pi[i].destroy();
 										}
 										alertMessage(
 											res,
@@ -2062,11 +2065,11 @@ router.get("/DeletePOrder/:id", ensureAdminAuthenticated, async (req, res) => {
 	// })
 
 	const PO = await Pending_Order.findOne({ where: { id: req.params.id } });
-	const POI = await Pending_OrderItem.findAll({
+	const Pi = await Pending_OrderItem.findAll({
 		where: { pendingOrderId: PO.id },
 	});
-	// console.log("POI IS")
-	// console.log(POI[0].destroy())
+	// console.log("Pi IS")
+	// console.log(Pi[0].destroy())
 	client.messages
 		.create({
 			body: "From BookStore: We are sorry to inform you that your order has cancelled by the administrator due to lack of payment",
@@ -2082,9 +2085,9 @@ router.get("/DeletePOrder/:id", ensureAdminAuthenticated, async (req, res) => {
 		true
 	);
 	PO.destroy();
-	for (i in POI) {
+	for (i in Pi) {
 		console.log(`Deleting Product ${i}`);
-		POI[i].destroy();
+		Pi[i].destroy();
 	}
 	res.redirect("/product/viewPendingOrders");
 });

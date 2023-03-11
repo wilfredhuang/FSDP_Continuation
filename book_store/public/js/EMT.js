@@ -1,19 +1,16 @@
 // Event Emitter
 
-const path = require('path');
+import path from "path";
 
-var pathObj = path.parse(__filename)
+var pathObj = path.parse(__filename);
 
-const EventEmitter = require('events');
-
+import EventEmitter from "events";
 
 // cannot use \ must use /
-const alertMessage = require(pathObj.root + "FSDP_Continuation/book_store/helpers/messenger");
+const alertMessage = require(pathObj.root +
+	"FSDP_Continuation/book_store/helpers/messenger");
 // same as
 // const alertMessage = require('../../helpers/messenger');
-
-
-
 
 /*
 / means the root of the current drive;
@@ -24,15 +21,14 @@ const alertMessage = require(pathObj.root + "FSDP_Continuation/book_store/helper
 
 */
 
-
 class EMT extends EventEmitter {
-    notify_user(message) {
-        this.emit('notify_user')
-    }
+	notify_user(message) {
+		this.emit("notify_user");
+	}
 
-    nothing(message) {
-        console.log("Nothing happens")
-    }
+	nothing(message) {
+		console.log("Nothing happens");
+	}
 }
 
 // const EMT_obj = new EMT();

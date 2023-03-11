@@ -1,8 +1,8 @@
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer";
 
 let name = "John";
 let ordernumber = "feshzujrfnsioez";
-let orderdate = "29/7/2020"
+let orderdate = "29/7/2020";
 let emailMessage = `<!DOCTYPE html>
 <html lang="en">
 
@@ -64,23 +64,23 @@ let message = ``;
 
 //nodemailer
 let transporter = nodemailer.createTransport({
-  host: "smtp.googlemail.com",
-  port: 465,
-  secure: true, // true for 465, false for other ports
-  auth: {
-    user: "superlegitemail100percent@gmail.com", // generated ethereal user
-    pass: "Passw0rdyes", // generated ethereal password
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
+	host: "smtp.googlemail.com",
+	port: 465,
+	secure: true, // true for 465, false for other ports
+	auth: {
+		user: "superlegitemail100percent@gmail.com", // generated ethereal user
+		pass: "Passw0rdyes", // generated ethereal password
+	},
+	tls: {
+		rejectUnauthorized: false,
+	},
 });
 
 let info = transporter.sendMail({
-  from: '"Book Store Support"superlegitemail100percent@gmail.com', // sender address
-  to: "cilipadi270@gmail.com", // list of receivers
-  subject: "Contact Us", // Subject line
-  //text: "Hello world?", // plain text body
-  html: emailMessage, // html body
+	from: '"Book Store Support"superlegitemail100percent@gmail.com', // sender address
+	to: "cilipadi270@gmail.com", // list of receivers
+	subject: "Contact Us", // Subject line
+	//text: "Hello world?", // plain text body
+	html: emailMessage, // html body
 });
 console.log(info);

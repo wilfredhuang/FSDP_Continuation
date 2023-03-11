@@ -30,7 +30,10 @@ import nodemailer from "nodemailer";
 // const nodemailer = require("nodemailer");
 
 // Add DotEnv dependency, we need this to load up the environment variables in the .env file of the root of project and from windows environment  - 260223
-import dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+// import dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+// dotenv.config();
+
+import * as dotenv from "dotenv";
 dotenv.config();
 //require("dotenv").config();
 //console.log("=== PROCESS ENV ===");
@@ -190,7 +193,7 @@ localStrategy(passport);
 
 import helper from "./helpers/hbs.js";
 
-import { when } from "./helpers/for_loop.js";
+import when from "./helpers/for_loop.js";
 
 //const { when } = require("./helpers/for_loop");
 
@@ -199,7 +202,7 @@ const app = express();
 
 // Handlebars Middleware
 app.engine(
-	".hbs",
+	"handlebars",
 	exphbs({
 		defaultLayout: "main", // Specify default template views/layout/main.handlebar
 		helpers: {
@@ -217,7 +220,7 @@ app.engine(
 			check_subtotal: helper.check_subtotal,
 			check_for_discount_msg: helper.check_for_discount_msg,
 			formatDeliveryStatus: helper.formatDeliveryStatus,
-			when: when,
+			when: when.when,
 			loop_n_times: helper.loop_n_times,
 			check_page: helper.check_page,
 		},
@@ -308,7 +311,7 @@ app.use(function (req, res, next) {
 	// it would calculate like this first, 60-6 = 54, 54-20, the subtotal would be like 34 the previous time with discount 6 and
 	// coupon 20.00
 	res.locals.full_og_subtotal_price = (0).toFixed(2);
-	for (i in req.session.userCart) {
+	for (var i in req.session.userCart) {
 		res.locals.full_og_subtotal_price = (
 			parseFloat(res.locals.full_og_subtotal_price) +
 			parseFloat(req.session.userCart[i].SubtotalPrice)
