@@ -4,7 +4,7 @@ import alertMessage from "../helpers/messenger.js";
 import Coupon from "../models/Coupon.js";
 import moment from "moment";
 import userAuth from "../helpers/auth.js";
-import productAdmin from "../models/ProductAdmin.js";
+import productadmin from "../models/ProductAdmin.js";
 
 // const express = require("express");
 // const router = express.Router();
@@ -195,4 +195,4 @@ router.get("/register", (req, res) => {
 	});
 });
 
-export default router;
+export { router };

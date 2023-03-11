@@ -1,8 +1,12 @@
 import express from "express";
 import path from "path";
+import { fileURLToPath } from "url";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
+
+import pkg from "express-handlebars";
+const { engine } = pkg;
 import exphbs from "express-handlebars";
 import methodOverride from "method-override";
 import Handlebars from "handlebars";
@@ -24,6 +28,13 @@ import { allowInsecurePrototypeAccess } from "@handlebars/allow-prototype-access
 //NodeMailer
 import nodemailer from "nodemailer";
 // const nodemailer = require("nodemailer");
+
+// Add DotEnv dependency, we need this to load up the environment variables in the .env file of the root of project and from windows environment  - 260223
+import dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+dotenv.config();
+//require("dotenv").config();
+//console.log("=== PROCESS ENV ===");
+//console.log(process.env); // remove this after you've confirmed it is working
 
 //EasyPost API
 import EasyPost from "@easypost/api";
@@ -97,13 +108,6 @@ import passport from "passport";
 
 // const FacebookStrategy = require('passport-facebook').Strategy;
 
-// Add DotEnv dependency, we need this to load up the environment variables in the .env file of the root of project and from windows environment  - 260223
-import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
-dotenv.config();
-//require("dotenv").config();
-//console.log("=== PROCESS ENV ===");
-//console.log(process.env); // remove this after you've confirmed it is working
-
 // Load routes
 import { router as mainRoute } from "./routes/main.js";
 import { router as userRoute } from "./routes/user.js";
@@ -133,16 +137,16 @@ import FlashMessenger from "flash-messenger";
 // const FlashMessenger = require("flash-messenger");
 
 // Bring in database connection
-import vidjotDB from "./config/DBConnection.js";
+import setUpDB from "./config/DBConnection.js";
 //const vidjotDB = require("./config/DBConnection");
 
 // Connects to MySQL database
-vidjotDB.setUpDB(false); // To set up database with new tables set (true)
+setUpDB(false); // To set up database with new tables set (true)
 
 // Passport Config - P4A2
-import authenticate from "./config/passport.js";
+import localStrategy from "./config/passport.js";
 //const authenticate = require("./config/passport");
-authenticate.localStrategy(passport);
+localStrategy(passport);
 
 // global.userCart = {};
 // Bring in Handlebars Helpers here
@@ -165,24 +169,26 @@ authenticate.localStrategy(passport);
 // 	check_page,
 // } = require("./helpers/hbs");
 
-import {
-	convertUpper,
-	adminCheck,
-	emptyCart,
-	cartQty,
-	formatDate,
-	capitaliseFirstLetter,
-	isSg,
-	checkPromo,
-	convertDiscount,
-	displayCouponType,
-	get_old_subtotal,
-	check_subtotal,
-	check_for_discount_msg,
-	formatDeliveryStatus,
-	loop_n_times,
-	check_page,
-} from "./helpers/hbs.js";
+// import {
+// 	convertUpper,
+// 	adminCheck,
+// 	emptyCart,
+// 	cartQty,
+// 	formatDate,
+// 	capitaliseFirstLetter,
+// 	isSg,
+// 	checkPromo,
+// 	convertDiscount,
+// 	displayCouponType,
+// 	get_old_subtotal,
+// 	check_subtotal,
+// 	check_for_discount_msg,
+// 	formatDeliveryStatus,
+// 	loop_n_times,
+// 	check_page,
+// } from "./helpers/hbs.js";
+
+import helper from "./helpers/hbs.js";
 
 import { when } from "./helpers/for_loop.js";
 
@@ -193,27 +199,27 @@ const app = express();
 
 // Handlebars Middleware
 app.engine(
-	"handlebars",
+	".hbs",
 	exphbs({
 		defaultLayout: "main", // Specify default template views/layout/main.handlebar
 		helpers: {
-			convertUpper: convertUpper,
-			adminCheck: adminCheck,
-			emptyCart: emptyCart,
-			cartQty: cartQty,
-			formatDate: formatDate,
-			capitaliseFirstLetter: capitaliseFirstLetter,
-			isSg: isSg,
-			checkPromo: checkPromo,
-			convertDiscount: convertDiscount,
-			displayCouponType: displayCouponType,
-			get_old_subtotal: get_old_subtotal,
-			check_subtotal: check_subtotal,
-			check_for_discount_msg: check_for_discount_msg,
-			formatDeliveryStatus: formatDeliveryStatus,
+			convertUpper: helper.convertUpper,
+			adminCheck: helper.adminCheck,
+			emptyCart: helper.emptyCart,
+			cartQty: helper.cartQty,
+			formatDate: helper.formatDate,
+			capitaliseFirstLetter: helper.capitaliseFirstLetter,
+			isSg: helper.isSg,
+			checkPromo: helper.checkPromo,
+			convertDiscount: helper.convertDiscount,
+			displayCouponType: helper.displayCouponType,
+			get_old_subtotal: helper.get_old_subtotal,
+			check_subtotal: helper.check_subtotal,
+			check_for_discount_msg: helper.check_for_discount_msg,
+			formatDeliveryStatus: helper.formatDeliveryStatus,
 			when: when,
-			loop_n_times: loop_n_times,
-			check_page: check_page,
+			loop_n_times: helper.loop_n_times,
+			check_page: helper.check_page,
 		},
 		handlebars: allowInsecurePrototypeAccess(Handlebars),
 	})
@@ -225,6 +231,13 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 // Creates static folder for publicly accessible HTML, CSS and Javascript files
+
+// https://bobbyhadz.com/blog/javascript-dirname-is-not-defined-in-es-module-scope#fix-__dirname-is-not-defined-in-es-module-scope-in-js
+// The "__dirname is not defined in ES module scope" error occurs when we try to use the __dirname global variable in an ES module file.
+//The __dirname or __filename global variables are not available in ECMAScript module files.
+const __filename = fileURLToPath(import.meta.url);
+console.log(__filename);
+const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, "public")));
 
 // Method override middleware to use other HTTP methods such as PUT and DELETE

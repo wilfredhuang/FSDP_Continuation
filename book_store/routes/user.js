@@ -521,4 +521,4 @@ router.post("/userPage/changeaddress", ensureAuthenticated, (req, res) => {
 	});
 });
 
-export default router;
+export { router };

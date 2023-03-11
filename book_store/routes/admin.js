@@ -50,7 +50,7 @@ const adminBro = new AdminBro({
 	},
 });
 
-let router = express.Router();
+var router = express.Router();
 router.use(ensureAuthenticated, (req, res, next) => {
 	if (req.user.isadmin == true) {
 		next();
@@ -61,4 +61,4 @@ router.use(ensureAuthenticated, (req, res, next) => {
 router = AdminBroExpress.buildRouter(adminBro, router);
 
 app.use(adminBro.options.rootPath, router);
-export default router;
+export { router };

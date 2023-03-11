@@ -1,12 +1,27 @@
-const LocalStrategy = require("passport-local").Strategy;
-const bcrypt = require("bcryptjs");
-const passport = require("passport"),
-	FacebookStrategy = require("passport-facebook").Strategy;
-const { v1: uuidv1 } = require("uuid");
+import passportlocal from "passport-local";
+const LocalStrategy = passportlocal.Strategy;
+
+//const LocalStrategy = require("passport-local").Strategy;
+
+import bcrypt from "bcryptjs";
+import passport from "passport";
+
+//const bcrypt = require("bcryptjs");
+//const passport = require("passport"),
+
+import passportfacebook from "passport-facebook";
+
+const FacebookStrategy = passportfacebook.Strategy;
+import pkg from "uuid";
+const { v1: uuidv1 } = pkg;
+
+//FacebookStrategy = require("passport-facebook").Strategy;
+//const { v1: uuidv1 } = require("uuid");
 
 // Load user model
-const User = require("../models/User");
-const facebookUser = require("../models/User");
+import User from "../models/User.js";
+//const User = require("../models/User");
+//const facebookUser = require("../models/User");
 
 function localStrategy(passport) {
 	passport.use(

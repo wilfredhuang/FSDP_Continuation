@@ -36,7 +36,7 @@ import Discount from "../models/Discount.js";
 //EasyPost API
 import EasyPost from "@easypost/api";
 //const EasyPost = require("@easypost/api");
-const apiKey = process.env.EASY_POST_APIKEY;
+const apiKey = "EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg";
 const api = new EasyPost(apiKey);
 
 // Stripe Payment - secret key
@@ -2559,4 +2559,4 @@ router.get("/event", (req, res) => {
 	res.render("checkout/event");
 });
 
-export default router;
+export { router };

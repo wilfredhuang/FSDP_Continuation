@@ -438,4 +438,5 @@ router.post("/checkout", (req, res) => {
 	// })
 });
 
-(module.exports = router), userCart;
+//(module.exports = router), userCart;
+export { router, userCart };

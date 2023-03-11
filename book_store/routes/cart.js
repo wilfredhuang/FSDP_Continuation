@@ -22,6 +22,10 @@ import ensureAdminAuthenticated from "../helpers/adminauth.js";
 import request from "request";
 //const request = require("request");
 
+// Add DotEnv dependency, we need this to load up the environment variables in the .env file of the root of project and from windows environment  - 260223
+import dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+dotenv.config();
+
 //EasyPost API
 //const EasyPost = require("@easypost/api");
 import EasyPost from "@easypost/api";
@@ -31,7 +35,10 @@ const api = new EasyPost(apiKey);
 //Twilio API
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_ACCOUNT_AUTHTOKEN;
-const client = require("twilio")(accountSid, authToken);
+
+import Client from "twilio";
+const client = new Client(accountSid, authToken);
+//const client = require("twilio")(accountSid, authToken);
 
 //Google Recaptcha Secret Key
 const secretKey = process.env.GOOGLE_RECAPTCHA_SECRET_KEY;
@@ -604,4 +611,4 @@ router.post("/checkingDelivery", (req, res) => {
 	});
 });
 
-export default router;
+export { router };

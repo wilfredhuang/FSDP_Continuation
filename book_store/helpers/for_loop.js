@@ -1,4 +1,4 @@
-export default {
+export var when = {
 	when: function (operand_1, operator, operand_2, options) {
 		var operators = {
 				eq: function (l, r) {
