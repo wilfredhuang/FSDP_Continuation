@@ -1,33 +1,32 @@
-const Sequelize = require('sequelize');
-const db = require('../config/DBConfig');
-const Discount = db.define('discount',
-    {
-        discount_rate: {
-            type: Sequelize.DECIMAL(10,2)
-        },
+import Sequelize from "sequelize";
+import db from "../config/DBConfig.js";
 
-        min_qty: {
-            type: Sequelize.INTEGER
-        },
+// const Sequelize = require('sequelize');
+// const db = require('../config/DBConfig');
+const Discount = db.define("discount", {
+	discount_rate: {
+		type: Sequelize.DECIMAL(10, 2),
+	},
 
-        expiry: {
-            type:Sequelize.DATE
-        },
+	min_qty: {
+		type: Sequelize.INTEGER,
+	},
 
-        stackable: {
-            type:Sequelize.BOOLEAN
-        },
+	expiry: {
+		type: Sequelize.DATE,
+	},
 
-        message: {
-            type:Sequelize.STRING
-        },
+	stackable: {
+		type: Sequelize.BOOLEAN,
+	},
 
-        target_id: {
-            type:Sequelize.INTEGER
-        }
+	message: {
+		type: Sequelize.STRING,
+	},
 
-        
-    });
+	target_id: {
+		type: Sequelize.INTEGER,
+	},
+});
 
-
-module.exports = Discount;
+export default Discount;
