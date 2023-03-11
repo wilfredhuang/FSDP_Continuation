@@ -1,45 +1,79 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const moment = require("moment");
-const alertMessage = require("../helpers/messenger");
+import moment from "moment";
+import alertMessage from "../helpers/messenger.js";
+
+// const express = require("express");
+// const router = express.Router();
+// const moment = require("moment");
+// const alertMessage = require("../helpers/messenger");
 
 //Models
-const product = require("../models/Product");
-const productadmin = require("../models/ProductAdmin");
-const order = require("../models/Order");
-const order_item = require("../models/OrderItem");
-const User = require("../models/User");
-const Pending_Order = require("../models/Pending_Orders");
-const Pending_OrderItem = require("../models/Pending_OrderItem");
+import product from "../models/Product.js";
+import productadmin from "../models/ProductAdmin.js";
+import order from "../models/Order.js";
+import order_item from "../models/OrderItem.js";
+import User from "../models/User.js";
+import Pending_Order from "../models/Pending_Orders.js";
+import Pending_OrderItem from "../models/Pending_OrderItem.js";
 
-const ProductAdmin = require("../models/ProductAdmin");
-const Coupon = require("../models/coupon");
-const Discount = require("../models/Discount");
+import ProductAdmin from "../models/ProductAdmin.js";
+import Coupon from "../models/Coupon.js";
+import Discount from "../models/Discount.js";
+
+// const product = require("../models/Product");
+// const productadmin = require("../models/ProductAdmin");
+// const order = require("../models/Order");
+// const order_item = require("../models/OrderItem");
+// const User = require("../models/User");
+// const Pending_Order = require("../models/Pending_Orders");
+// const Pending_OrderItem = require("../models/Pending_OrderItem");
+
+// const ProductAdmin = require("../models/ProductAdmin");
+// const Coupon = require("../models/coupon");
+// const Discount = require("../models/Discount");
 
 //EasyPost API
-const EasyPost = require("@easypost/api");
+import EasyPost from "@easypost/api";
+//const EasyPost = require("@easypost/api");
 const apiKey = process.env.EASY_POST_APIKEY;
 const api = new EasyPost(apiKey);
 
 // Stripe Payment - secret key
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
+
+import Stripe from "stripe";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 	apiVersion: "2020-03-02",
 });
+// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
+// 	apiVersion: "2020-03-02",
+// });
 
 // PayNow
-const paynow = require("paynow-generator").paynowGenerator;
-const QRCode = require("qrcode");
-const { CheckboxRadioContainer } = require("admin-bro");
+
+import paynow from "paynow-generator";
+import QRCode from "qrcode";
+
+//const paynow = require("paynow-generator");
+//const QRCode = require("qrcode");
+//const { CheckboxRadioContainer } = require("admin-bro");
 
 // twilo API - Send SMS
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_ACCOUNT_AUTHTOKEN;
-const client = require("twilio")(accountSid, authToken);
+
+import Client from "twilio";
+const client = new Client(accountSid, authToken);
+// const client = require("twilio")(accountSid, authToken);
 
 // Authentications
-const ensureAuthenticated = require("../helpers/auth");
-const ensureAdminAuthenticated = require("../helpers/adminauth");
-const checkCart = require("../helpers/cart");
+import ensureAuthenticated from "../helpers/auth.js";
+import ensureAdminAuthenticated from "../helpers/adminauth.js";
+import checkCart from "../helpers/cart.js";
+
+// const ensureAuthenticated = require("../helpers/auth");
+// const ensureAdminAuthenticated = require("../helpers/adminauth");
+// const checkCart = require("../helpers/cart");
 
 // variables below for coupon feature, dont change - wilfred
 // switched req.session.userCart to global variable @app.js
@@ -1679,7 +1713,7 @@ router.post("/stripepayment", async (req, res) => {
 router.get("/paynow", checkCart, (req, res) => {
 	title = "PayNow Payment";
 	// let payNowString = paynow('proxyType','proxyValue','edit',price,'merchantName','additionalComments')
-	let payNowString = paynow(
+	let payNowString = paynow.paynowGenerator(
 		"mobile",
 		"87558054",
 		"no",
@@ -2525,4 +2559,4 @@ router.get("/event", (req, res) => {
 	res.render("checkout/event");
 });
 
-module.exports = router;
+export default router;

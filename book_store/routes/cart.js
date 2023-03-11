@@ -1,20 +1,30 @@
-const express = require("express");
+// const express = require("express");
+// const router = express.Router();
+// const alertMessage = require("../helpers/messenger");
+
+import express from "express";
 const router = express.Router();
-const alertMessage = require("../helpers/messenger");
+import alertMessage from "../helpers/messenger.js";
 
 //Models
-const Order = require("../models/Order");
-const orderItem = require("../models/OrderItem");
+// const Order = require("../models/Order");
+// const orderItem = require("../models/OrderItem");
+import Order from "../models/Order.js";
+import orderItem from "../models/OrderItem.js";
 
 //Authentication
-const ensureAuthenticated = require("../helpers/auth");
-const ensureAdminAuthenticated = require("../helpers/adminauth");
+// const ensureAuthenticated = require("../helpers/auth");
+// const ensureAdminAuthenticated = require("../helpers/adminauth");
+import ensureAuthenticated from "../helpers/auth.js";
+import ensureAdminAuthenticated from "../helpers/adminauth.js";
 
 //Request Function
-const request = require("request");
+import request from "request";
+//const request = require("request");
 
 //EasyPost API
-const EasyPost = require("@easypost/api");
+//const EasyPost = require("@easypost/api");
+import EasyPost from "@easypost/api";
 const apiKey = process.env.EASY_POST_APIKEY;
 const api = new EasyPost(apiKey);
 
@@ -27,10 +37,12 @@ const client = require("twilio")(accountSid, authToken);
 const secretKey = process.env.GOOGLE_RECAPTCHA_SECRET_KEY;
 
 //QR Code
-var QRCode = require("qrcode");
+import QRCode from "qrcode";
+//var QRCode = require("qrcode");
 
 //NodeMailer
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer";
+//const nodemailer = require("nodemailer");
 
 //view More Details of Order
 router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
@@ -592,4 +604,4 @@ router.post("/checkingDelivery", (req, res) => {
 	});
 });
 
-module.exports = router;
+export default router;

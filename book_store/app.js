@@ -1,31 +1,50 @@
-const express = require("express");
-const path = require("path");
-const session = require("express-session");
-const cookieParser = require("cookie-parser");
-const bodyParser = require("body-parser");
-const exphbs = require("express-handlebars");
-const methodOverride = require("method-override");
-const Handlebars = require("handlebars");
+import express from "express";
+import path from "path";
+import session from "express-session";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+import exphbs from "express-handlebars";
+import methodOverride from "method-override";
+import Handlebars from "handlebars";
+import { allowInsecurePrototypeAccess } from "@handlebars/allow-prototype-access";
 
-const {
-	allowInsecurePrototypeAccess,
-} = require("@handlebars/allow-prototype-access");
+// const express = require("express");
+// const path = require("path");
+// const session = require("express-session");
+// const cookieParser = require("cookie-parser");
+// const bodyParser = require("body-parser");
+// const exphbs = require("express-handlebars");
+// const methodOverride = require("method-override");
+// const Handlebars = require("handlebars");
+
+// const {
+// 	allowInsecurePrototypeAccess,
+// } = require("@handlebars/allow-prototype-access");
 
 //NodeMailer
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer";
+// const nodemailer = require("nodemailer");
 
 //EasyPost API
-const EasyPost = require("@easypost/api");
-const apiKey = "EZTK29b55ab4ee7a437890e19551520f5dd0uaJjPiW9XsVqXYFNVI0kog";
+import EasyPost from "@easypost/api";
+const apiKey = process.env.EASY_POST_APIKEY;
 const api = new EasyPost(apiKey);
+
+// const EasyPost = require("@easypost/api");
+// const apiKey = "EZTK29b55ab4ee7a437890e19551520f5dd0uaJjPiW9XsVqXYFNVI0kog";
+// const api = new EasyPost(apiKey);
 
 //Twilio API
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_ACCOUNT_AUTHTOKEN;
-const client = require("twilio")(accountSid, authToken);
+import Client from "twilio";
+const client = new Client(accountSid, authToken);
+
+//const client = require("twilio")(accountSid, authToken);
 
 //Models
-const order = require("../book_store/models/Order");
+import order from "../book_store/models/Order.js";
+//const order = require("../book_store/models/Order");
 
 //nodemailer
 let transporter = nodemailer.createTransport({
@@ -42,65 +61,111 @@ let transporter = nodemailer.createTransport({
 });
 
 //https
-const openssl = require("openssl-nodejs");
-const https = require("https");
-const fs = require("fs");
+import openssl from "openssl-nodejs";
+import https from "https";
+import fs from "fs";
+
+// const openssl = require("openssl-nodejs");
+// const https = require("https");
+// const fs = require("fs");
 const options = {
 	key: fs.readFileSync("key.pem"),
 	cert: fs.readFileSync("cert.crt"),
 };
 
 //admin
-const AdminBroExpress = require("admin-bro-expressjs");
+import AdminBroExpress from "admin-bro-expressjs";
+//const AdminBroExpress = require("admin-bro-expressjs");
 
 // Stripe Payment System
 // Set your secret key. Remember to switch to your live secret key in production!
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
+import Stripe from "stripe";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 	apiVersion: "2020-03-02",
 });
+// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
+// 	apiVersion: "2020-03-02",
+// });
 
 // Bcrypt - Encrypt password - P4A1
-const bcrypt = require("bcryptjs"); // added here for debugging, but it's import only used in user.js
+import bcrypt from "bcryptjs";
+//const bcrypt = require("bcryptjs"); // added here for debugging, but it's import only used in user.js
 
 // Passport - Setting Authentication - P4A2
-const passport = require("passport");
+import passport from "passport";
+//const passport = require("passport");
 
 // const FacebookStrategy = require('passport-facebook').Strategy;
 
 // Add DotEnv dependency, we need this to load up the environment variables in the .env file of the root of project and from windows environment  - 260223
-require("dotenv").config();
+import * as dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
+dotenv.config();
+//require("dotenv").config();
 //console.log("=== PROCESS ENV ===");
 //console.log(process.env); // remove this after you've confirmed it is working
 
 // Load routes
-const mainRoute = require("./routes/main");
-const userRoute = require("./routes/user");
-const productRoute = require("./routes/product");
-const deliveryRoute = require("./routes/cart");
-const checkoutRoute = require("./routes/checkout");
-const adminRoute = require("./routes/admin");
+import { router as mainRoute } from "./routes/main.js";
+import { router as userRoute } from "./routes/user.js";
+import { router as productRoute } from "./routes/product.js";
+import { router as deliveryRoute } from "./routes/cart.js";
+import { router as checkoutRoute } from "./routes/checkout.js";
+import { router as adminRoute } from "./routes/admin.js";
+// const mainRoute = require("./routes/main");
+// const userRoute = require("./routes/user");
+// const productRoute = require("./routes/product");
+// const deliveryRoute = require("./routes/cart");
+// const checkoutRoute = require("./routes/checkout");
+// const adminRoute = require("./routes/admin");
 
 // Library to use MySQL to store session objects
-const MySQLStore = require("express-mysql-session");
-const db = require("./config/db"); // db.js config file
+import MySQLStore from "express-mysql-session";
+import db from "./config/db.js";
+
+// const MySQLStore = require("express-mysql-session");
+// const db = require("./config/db"); // db.js config file
 
 // Messaging libraries
-const flash = require("connect-flash");
-const FlashMessenger = require("flash-messenger");
+import flash from "connect-flash";
+import FlashMessenger from "flash-messenger";
+
+// const flash = require("connect-flash");
+// const FlashMessenger = require("flash-messenger");
 
 // Bring in database connection
-const vidjotDB = require("./config/DBConnection");
+import vidjotDB from "./config/DBConnection.js";
+//const vidjotDB = require("./config/DBConnection");
 
 // Connects to MySQL database
 vidjotDB.setUpDB(false); // To set up database with new tables set (true)
 
 // Passport Config - P4A2
-const authenticate = require("./config/passport");
+import authenticate from "./config/passport.js";
+//const authenticate = require("./config/passport");
 authenticate.localStrategy(passport);
 
 // global.userCart = {};
 // Bring in Handlebars Helpers here
-const {
+// const {
+// 	convertUpper,
+// 	adminCheck,
+// 	emptyCart,
+// 	cartQty,
+// 	formatDate,
+// 	capitaliseFirstLetter,
+// 	isSg,
+// 	checkPromo,
+// 	convertDiscount,
+// 	displayCouponType,
+// 	get_old_subtotal,
+// 	check_subtotal,
+// 	check_for_discount_msg,
+// 	formatDeliveryStatus,
+// 	loop_n_times,
+// 	check_page,
+// } = require("./helpers/hbs");
+
+import {
 	convertUpper,
 	adminCheck,
 	emptyCart,
@@ -117,8 +182,11 @@ const {
 	formatDeliveryStatus,
 	loop_n_times,
 	check_page,
-} = require("./helpers/hbs");
-const { when } = require("./helpers/for_loop");
+} from "./helpers/hbs.js";
+
+import { when } from "./helpers/for_loop.js";
+
+//const { when } = require("./helpers/for_loop");
 
 // creates an express server
 const app = express();

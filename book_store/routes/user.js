@@ -1,26 +1,48 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
 // User register URL using HTTP post => /user/register
-const alertMessage = require("../helpers/messenger");
-const bcrypt = require("bcryptjs");
-const passport = require("passport");
-const { v1: uuidv1 } = require("uuid");
-const request = require("request");
+import alertMessage from "../helpers/messenger.js";
+import bcrypt from "bcryptjs";
+import passport from "passport";
+
+import pkg from "uuid";
+const { v1: uuidv1 } = pkg;
+//import { v1 as uuidv1 } from "uuid";
+import request from "request";
+
+// const express = require("express");
+// const router = express.Router();
+// User register URL using HTTP post => /user/register
+// const alertMessage = require("../helpers/messenger");
+// const bcrypt = require("bcryptjs");
+// const passport = require("passport");
+// const { v1: uuidv1 } = require("uuid");
+// const request = require("request");
 const secretKey = process.env.GOOGLE_RECAPTCHA_SECRET_KEY;
 
 //Authentication
-const ensureAuthenticated = require("../helpers/auth");
-const ensureAdminAuthenticated = require("../helpers/adminauth");
+import ensureAuthenticated from "../helpers/auth.js";
+import ensureAdminAuthenticated from "../helpers/adminauth.js";
+// const ensureAuthenticated = require("../helpers/auth");
+// const ensureAdminAuthenticated = require("../helpers/adminauth");
 
 //Models
-const User = require("../models/User");
-const order = require("../models/Order");
-const orderItem = require("../models/OrderItem");
+import User from "../models/User.js";
+import order from "../models/Order.js";
+import orderItem from "../models/OrderItem.js";
+
+// const User = require("../models/User");
+// const order = require("../models/Order");
+// const orderItem = require("../models/OrderItem");
 
 //NodeMailer
-const nodemailer = require("nodemailer");
-const jwt = require("jsonwebtoken");
-const { reservationsUrl } = require("twilio/lib/jwt/taskrouter/util");
+import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
+import { reservationsUrl } from "twilio/lib/jwt/taskrouter/util.js";
+
+// const nodemailer = require("nodemailer");
+// const jwt = require("jsonwebtoken");
+// const { reservationsUrl } = require("twilio/lib/jwt/taskrouter/util");
 const SECRET = process.env.NODEMAILER_SECRET_KEY;
 const SECRET_2 = process.env.NODEMAILER_SECRET_KEY2;
 
@@ -499,4 +521,4 @@ router.post("/userPage/changeaddress", ensureAuthenticated, (req, res) => {
 	});
 });
 
-module.exports = router;
+export default router;

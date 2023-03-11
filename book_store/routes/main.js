@@ -1,10 +1,18 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const alertMessage = require("../helpers/messenger");
-const Coupon = require("../models/coupon");
-const moment = require("moment");
-const userAuth = require("../helpers/auth");
-const productadmin = require("../models/ProductAdmin");
+import alertMessage from "../helpers/messenger.js";
+import Coupon from "../models/Coupon.js";
+import moment from "moment";
+import userAuth from "../helpers/auth.js";
+import productAdmin from "../models/ProductAdmin.js";
+
+// const express = require("express");
+// const router = express.Router();
+// const alertMessage = require("../helpers/messenger");
+// const Coupon = require("../models/coupon");
+// const moment = require("moment");
+// const userAuth = require("../helpers/auth");
+// const productadmin = require("../models/ProductAdmin");
 
 router.get("/", async (req, res, next) => {
 	const title = "Bookstore Home Page";
@@ -187,4 +195,4 @@ router.get("/register", (req, res) => {
 	});
 });
 
-module.exports = router;
+export default router;

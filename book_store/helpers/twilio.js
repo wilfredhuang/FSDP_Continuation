@@ -13,4 +13,4 @@ const sendSms = (phone, message) => {
 		.then((message) => console.log(message.sid));
 };
 
-module.exports = sendSms;
+export default sendSms;

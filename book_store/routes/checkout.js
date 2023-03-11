@@ -1,12 +1,19 @@
 // Dont touch this file for now.. - W
 
-const express = require("express");
-const Product = require("../models/product"); // Bring in Sequelize object 'Product'
+// const express = require("express");
+// const Product = require("../models/product");
+
+import express from "express";
+import Product from "../models/Product.js";
 // const CartItems = require('../models/cart_items');
 const router = express.Router();
-const alertMessage = require("../helpers/messenger");
-const moment = require("moment");
-const Coupon = require("../models/coupon");
+// const alertMessage = require("../helpers/messenger");
+// const moment = require("moment");
+// const Coupon = require("../models/coupon");
+import alertMessage from "../helpers/messenger.js";
+import moment from "moment";
+import Coupon from "../models/Coupon.js";
+
 // const Order = require('../models/order');
 // const OrderItem = require('../models/order');
 // const userCart = {1:{"ID":1, "Name":"Dynamic Book Name", "Image":"r1", "Quantity":5, "SubtotalPrice":10.00},
@@ -28,9 +35,14 @@ let sub_discount_limit = 0;
 let sub_discounted_price = 0;
 let full_total_price = 0;
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
+import Stripe from "stripe";
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 	apiVersion: "2020-03-02",
 });
+
+// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
+// 	apiVersion: "2020-03-02",
+// });
 
 // router.get('/123', (req, res) => {
 //     res.render('checkout/checkout', {

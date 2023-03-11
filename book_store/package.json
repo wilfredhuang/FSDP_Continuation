@@ -1,6 +1,7 @@
 {
   "name": "BookStore",
   "version": "1.0.0",
+  "type": "module",
   "description": "Video Jotter",
   "main": "app.js",
   "scripts": {

@@ -1,16 +1,16 @@
 const flashMessage = (res, messageType, message, icon, dismissable) => {
 	let alert;
-	switch(messageType) {
-		case 'success':
+	switch (messageType) {
+		case "success":
 			alert = res.flashMessenger.success(message);
 			break;
-		case 'error':
+		case "error":
 			alert = res.flashMessenger.error(message);
 			break;
-		case 'info':
+		case "info":
 			alert = res.flashMessenger.info(message);
 			break;
-		case 'danger':
+		case "danger":
 			alert = res.flashMessenger.danger(message);
 			break;
 		default:
@@ -20,14 +20,14 @@ const flashMessage = (res, messageType, message, icon, dismissable) => {
 	alert.canBeDismissed = dismissable;
 };
 
-module.exports = flashMessage; 		// returns a function
+export default flashMessage; // returns a function
 /*
-* const alertMessage = require('..../messenger')
-* alertMessage(res, 'info', 'message', icon, true
-* */
+ * const alertMessage = require('..../messenger')
+ * alertMessage(res, 'info', 'message', icon, true
+ * */
 
 // module.exports = { flashMessage }; // returns and object instead of a function
 /*
-* const alertMessage = require('.../messenger')
-* alertMessage.flashMessage(...)	 // Calls object using dot notation
-* */
+ * const alertMessage = require('.../messenger')
+ * alertMessage.flashMessage(...)	 // Calls object using dot notation
+ * */
