@@ -12,22 +12,8 @@ import methodOverride from "method-override";
 import Handlebars from "handlebars";
 import { allowInsecurePrototypeAccess } from "@handlebars/allow-prototype-access";
 
-// const express = require("express");
-// const path = require("path");
-// const session = require("express-session");
-// const cookieParser = require("cookie-parser");
-// const bodyParser = require("body-parser");
-// const exphbs = require("express-handlebars");
-// const methodOverride = require("method-override");
-// const Handlebars = require("handlebars");
-
-// const {
-// 	allowInsecurePrototypeAccess,
-// } = require("@handlebars/allow-prototype-access");
-
 //NodeMailer
 import nodemailer from "nodemailer";
-// const nodemailer = require("nodemailer");
 
 // Add DotEnv dependency, we need this to load up the environment variables in the .env file of the root of project and from windows environment  - 260223
 // import dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
@@ -44,17 +30,11 @@ import EasyPost from "@easypost/api";
 const apiKey = process.env.EASY_POST_APIKEY;
 const api = new EasyPost(apiKey);
 
-// const EasyPost = require("@easypost/api");
-// const apiKey = "EZTK29b55ab4ee7a437890e19551520f5dd0uaJjPiW9XsVqXYFNVI0kog";
-// const api = new EasyPost(apiKey);
-
 //Twilio API
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_ACCOUNT_AUTHTOKEN;
 import Client from "twilio";
 const client = new Client(accountSid, authToken);
-
-//const client = require("twilio")(accountSid, authToken);
 
 //Models
 import order from "../book_store/models/Order.js";
@@ -107,9 +87,6 @@ import bcrypt from "bcryptjs";
 
 // Passport - Setting Authentication - P4A2
 import passport from "passport";
-//const passport = require("passport");
-
-// const FacebookStrategy = require('passport-facebook').Strategy;
 
 // Load routes
 import { router as mainRoute } from "./routes/main.js";
@@ -118,37 +95,26 @@ import { router as productRoute } from "./routes/product.js";
 import { router as deliveryRoute } from "./routes/cart.js";
 import { router as checkoutRoute } from "./routes/checkout.js";
 import { router as adminRoute } from "./routes/admin.js";
+
+// OLD, note the exclusion of .js extension
 // const mainRoute = require("./routes/main");
-// const userRoute = require("./routes/user");
-// const productRoute = require("./routes/product");
-// const deliveryRoute = require("./routes/cart");
-// const checkoutRoute = require("./routes/checkout");
-// const adminRoute = require("./routes/admin");
 
 // Library to use MySQL to store session objects
 import MySQLStore from "express-mysql-session";
 import db from "./config/db.js";
 
-// const MySQLStore = require("express-mysql-session");
-// const db = require("./config/db"); // db.js config file
-
 // Messaging libraries
 import flash from "connect-flash";
 import FlashMessenger from "flash-messenger";
 
-// const flash = require("connect-flash");
-// const FlashMessenger = require("flash-messenger");
-
 // Bring in database connection
 import setUpDB from "./config/DBConnection.js";
-//const vidjotDB = require("./config/DBConnection");
 
 // Connects to MySQL database
 setUpDB(false); // To set up database with new tables set (true)
 
 // Passport Config - P4A2
 import localStrategy from "./config/passport.js";
-//const authenticate = require("./config/passport");
 localStrategy(passport);
 
 // global.userCart = {};
@@ -194,8 +160,6 @@ localStrategy(passport);
 import helper from "./helpers/hbs.js";
 
 import when from "./helpers/for_loop.js";
-
-//const { when } = require("./helpers/for_loop");
 
 // creates an express server
 const app = express();
@@ -249,6 +213,7 @@ app.use(methodOverride("_method"));
 // Enables session to be stored using browser's Cookie
 app.use(cookieParser());
 
+app.use(console.log("Start Session Store"));
 // Express session middleware - uses MySQL to store session
 app.use(
 	session({
@@ -273,7 +238,7 @@ app.use(
 		},
 	})
 );
-
+app.use(console.log("End Session Store"));
 // Initilize Passport middleware - P4A2
 app.use(passport.initialize());
 app.use(passport.session());
@@ -504,4 +469,6 @@ app.listen(port, () => {
 });
 */
 //remember to use https://localhost:5000/
+
+// To actually serve requests, the listen method needs to be called on the server object.
 https.createServer(options, app).listen(port);

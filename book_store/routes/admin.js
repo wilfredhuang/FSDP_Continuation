@@ -1,24 +1,15 @@
-// const AdminBro = require("admin-bro");
-// const AdminBroExpress = require("admin-bro-expressjs");
-// const AdminBroSequelize = require("admin-bro-sequelizejs");
+import AdminJS from "adminjs";
+import AdminJSExpress from "@adminjs/express";
+import AdminJSSequelize from "@adminjs/sequelize";
 
-import AdminBro from "admin-bro";
-import AdminBroExpress from "admin-bro-expressjs";
-import AdminBroSequelize from "admin-bro-sequelizejs";
-
-AdminBro.registerAdapter(AdminBroSequelize);
-
-// const express = require("express");
-// const app = express();
-// const User = require("../models/User.js");
-// const ensureAuthenticated = require("../helpers/auth");
+AdminJS.registerAdapter(AdminJSSequelize);
 
 import express from "express";
 const app = express();
 import User from "../models/User.js";
 import ensureAuthenticated from "../helpers/auth.js";
 
-const adminBro = new AdminBro({
+const adminJS = new AdminJS({
 	rootPath: "/admin",
 	resources: [
 		{
@@ -58,7 +49,8 @@ router.use(ensureAuthenticated, (req, res, next) => {
 		res.redirect("https://localhost:5000/user/login");
 	}
 });
-router = AdminBroExpress.buildRouter(adminBro, router);
 
-app.use(adminBro.options.rootPath, router);
+router = AdminJSExpress.buildRouter(adminJS, router);
+
+app.use(adminJS.options.rootPath, router);
 export { router };

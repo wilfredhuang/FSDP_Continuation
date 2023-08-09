@@ -49,7 +49,8 @@
     "request": "^2.88.2",
     "sequelize": "^5.22.5",
     "stripe": "^8.195.0",
-    "twilio": "^3.72.0"
+    "twilio": "^3.72.0",
+    "validator": "^13.9.0"
   },
   "devDependencies": {
     "handlebars": "^4.7.7"

@@ -18,6 +18,7 @@ router.get("/", async (req, res, next) => {
 	const title = "Bookstore Home Page";
 	const navStatusHome = "active";
 
+	console.log(`Req Body: ${JSON.stringify(req.body)}`);
 	// check if logged in or not
 	if (req.user) {
 		console.log("LOGGED IN");

@@ -2522,7 +2522,7 @@ router.get("/getjson", (req, res) => {
 });
 
 router.get("/event", (req, res) => {
-	title = "Event Emitter Test";
+	var title = "Event Emitter Test";
 	// We import the EMT class from EMT.js, create a new object with it
 	// the object inherits the EventEmitter methods like 'on' and 'emit'
 	// 'on' is an alias for 'addEventListener'

@@ -1,70 +1,88 @@
 import express from "express";
 const router = express.Router();
-// User register URL using HTTP post => /user/register
-import alertMessage from "../helpers/messenger.js";
-import bcrypt from "bcryptjs";
-import passport from "passport";
 
-import pkg from "uuid";
+import alertMessage from "../helpers/messenger.js";
+import bcrypt from "bcryptjs"; // Provides Hashing
+import passport from "passport"; // Handle authentication for requests
+
+import pkg from "uuid"; // Create universally unique identifier
 const { v1: uuidv1 } = pkg;
-//import { v1 as uuidv1 } from "uuid";
 import request from "request";
 
-// const express = require("express");
-// const router = express.Router();
-// User register URL using HTTP post => /user/register
-// const alertMessage = require("../helpers/messenger");
-// const bcrypt = require("bcryptjs");
-// const passport = require("passport");
-// const { v1: uuidv1 } = require("uuid");
-// const request = require("request");
 const secretKey = process.env.GOOGLE_RECAPTCHA_SECRET_KEY;
 
-//Authentication
+//Authentication Middleware Function
 import ensureAuthenticated from "../helpers/auth.js";
 import ensureAdminAuthenticated from "../helpers/adminauth.js";
-// const ensureAuthenticated = require("../helpers/auth");
-// const ensureAdminAuthenticated = require("../helpers/adminauth");
 
 //Models
 import User from "../models/User.js";
 import order from "../models/Order.js";
 import orderItem from "../models/OrderItem.js";
 
-// const User = require("../models/User");
-// const order = require("../models/Order");
-// const orderItem = require("../models/OrderItem");
-
 //NodeMailer
-import nodemailer from "nodemailer";
-import jwt from "jsonwebtoken";
+import nodemailer from "nodemailer"; // Send emails service
+import jwt from "jsonwebtoken"; // Tokens used for Authorization / Information Exchange purposes, consists of 'Header', 'Payload' and 'Signature'
 import { reservationsUrl } from "twilio/lib/jwt/taskrouter/util.js";
 
-// const nodemailer = require("nodemailer");
-// const jwt = require("jsonwebtoken");
-// const { reservationsUrl } = require("twilio/lib/jwt/taskrouter/util");
+// Validator
+import validator from "validator";
+
 const SECRET = process.env.NODEMAILER_SECRET_KEY;
 const SECRET_2 = process.env.NODEMAILER_SECRET_KEY2;
 
-//Email Template
-//const Email = require('email-templates');
+//nodemailer
+let transporter = nodemailer.createTransport({
+	host: "smtp.zoho.com",
+	port: 465,
+	secure: true, // true for 465, false for other ports
+	auth: {
+		user: "bellavistabookstore@zohomail.com",
+		pass: "B00kstore123A#",
+	},
+	tls: {
+		// do not fail on invalid certs
+		rejectUnauthorized: false,
+	},
+});
 
-//Contact Us Form at Footer by Hasan
+// verify connection configuration
+transporter.verify(function (error, success) {
+	if (error) {
+		console.log(`NODEMAILER ${error}`);
+	} else {
+		console.log(`NODEMAILER Server is ready to take our messages`);
+	}
+});
+
+//Contact Us Form at Footer (working)
 //BTW this is a testing ground for email notifications
 router.post("/contactUs", (req, res) => {
 	let name = req.body.name;
 	let email = req.body.email;
-	let message = req.body.message;
-	let emailMessage = `<p>Thank You for contacting us! We will respond back to you shortly.</p>`;
-	console.log(name);
-	let info = transporter.sendMail({
-		from: '"Book Store Support"superlegitemail100percent@gmail.com', // sender address
-		to: email, // list of receivers
-		subject: "Contact Us", // Subject line
-		//text: "Hello world?", // plain text body
-		html: emailMessage, // html body
+	console.log(`Old Text: ${req.body.message}`);
+
+	// TODO Sanitize input of any html tags
+	let emailMessage = `<p>Thank You for contacting us! We will respond back to you shortly.  ${req.body.message} </p>`;
+	let subject = req.body.subject;
+
+	let message = {
+		from: "BellaVista Bookstore Admin <bellavistabookstore@zohomail.com>",
+		to: `${name} <${email}>`,
+		subject: `Re: BellaVista Bookstore ${subject}`,
+		html: `${emailMessage}`,
+	};
+
+	transporter.sendMail(message, (err, info) => {
+		if (err) {
+			console.log("Error occurred. " + err.message);
+			return process.exit(1);
+		}
+
+		console.log("Message sent: %s", info.messageId);
+		// Preview only available when sending through an Ethereal account
+		console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 	});
-	console.log(info);
 	alertMessage(
 		res,
 		"success",
@@ -73,18 +91,57 @@ router.post("/contactUs", (req, res) => {
 		true
 	);
 	res.redirect("/");
-	//.catch(err => console.log(err));
 });
 
-//nodemailer
-let transporter = nodemailer.createTransport({
-	host: "smtp.googlemail.com",
-	port: 465,
-	secure: true, // true for 465, false for other ports
-	auth: {
-		user: "superlegitemail100percent@gmail.com", // generated ethereal user
-		pass: "Passw0rdyes", // generated ethereal password
-	},
+router.get("/jwt", (req, res) => {
+	// Create the token
+
+	const token = jwt.sign({ name: "user1337" }, "secretkey1337", {
+		expiresIn: "1d",
+	});
+
+	// Create Cookies
+	res.cookie("cookie1", "cookie1value");
+	res.cookie("jwttoken", token, {
+		maxAge: 3600,
+		httpOnly: true,
+		secure: true,
+	});
+	console.log(`Token value is ${token}`);
+
+	res.render("user/jwt");
+});
+
+router.post("/jwt", (req, res) => {
+	var username = req.username;
+	var password = req.password;
+
+	//console.log(`Cookie Value is ${req.cookies.jwttoken}`);
+	if (req.cookies.cookie1) {
+		console.log(`Cookie Value is ${req.cookies.jwttoken}`);
+		console.log(`Cookie1 Value is ${req.cookies.cookie1}`);
+		console.log("Cookie Exist");
+		console.log(`Signed Cookies: ${JSON.stringify(req.signedCookies)}`);
+	} else {
+		console.log("Cookie dont exist");
+	}
+
+	const verify = jwt.verify(req.cookies.jwttoken, "secretkey1337");
+
+	console.log(`Verify: ${JSON.stringify(verify)}`);
+
+	if (username != "user" && password != "password") {
+		// Read all the cookies in the browser
+		console.log(`Data is ${JSON.stringify(req.cookies)}`);
+
+		console.log("wrong");
+	} else {
+		res.redirect("/user/successfuljwt");
+	}
+});
+
+router.get("/successfuljwt", (req, res) => {
+	res.render("user/successfuljwt");
 });
 
 router.get("/resetpassword", (req, res) => {
@@ -201,8 +258,76 @@ router.post("/forgetpassword", (req, res) => {
 	});
 });
 
+router.post("/forgetpassword", (req, res) => {
+	let captcha = req.body["g-recaptcha-response"]; //get user token value
+	console.log(captcha);
+	//checks if captcha response is valid
+	if (captcha === undefined || captcha === "" || captcha === null) {
+		return res.json({ success: false, msg: "Please select captcha" });
+	}
+	const verifyURL =
+		"https://www.google.com/recaptcha/api/siteverify?secret=" +
+		secretKey +
+		"&response=" +
+		captcha;
+	console.log(verifyURL); //this is a url that needs to be verified
+
+	request(verifyURL, (err, response, body) => {
+		body = JSON.parse(body);
+		console.log(body); //retrieves response from google and return its json info
+
+		if (body.success !== undefined && !body.success) {
+			alertMessage(
+				res,
+				"danger",
+				"Please re-enter the recaptcha",
+				"fas faexclamation-circle",
+				true
+			);
+			res.redirect("/user/forgetpassword");
+		} else {
+			let email = req.body.email;
+			console.log(email);
+			User.findOne({ where: { email: email } }).then((user) => {
+				if (!user) {
+					res.redirect("/user/login");
+				} else {
+					theid = user.id;
+					console.log(theid);
+					jwt.sign(
+						{
+							user: theid,
+						},
+						SECRET_2,
+						{
+							expiresIn: "1d",
+						},
+						(err, passwordToken) => {
+							const url = `https://localhost:5000/user/changepassword/${passwordToken}`;
+							console.log(url);
+							transporter.sendMail({
+								to: req.body.email,
+								subject: "Password Reset ",
+								html: `Please click this link to change you password: <a href="${url}">${url}</a>`,
+							});
+						}
+					);
+					alertMessage(
+						res,
+						"success",
+						"please check your email",
+						"fas fa-sign-in-alt",
+						true
+					);
+					res.redirect("/user/login");
+				}
+			});
+		}
+	});
+});
+
 router.get("/confirmation/:token", async (req, res) => {
-	const token = jwt.verify(req.params.token, SECRET);
+	const token = jwt.verify(req.params.token, "HARDCODEDSECRET123");
 	User.findOne({ where: { id: token.user } }).then((user) => {
 		user.update({ confirmed: true });
 		console.log("email verified");
@@ -326,7 +451,7 @@ router.get("/register", (req, res) => {
 	});
 });
 
-router.post("/register", (req, res) => {
+router.post("/register", async (req, res) => {
 	let errors = [];
 	let { email, name, password, password2 } = req.body;
 	if (password !== password2) {
@@ -344,63 +469,144 @@ router.post("/register", (req, res) => {
 			password2,
 		});
 	} else {
-		User.findOne({ where: { email: req.body.email } }).then((user) => {
-			if (user) {
-				res.render("user/register", {
-					errors: user.email + " already registered",
-					name,
-					email,
-					password,
-					password2,
-				});
-			} else {
-				bcrypt.genSalt(10, function (err, salt) {
-					if (err) return next(err);
-					bcrypt.hash(password, salt, function (err, hash) {
-						if (err) return next(err);
-						password = hash;
-						theid = uuidv1();
-						User.create({
-							id: theid,
-							name,
-							email,
-							password,
-							isadmin: false,
-							confirmed: false,
-						}).then((user) => {
-							alertMessage(
-								res,
-								"success",
-								user.name + " added.Please Verify you account",
-								"fas fa-sign-in-alt",
-								true
-							);
-							jwt.sign(
-								{
-									user: theid,
-								},
-								SECRET,
-								{
-									expiresIn: "1d",
-								},
-								(err, emailToken) => {
-									const url = `https://localhost:5000/user/confirmation/${emailToken}`;
-									console.log(url);
-									transporter.sendMail({
-										to: req.body.email,
-										subject: "Confirm Email",
-										html: `Please click this email to confirm your email: <a href="${url}">${url}</a>`,
-									});
-								}
-							);
-							res.redirect("/user/login");
-						});
-					});
-				});
-			}
+		const searchUserPromise = await User.findOne({
+			where: { email: req.body.email },
 		});
+		if (searchUserPromise) {
+			res.render("user/register", {
+				errors: user.email + " already registered",
+				name,
+				email,
+				password,
+				password2,
+			});
+		} else {
+			bcrypt.genSalt(10, (err, salt) => {
+				if (err) return next(err);
+				bcrypt.hash(password, salt, async function (err, hash) {
+					if (err) return next(err);
+					password = hash;
+					var theid = uuidv1();
+					var createUserPromise = await User.create({
+						id: theid,
+						name,
+						email,
+						password,
+						isadmin: false,
+						confirmed: false,
+					});
+
+					alertMessage(
+						res,
+						"success",
+						createUserPromise.name + " added.Please Verify you account",
+						"fas fa-sign-in-alt",
+						true
+					);
+					// replace SECRET with a hardcoded for testing
+					jwt.sign(
+						{
+							user: theid,
+						},
+						"HARDCODEDSECRET123",
+						{
+							expiresIn: "1d",
+						},
+						(err, emailToken) => {
+							const url = `https://localhost:5000/user/confirmation/${emailToken}`;
+							console.log(url);
+							transporter.sendMail({
+								from: "BellaVista Bookstore Admin <bellavistabookstore@zohomail.com>",
+								to: `${name} <${req.body.email}>`,
+								subject: "Confirm Email",
+								html: `Please click this email to confirm your email: <a href="${url}">${url}</a>`,
+							});
+						}
+					);
+					res.redirect("/user/login");
+				});
+			});
+		}
 	}
 });
+
+// Back up copy for register
+// router.post("/register", (req, res) => {
+// 	let errors = [];
+// 	let { email, name, password, password2 } = req.body;
+// 	if (password !== password2) {
+// 		errors.push({ text: "Passwords do not match" });
+// 	}
+// 	if (password.length < 4) {
+// 		errors.push({ text: "Password must be at least 4 characters" });
+// 	}
+// 	if (errors.length > 0) {
+// 		res.render("user/register", {
+// 			errors,
+// 			name,
+// 			email,
+// 			password,
+// 			password2,
+// 		});
+// 	} else {
+// 		User.findOne({ where: { email: req.body.email } }).then((user) => {
+// 			if (user) {
+// 				res.render("user/register", {
+// 					errors: user.email + " already registered",
+// 					name,
+// 					email,
+// 					password,
+// 					password2,
+// 				});
+// 			} else {
+// 				bcrypt.genSalt(10, function (err, salt) {
+// 					if (err) return next(err);
+// 					bcrypt.hash(password, salt, function (err, hash) {
+// 						if (err) return next(err);
+// 						password = hash;
+// 						var theid = uuidv1();
+// 						User.create({
+// 							id: theid,
+// 							name,
+// 							email,
+// 							password,
+// 							isadmin: false,
+// 							confirmed: false,
+// 						}).then((user) => {
+// 							alertMessage(
+// 								res,
+// 								"success",
+// 								user.name + " added.Please Verify you account",
+// 								"fas fa-sign-in-alt",
+// 								true
+// 							);
+// 							jwt.sign(
+// 								{
+// 									user: theid,
+// 								},
+// 								SECRET,
+// 								{
+// 									expiresIn: "1d",
+// 								},
+// 								(err, emailToken) => {
+// 									const url = `https://localhost:5000/user/confirmation/${emailToken}`;
+// 									console.log(url);
+// 									transporter.sendMail({
+// 										from: "BellaVista Bookstore Admin <bellavistabookstore@zohomail.com>",
+// 										to: `${name} <${req.body.email}>`,
+// 										subject: "Confirm Email",
+// 										html: `Please click this email to confirm your email: <a href="${url}">${url}</a>`,
+// 									});
+// 								}
+// 							);
+// 							res.redirect("/user/login");
+// 						});
+// 					});
+// 				});
+// 			}
+// 		});
+// 	}
+// });
 
 router.get("/logout", function (req, res) {
 	// Empty the cart
@@ -422,6 +628,8 @@ router.get("/logout", function (req, res) {
 	// Problem: Error: req#logout requires a callback function, Solution: Edited the code to become asynchronous
 	// https://stackoverflow.com/questions/72336177/error-reqlogout-requires-a-callback-function
 	req.logout(function (err) {
+		// TODO: https://stackoverflow.com/questions/22033174/deleting-expired-sessions-from-mysql
+		req.session.destroy();
 		if (err) {
 			return next(err);
 		}
