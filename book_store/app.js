@@ -213,7 +213,11 @@ app.use(methodOverride("_method"));
 // Enables session to be stored using browser's Cookie
 app.use(cookieParser());
 
-app.use(console.log("Start Session Store"));
+// Example middleware function (replace with your actual middleware)
+app.use((req, res, next) => {
+	console.log("Start Session Store");
+	next();
+});
 // Express session middleware - uses MySQL to store session
 app.use(
 	session({
@@ -238,7 +242,12 @@ app.use(
 		},
 	})
 );
-app.use(console.log("End Session Store"));
+
+app.use((req, res, next) => {
+	console.log("End Session Store");
+	next();
+});
+
 // Initilize Passport middleware - P4A2
 app.use(passport.initialize());
 app.use(passport.session());
