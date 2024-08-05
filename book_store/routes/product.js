@@ -399,7 +399,7 @@ router.get("/listproduct/:id", async (req, res, next) => {
 			req.session.userCart[z].SubtotalPrice = (
 				first_half + second_half
 			).toFixed(2);
-			discounted_value = (
+			var discounted_value = (
 				req.session.userCart[z].Quantity * req.session.userCart[z].Price -
 				(first_half + second_half)
 			).toFixed(2);
@@ -837,7 +837,7 @@ router.post("/goToCart", (req, res) => {
 			// we check by comparing original and special price
 			var special_price = req.session.userCart[z].SubtotalPrice;
 			if (special_price != original_price) {
-				product_discounted_value = (
+				var product_discounted_value = (
 					parseFloat(original_price) - parseFloat(special_price)
 				).toFixed(2);
 				req.session.deducted = (
@@ -921,7 +921,7 @@ router.post("/cart", async (req, res) => {
 				req.session.userCart[z].SubtotalPrice = (
 					first_half + second_half
 				).toFixed(2);
-				discounted_value = (
+				var discounted_value = (
 					req.session.userCart[z].Quantity * req.session.userCart[z].Price -
 					(first_half + second_half)
 				).toFixed(2);
@@ -2096,7 +2096,7 @@ router.get("/createCoupon", ensureAdminAuthenticated, (req, res) => {
 	// if (!req.session.public_coupon) {
 	//     req.session.public_coupon = "NULL";
 	// }
-	title = "Create Coupon";
+	const title = "Create Coupon";
 	let currentDate = moment(req.body.currentDate, "DD/MM/YYYY");
 	// Get current time of server
 	// hh or HH = 24 hr format, h / H = 12 hr format, a = PM/AM
@@ -2209,7 +2209,7 @@ router.post("/createCoupon", ensureAdminAuthenticated, (req, res) => {
 
 // Create Discount Page
 router.get("/createDiscount", ensureAdminAuthenticated, async (req, res) => {
-	title = "Create Discount";
+	const title = "Create Discount";
 	let currentDate = moment(req.body.currentDate, "DD/MM/YYYY");
 	let currentTime = moment().format("HH:mm");
 	let errors;

@@ -5,9 +5,11 @@ import session from "express-session";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 
-import pkg from "express-handlebars";
-const { engine } = pkg;
-import exphbs from "express-handlebars";
+// import pkg from "express-handlebars";
+// const { engine } = pkg;
+// import exphbs from "express-handlebars";
+import { engine } from 'express-handlebars';
+
 import methodOverride from "method-override";
 import Handlebars from "handlebars";
 import { allowInsecurePrototypeAccess } from "@handlebars/allow-prototype-access";
@@ -147,33 +149,61 @@ import when from "./helpers/for_loop.js";
 const app = express();
 
 // Handlebars Middleware
+// app.engine(
+// 	"handlebars",
+// 	exphbs({
+// 		defaultLayout: "main", // Specify default template views/layout/main.handlebar
+// 		helpers: {
+// 			convertUpper: helper.convertUpper,
+// 			adminCheck: helper.adminCheck,
+// 			emptyCart: helper.emptyCart,
+// 			cartQty: helper.cartQty,
+// 			formatDate: helper.formatDate,
+// 			capitaliseFirstLetter: helper.capitaliseFirstLetter,
+// 			isSg: helper.isSg,
+// 			checkPromo: helper.checkPromo,
+// 			convertDiscount: helper.convertDiscount,
+// 			displayCouponType: helper.displayCouponType,
+// 			get_old_subtotal: helper.get_old_subtotal,
+// 			check_subtotal: helper.check_subtotal,
+// 			check_for_discount_msg: helper.check_for_discount_msg,
+// 			formatDeliveryStatus: helper.formatDeliveryStatus,
+// 			when: when.when,
+// 			loop_n_times: helper.loop_n_times,
+// 			check_page: helper.check_page,
+// 		},
+// 		handlebars: allowInsecurePrototypeAccess(Handlebars),
+// 	})
+// );
+// app.set("view engine", "handlebars");
+
 app.engine(
-	"handlebars",
-	exphbs({
-		defaultLayout: "main", // Specify default template views/layout/main.handlebar
-		helpers: {
-			convertUpper: helper.convertUpper,
-			adminCheck: helper.adminCheck,
-			emptyCart: helper.emptyCart,
-			cartQty: helper.cartQty,
-			formatDate: helper.formatDate,
-			capitaliseFirstLetter: helper.capitaliseFirstLetter,
-			isSg: helper.isSg,
-			checkPromo: helper.checkPromo,
-			convertDiscount: helper.convertDiscount,
-			displayCouponType: helper.displayCouponType,
-			get_old_subtotal: helper.get_old_subtotal,
-			check_subtotal: helper.check_subtotal,
-			check_for_discount_msg: helper.check_for_discount_msg,
-			formatDeliveryStatus: helper.formatDeliveryStatus,
-			when: when.when,
-			loop_n_times: helper.loop_n_times,
-			check_page: helper.check_page,
-		},
-		handlebars: allowInsecurePrototypeAccess(Handlebars),
+	'handlebars',
+	engine({
+	  defaultLayout: 'main',
+	  helpers: {
+		convertUpper: helper.convertUpper,
+		adminCheck: helper.adminCheck,
+		emptyCart: helper.emptyCart,
+		cartQty: helper.cartQty,
+		formatDate: helper.formatDate,
+		capitaliseFirstLetter: helper.capitaliseFirstLetter,
+		isSg: helper.isSg,
+		checkPromo: helper.checkPromo,
+		convertDiscount: helper.convertDiscount,
+		displayCouponType: helper.displayCouponType,
+		get_old_subtotal: helper.get_old_subtotal,
+		check_subtotal: helper.check_subtotal,
+		check_for_discount_msg: helper.check_for_discount_msg,
+		formatDeliveryStatus: helper.formatDeliveryStatus,
+		when: when.when,
+		loop_n_times: helper.loop_n_times,
+		check_page: helper.check_page,
+	  },
+	  handlebars: allowInsecurePrototypeAccess(Handlebars), // Ensure `allowInsecurePrototypeAccess` is used correctly
 	})
-);
-app.set("view engine", "handlebars");
+  );
+  app.set('view engine', 'handlebars');
 
 // Body parser middleware to parse HTTP body to read post data
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -200,23 +230,28 @@ app.use((req, res, next) => {
 	console.log("Start Session Store");
 	next();
 });
+
+const dbOptions = {
+	host: process.env.MYSQLDB_HOST,
+	port: 3306,
+	user: process.env.MYSQLDB_USERNAME,
+	password: process.env.MYSQLDB_PASSWORD,
+	database: process.env.MYSQLDB_DATABASE,
+	clearExpired: true,
+	checkExpirationInterval: 900000, // How frequently expired sessions will be cleared; milliseconds
+	expiration: 900000, // The maximum age of a valid session; milliseconds
+  };
+  
+// Initialize MySQLStore with session
+const MySQLStoreInit = MySQLStore(session);
+const sessionStore = new MySQLStoreInit(dbOptions);
+
 // Express session middleware - uses MySQL to store session
 app.use(
 	session({
 		key: "vidjot_session",
 		secret: "tojiv",
-		store: new MySQLStore({
-			host: db.host,
-			port: 3306,
-			user: db.username,
-			password: db.password,
-			database: db.database,
-			clearExpired: true,
-			// How frequently expired sessions will be cleared; milliseconds:
-			checkExpirationInterval: 900000,
-			// The maximum age of a valid session; milliseconds:
-			expiration: 900000,
-		}),
+		store: sessionStore,
 		resave: false,
 		saveUninitialized: false,
 		cookie: {
@@ -224,6 +259,29 @@ app.use(
 		},
 	})
 );
+// app.use(
+// 	session({
+// 		key: "vidjot_session",
+// 		secret: "tojiv",
+// 		store: new MySQLStore({
+// 			host: process.env.MYSQLDB_HOST,
+// 			port: 3306,
+// 			user: process.env.MYSQLDB_USERNAME,
+// 			password: process.env.MYSQLDB_PASSWORD,
+// 			database: process.env.MYSQLDB_DATABASE,
+// 			clearExpired: true,
+// 			// How frequently expired sessions will be cleared; milliseconds:
+// 			checkExpirationInterval: 900000,
+// 			// The maximum age of a valid session; milliseconds:
+// 			expiration: 900000,
+// 		}),
+// 		resave: false,
+// 		saveUninitialized: false,
+// 		cookie: {
+// 			secure: true,
+// 		},
+// 	})
+// );
 
 app.use((req, res, next) => {
 	console.log("End Session Store");
