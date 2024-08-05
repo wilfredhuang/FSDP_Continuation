@@ -5,8 +5,9 @@ import alertMessage from "../helpers/messenger.js";
 import bcrypt from "bcryptjs"; // Provides Hashing
 import passport from "passport"; // Handle authentication for requests
 
-import pkg from "uuid"; // Create universally unique identifier
-const { v1: uuidv1 } = pkg;
+import { v1 as uuidv1 } from 'uuid';
+
+
 import request from "request";
 
 const secretKey = process.env.GOOGLE_RECAPTCHA_SECRET_KEY;

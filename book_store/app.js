@@ -17,13 +17,10 @@ import nodemailer from "nodemailer";
 
 // Add DotEnv dependency, we need this to load up the environment variables in the .env file of the root of project and from windows environment  - 260223
 // import dotenv from "dotenv"; // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
-// dotenv.config();
 
 import * as dotenv from "dotenv";
 dotenv.config();
-//require("dotenv").config();
-//console.log("=== PROCESS ENV ===");
-//console.log(process.env); // remove this after you've confirmed it is working
+
 
 //EasyPost API
 import EasyPost from "@easypost/api";
@@ -38,7 +35,6 @@ const client = new Client(accountSid, authToken);
 
 //Models
 import order from "../book_store/models/Order.js";
-//const order = require("../book_store/models/Order");
 
 //nodemailer
 let transporter = nodemailer.createTransport({
@@ -59,9 +55,6 @@ import openssl from "openssl-nodejs";
 import https from "https";
 import fs from "fs";
 
-// const openssl = require("openssl-nodejs");
-// const https = require("https");
-// const fs = require("fs");
 const options = {
 	key: fs.readFileSync("key.pem"),
 	cert: fs.readFileSync("cert.crt"),
@@ -69,7 +62,6 @@ const options = {
 
 //admin
 import AdminBroExpress from "admin-bro-expressjs";
-//const AdminBroExpress = require("admin-bro-expressjs");
 
 // Stripe Payment System
 // Set your secret key. Remember to switch to your live secret key in production!
@@ -77,13 +69,6 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 	apiVersion: "2020-03-02",
 });
-// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
-// 	apiVersion: "2020-03-02",
-// });
-
-// Bcrypt - Encrypt password - P4A1
-import bcrypt from "bcryptjs";
-//const bcrypt = require("bcryptjs"); // added here for debugging, but it's import only used in user.js
 
 // Passport - Setting Authentication - P4A2
 import passport from "passport";
@@ -95,9 +80,6 @@ import { router as productRoute } from "./routes/product.js";
 import { router as deliveryRoute } from "./routes/cart.js";
 import { router as checkoutRoute } from "./routes/checkout.js";
 import { router as adminRoute } from "./routes/admin.js";
-
-// OLD, note the exclusion of .js extension
-// const mainRoute = require("./routes/main");
 
 // Library to use MySQL to store session objects
 import MySQLStore from "express-mysql-session";
@@ -248,7 +230,7 @@ app.use((req, res, next) => {
 	next();
 });
 
-// Initilize Passport middleware - P4A2
+// Initilize Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -314,7 +296,7 @@ app.use(function (req, res, next) {
 	next();
 });
 
-//SMS Notification - in progress by Hasan
+//SMS Notification 
 app.post("/deliveryUpdates", (req, res) => {
 	let firstMessage = "Hey! This is Bookstore. ";
 	objectWeb = req.body.object;
@@ -439,17 +421,6 @@ app.post("/deliveryUpdates", (req, res) => {
 				}
 			});
 	}
-	// else if(objectWeb == "Event" && descriptionWeb == "tracker.created"){
-	// 	trackingResult = req.body.result
-	// 	console.log(trackingResult.length)
-	// 	for (i = 0; i<trackingResult.length; i++){
-	// 		console.log("______________________________")
-	// 		console.log(i)
-	// 		console.log("______________________________")
-
-	// 	}
-	// 	console.log("currently shifting sms notification to here")
-	// }
 });
 
 // Use Routes

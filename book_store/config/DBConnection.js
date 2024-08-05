@@ -7,15 +7,6 @@ import orderItem from "../models/OrderItem.js";
 import pending_order from "../models/Pending_Orders.js";
 import pending_orderItem from "../models/Pending_OrderItem.js";
 
-// const mySQLDB = require("./DBConfig");
-// const user = require("../models/User");
-// const order = require("../models/Order");
-// const ProductAdmin = require("../models/ProductAdmin");
-// const Discount = require("../models/Discount");
-// const orderItem = require("../models/OrderItem");
-// const pending_order = require("../models/Pending_Orders");
-// const pending_orderItem = require("../models/Pending_OrderItem");
-
 // If drop is true, all existing tables are dropped and recreated
 const setUpDB = (drop) => {
 	mySQLDB
