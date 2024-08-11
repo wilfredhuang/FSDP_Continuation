@@ -7,9 +7,6 @@ import passport from "passport"; // Handle authentication for requests
 
 import { v1 as uuidv1 } from 'uuid';
 
-
-import request from "request";
-
 const secretKey = process.env.GOOGLE_RECAPTCHA_SECRET_KEY;
 
 //Authentication Middleware Function
@@ -24,22 +21,19 @@ import orderItem from "../models/OrderItem.js";
 //NodeMailer
 import nodemailer from "nodemailer"; // Send emails service
 import jwt from "jsonwebtoken"; // Tokens used for Authorization / Information Exchange purposes, consists of 'Header', 'Payload' and 'Signature'
-import { reservationsUrl } from "twilio/lib/jwt/taskrouter/util.js";
 
-// Validator
-import validator from "validator";
+const JWT_SECRETKEY = process.env.JWT_SECRETKEY;
+import { body, validationResult } from 'express-validator';
 
-const SECRET = process.env.NODEMAILER_SECRET_KEY;
-const SECRET_2 = process.env.NODEMAILER_SECRET_KEY2;
 
-//nodemailer
+//Set up the nodemailer
 let transporter = nodemailer.createTransport({
 	host: "smtp.zoho.com",
 	port: 465,
 	secure: true, // true for 465, false for other ports
 	auth: {
-		user: "bellavistabookstore@zohomail.com",
-		pass: "B00kstore123A#",
+		user: process.env.BOOKSTORE_EMAIL_USERNAME,
+		pass: process.env.BOOKSTORE_EMAIL_PASSWORD,
 	},
 	tls: {
 		// do not fail on invalid certs
@@ -47,7 +41,7 @@ let transporter = nodemailer.createTransport({
 	},
 });
 
-// verify connection configuration
+// Check if nodemailer configuration is working.
 transporter.verify(function (error, success) {
 	if (error) {
 		console.log(`NODEMAILER ${error}`);
@@ -56,94 +50,163 @@ transporter.verify(function (error, success) {
 	}
 });
 
-//Contact Us Form at Footer (working)
-//BTW this is a testing ground for email notifications
-router.post("/contactUs", (req, res) => {
+// Contact Us Form (Complete)
+router.post('/contactUs', [
+	// Validation and sanitization
+	body('name').trim().isLength({ min: 1 }).withMessage('Name is required').escape(),
+	body('email').trim().isEmail().withMessage('Invalid email address').normalizeEmail(),
+	body('subject').trim().isLength({ min: 1 }).withMessage('Subject is required').escape(),
+	body('message').trim().isLength({ min: 1 }).withMessage('Message is required').escape()
+  ], (req, res) => {
+	// Handling errors
+	const errors = validationResult(req);
+	if (!errors.isEmpty()) {
+		alertMessage(
+			res,
+			"danger",
+			"Contact form is incomplete. Please try again.",
+			"fas fa-exclamation-circle",
+			true
+		);
+		return res.redirect('back')
+	  //return res.status(400).json({ errors: errors.array() });
+	}
+  
+
+	// Process the sanitized data
 	let name = req.body.name;
 	let email = req.body.email;
-	console.log(`Old Text: ${req.body.message}`);
-
-	// TODO Sanitize input of any html tags
-	let emailMessage = `<p>Thank You for contacting us! We will respond back to you shortly.  ${req.body.message} </p>`;
 	let subject = req.body.subject;
-
+	let sanitizedMessage = req.body.message;
+  
+	// Example of sending an email with the sanitized inputs
+	let emailMessage = `<p>Thank you for contacting us! We will respond back to you shortly. \n You wrote: ${sanitizedMessage}</p>`;
 	let message = {
-		from: "BellaVista Bookstore Admin <bellavistabookstore@zohomail.com>",
-		to: `${name} <${email}>`,
-		subject: `Re: BellaVista Bookstore ${subject}`,
-		html: `${emailMessage}`,
+	  from: `BellaVista Bookstore Admin <${process.env.BOOKSTORE_EMAIL_USERNAME}>`,
+	  to: `${name} <${email}>`,
+	  subject: `Re: BellaVista Bookstore ${subject}`,
+	  html: emailMessage,
 	};
-
+  
 	transporter.sendMail(message, (err, info) => {
-		if (err) {
-			console.log("Error occurred. " + err.message);
-			return process.exit(1);
-		}
-
-		console.log("Message sent: %s", info.messageId);
-		// Preview only available when sending through an Ethereal account
-		console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+	  if (err) {
+		console.log("Error occurred. " + err.message);
+		return res.status(500).send("An error occurred while sending the email.");
+	  }
+  
+	  // Success feedback
+	  alertMessage(res, "success", "Thank You for contacting us!", "fas fa-exclamation-circle", true);
+	  res.redirect("/");
 	});
-	alertMessage(
-		res,
-		"success",
-		"Thank You for contacting us!",
-		"fas faexclamation-circle",
-		true
-	);
-	res.redirect("/");
-});
+  });
 
+
+// JSON Web Token Testing Route
 router.get("/jwt", (req, res) => {
-	// Create the token
-
-	const token = jwt.sign({ name: "user1337" }, "secretkey1337", {
-		expiresIn: "1d",
-	});
-
-	// Create Cookies
-	res.cookie("cookie1", "cookie1value");
-	res.cookie("jwttoken", token, {
-		maxAge: 3600,
-		httpOnly: true,
-		secure: true,
-	});
-	console.log(`Token value is ${token}`);
-
+	// Create A Normal Cookie
+	res.cookie("example_cookie", "example_value");
 	res.render("user/jwt");
 });
 
-router.post("/jwt", (req, res) => {
-	var username = req.username;
-	var password = req.password;
 
-	//console.log(`Cookie Value is ${req.cookies.jwttoken}`);
-	if (req.cookies.cookie1) {
-		console.log(`Cookie Value is ${req.cookies.jwttoken}`);
-		console.log(`Cookie1 Value is ${req.cookies.cookie1}`);
+router.post("/jwt", (req, res) => {
+	var username = req.body.username;
+	var password = req.body.password;
+
+	// Example Cookie Check
+	if (req.cookies.example_cookie) {
+
+		console.log(`Example Cookie Value is ${req.cookies.example_cookie}`);
 		console.log("Cookie Exist");
 		console.log(`Signed Cookies: ${JSON.stringify(req.signedCookies)}`);
 	} else {
 		console.log("Cookie dont exist");
+		return res.status(401).send("Example cookie not provided");
 	}
-
-	const verify = jwt.verify(req.cookies.jwttoken, "secretkey1337");
-
-	console.log(`Verify: ${JSON.stringify(verify)}`);
 
 	if (username != "user" && password != "password") {
 		// Read all the cookies in the browser
 		console.log(`Data is ${JSON.stringify(req.cookies)}`);
-
-		console.log("wrong");
+		console.log("wrong credentials");
+		res.redirect('back');
 	} else {
-		res.redirect("/user/successfuljwt");
+		res.redirect("/user/jwt2");
 	}
 });
+
+router.get('/jwt2', (req, res) => {
+	// Create the JsonWebToken after successful login
+		const token = jwt.sign({username: "username", isAdmin:0, isConfirmed:0 }, JWT_SECRETKEY, {
+			expiresIn: "1d",
+		});
+
+	// Assign JWT to a HTTPONLY Cookie
+	res.cookie("jwt_cookie", token, {
+		maxAge: 360000000,
+		httpOnly: true,
+		secure: true,
+	});
+	
+	res.render('user/jwt2')
+})
+
+router.post('/jwt2', (req, res) => { 
+	console.log(`Request body: ${JSON.stringify(req.body)}`); // Inspect Request Body
+    console.log(`Cookies received: ${JSON.stringify(req.cookies)}`); // Inspect Cookies received
+
+	// JWT Cookie Check
+    if (req.cookies.jwt_cookie) {
+		console.log(`JWTCookie Value is ${req.cookies.jwt_cookie}`);
+		console.log("Cookie Exist");
+		console.log(`Signed Cookies: ${JSON.stringify(req.signedCookies)}`);
+    }
+	
+	else {
+        console.error("JWT token not provided in cookies");
+        return res.status(401).send("JWT token not provided");
+	}
+
+	// Verify the JWT provided
+	try {
+
+		// Verify the token
+		jwt.verify(req.cookies.jwt_cookie, JWT_SECRETKEY, (err, decoded) => {
+			if (err) {
+				// If an error occurs, such as token being invalid or expired
+				//return res.sendStatus(403); // Forbidden if the token is not valid
+				console.log(`Error: ${err.message}`);
+				console.log("Invalid")
+			}
+
+			else {
+				console.log(`Decoded JWT Token is ${JSON.stringify(decoded)}`);
+
+			}
+		});
+
+
+
+		const verify = jwt.verify(req.cookies.jwt_cookie, JWT_SECRETKEY);
+		console.log(`Verify: ${JSON.stringify(verify)}`);
+	}
+
+	catch (err) {
+        console.error("JWT verification failed:", err.message);
+        return res.status(403).send("JWT verification failed");
+	}
+
+	//Redirect to the successful page if the credentials are correct
+	res.redirect("/user/successfuljwt");
+
+});
+
 
 router.get("/successfuljwt", (req, res) => {
 	res.render("user/successfuljwt");
 });
+
+// JSON Web Token Testing Route End
+
 
 router.get("/resetpassword", (req, res) => {
 	res.render("user/changePassword");
@@ -174,7 +237,7 @@ router.post("/resetpassword/", async (req, res) => {
 });
 
 router.get("/changepassword/:token", async (req, res) => {
-	const token = jwt.verify(req.params.token, SECRET_2);
+	const token = jwt.verify(req.params.token, JWT_SECRETKEY);
 	User.findOne({ where: { id: token.user } }).then((user) => {
 		req.login(user, function (err) {
 			if (err) {
@@ -191,144 +254,49 @@ router.get("/forgetpassword", (req, res) => {
 	});
 });
 
-router.post("/forgetpassword", (req, res) => {
-	let captcha = req.body["g-recaptcha-response"]; //get user token value
-	console.log(captcha);
-	//checks if captcha response is valid
-	if (captcha === undefined || captcha === "" || captcha === null) {
-		return res.json({ success: false, msg: "Please select captcha" });
-	}
-	const verifyURL =
-		"https://www.google.com/recaptcha/api/siteverify?secret=" +
-		secretKey +
-		"&response=" +
-		captcha;
-	console.log(verifyURL); //this is a url that needs to be verified
 
-	request(verifyURL, (err, response, body) => {
-		body = JSON.parse(body);
-		console.log(body); //retrieves response from google and return its json info
+router.post("/forgetpassword", async (req, res) => {
+    const captcha = req.body["g-recaptcha-response"];
+    if (!captcha) {
+        return res.json({ success: false, msg: "Please select captcha" });
+    }
 
-		if (body.success !== undefined && !body.success) {
-			alertMessage(
-				res,
-				"danger",
-				"Please re-enter the recaptcha",
-				"fas faexclamation-circle",
-				true
-			);
-			res.redirect("/user/forgetpassword");
-		} else {
-			let email = req.body.email;
-			console.log(email);
-			User.findOne({ where: { email: email } }).then((user) => {
-				if (!user) {
-					res.redirect("/user/login");
-				} else {
-					theid = user.id;
-					console.log(theid);
-					jwt.sign(
-						{
-							user: theid,
-						},
-						SECRET_2,
-						{
-							expiresIn: "1d",
-						},
-						(err, passwordToken) => {
-							const url = `https://localhost:5000/user/changepassword/${passwordToken}`;
-							console.log(url);
-							transporter.sendMail({
-								to: req.body.email,
-								subject: "Password Reset ",
-								html: `Please click this link to change you password: <a href="${url}">${url}</a>`,
-							});
-						}
-					);
-					alertMessage(
-						res,
-						"success",
-						"please check your email",
-						"fas fa-sign-in-alt",
-						true
-					);
-					res.redirect("/user/login");
-				}
-			});
-		}
-	});
-});
+    const verifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captcha}`;
 
-router.post("/forgetpassword", (req, res) => {
-	let captcha = req.body["g-recaptcha-response"]; //get user token value
-	console.log(captcha);
-	//checks if captcha response is valid
-	if (captcha === undefined || captcha === "" || captcha === null) {
-		return res.json({ success: false, msg: "Please select captcha" });
-	}
-	const verifyURL =
-		"https://www.google.com/recaptcha/api/siteverify?secret=" +
-		secretKey +
-		"&response=" +
-		captcha;
-	console.log(verifyURL); //this is a url that needs to be verified
+    try {
+        const { data: body } = await axios.post(verifyURL);
+        if (!body.success) {
+            alertMessage(res, "danger", "Please re-enter the recaptcha", "fas fa-exclamation-circle", true);
+            return res.redirect("/user/forgetpassword");
+        }
 
-	request(verifyURL, (err, response, body) => {
-		body = JSON.parse(body);
-		console.log(body); //retrieves response from google and return its json info
+        const user = await User.findOne({ where: { email: req.body.email } });
+        if (!user) {
+            return res.redirect("/user/login");
+        }
 
-		if (body.success !== undefined && !body.success) {
-			alertMessage(
-				res,
-				"danger",
-				"Please re-enter the recaptcha",
-				"fas faexclamation-circle",
-				true
-			);
-			res.redirect("/user/forgetpassword");
-		} else {
-			let email = req.body.email;
-			console.log(email);
-			User.findOne({ where: { email: email } }).then((user) => {
-				if (!user) {
-					res.redirect("/user/login");
-				} else {
-					theid = user.id;
-					console.log(theid);
-					jwt.sign(
-						{
-							user: theid,
-						},
-						SECRET_2,
-						{
-							expiresIn: "1d",
-						},
-						(err, passwordToken) => {
-							const url = `https://localhost:5000/user/changepassword/${passwordToken}`;
-							console.log(url);
-							transporter.sendMail({
-								to: req.body.email,
-								subject: "Password Reset ",
-								html: `Please click this link to change you password: <a href="${url}">${url}</a>`,
-							});
-						}
-					);
-					alertMessage(
-						res,
-						"success",
-						"please check your email",
-						"fas fa-sign-in-alt",
-						true
-					);
-					res.redirect("/user/login");
-				}
-			});
-		}
-	});
+        const theid = user.id;
+        const passwordToken = jwt.sign({ user: theid }, JWT_SECRETKEY, { expiresIn: "1d" });
+        const url = `https://localhost:5000/user/changepassword/${passwordToken}`;
+
+        await transporter.sendMail({
+            from: "BellaVista Bookstore Admin <bellavistabookstore@zohomail.com>",
+            to: req.body.email,
+            subject: "Password Reset",
+            html: `Please click this link to change your password: <a href="${url}">${url}</a>`,
+        });
+
+        alertMessage(res, "success", "Please check your email", "fas fa-sign-in-alt", true);
+        res.redirect("/user/login");
+    } catch (err) {
+        console.error("Error: " + err.message);
+        alertMessage(res, "danger", "An error occurred. Please try again later.", "fas fa-exclamation-circle", true);
+        res.redirect("/user/forgetpassword");
+    }
 });
 
 router.get("/confirmation/:token", async (req, res) => {
-	const token = jwt.verify(req.params.token, "HARDCODEDSECRET123");
+	const token = jwt.verify(req.params.token, JWT_SECRETKEY);
 	User.findOne({ where: { id: token.user } }).then((user) => {
 		user.update({ confirmed: true });
 		console.log("email verified");
@@ -337,6 +305,8 @@ router.get("/confirmation/:token", async (req, res) => {
 	res.redirect("https://localhost:5000/user/login");
 });
 
+
+// Facebook Auth Login (Down)
 router.get(
 	"/auth/facebook",
 	passport.authenticate("facebook", { scope: ["email"] })
@@ -349,6 +319,11 @@ router.get(
 		failureRedirect: "/login",
 	})
 );
+
+// 
+
+
+
 
 router.get("/userPage", ensureAuthenticated, (req, res) => {
 	const title = "User Information";
@@ -453,161 +428,112 @@ router.get("/register", (req, res) => {
 });
 
 router.post("/register", async (req, res) => {
-	let errors = [];
-	let { email, name, password, password2 } = req.body;
-	if (password !== password2) {
-		errors.push({ text: "Passwords do not match" });
-	}
-	if (password.length < 4) {
-		errors.push({ text: "Password must be at least 4 characters" });
-	}
-	if (errors.length > 0) {
-		res.render("user/register", {
-			errors,
-			name,
-			email,
-			password,
-			password2,
-		});
-	} else {
-		const searchUserPromise = await User.findOne({
-			where: { email: req.body.email },
-		});
-		if (searchUserPromise) {
-			res.render("user/register", {
-				errors: user.email + " already registered",
-				name,
-				email,
-				password,
-				password2,
-			});
-		} else {
-			bcrypt.genSalt(10, (err, salt) => {
-				if (err) return next(err);
-				bcrypt.hash(password, salt, async function (err, hash) {
-					if (err) return next(err);
-					password = hash;
-					var theid = uuidv1();
-					var createUserPromise = await User.create({
-						id: theid,
-						name,
-						email,
-						password,
-						isadmin: false,
-						confirmed: false,
-					});
+    let errors = [];
+    let { email, name, password, password2 } = req.body;
 
-					alertMessage(
-						res,
-						"success",
-						createUserPromise.name + " added.Please Verify you account",
-						"fas fa-sign-in-alt",
-						true
-					);
-					// replace SECRET with a hardcoded for testing
-					jwt.sign(
-						{
-							user: theid,
-						},
-						"HARDCODEDSECRET123",
-						{
-							expiresIn: "1d",
-						},
-						(err, emailToken) => {
-							const url = `https://localhost:5000/user/confirmation/${emailToken}`;
-							console.log(url);
-							transporter.sendMail({
-								from: "BellaVista Bookstore Admin <bellavistabookstore@zohomail.com>",
-								to: `${name} <${req.body.email}>`,
-								subject: "Confirm Email",
-								html: `Please click this email to confirm your email: <a href="${url}">${url}</a>`,
-							});
-						}
-					);
-					res.redirect("/user/login");
-				});
-			});
-		}
-	}
+    if (password !== password2) {
+        errors.push({ text: "Passwords do not match" });
+    }
+    if (password.length < 4) {
+        errors.push({ text: "Password must be at least 4 characters" });
+    }
+
+    if (errors.length > 0) {
+        return res.render("user/register", {
+            errors,
+            name,
+            email,
+            password,
+            password2,
+        });
+    }
+
+    try {
+        // Check if user already exists
+        const existingUser = await User.findOne({ where: { email } });
+        if (existingUser) {
+            return res.render("user/register", {
+                errors: [{ text: `${email} is already registered` }],
+                name,
+                email,
+                password,
+                password2,
+            });
+        }
+
+        // Hash password and create user
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const theid = uuidv1();
+        const newUser = await User.create({
+            id: theid,
+            name,
+            email,
+            password: hashedPassword,
+            isadmin: false,
+            confirmed: false,
+        });
+
+        // Send confirmation email
+        const emailToken = jwt.sign({ user: theid }, JWT_SECRETKEY, { expiresIn: '1d' });
+        const url = `https://localhost:5000/user/confirmation/${emailToken}`;
+
+        const mailOptions = {
+            from: "BellaVista Bookstore Admin <bellavistabookstore@zohomail.com>",
+            to: `${name} <${email}>`,
+            subject: "Confirm Email",
+            html: `Please click this link to confirm your email: <a href="${url}">${url}</a>`,
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log("Error occurred while sending email: " + error.message);
+				alertMessage(
+											res,
+											"danger",
+											"Failed to send confirmation email. Please try again later.",
+											"fas fa-exclamation-circle",
+											true
+										);
+                return res.render("user/register", {
+                    errors: [{ text: "Failed to send confirmation email. Please try again later." }],
+                    name,
+                    email,
+                    password,
+                    password2,
+                });
+            }
+            console.log("Confirmation email sent: %s", info.messageId);
+			alertMessage(
+                res,
+                "success",
+                `A confirmation email has been sent to ${email}. Please check your inbox.`,
+                "fas fa-check-circle",
+                true
+            );
+			res.redirect("/user/login");
+        });
+
+
+    } catch (err) {
+        console.error("Error during registration process: " + err.message);
+		alertMessage(
+            res,
+            "danger",
+            "An error occurred during registration. Please try again later.",
+            "fas fa-exclamation-circle",
+            true
+        );
+        res.render("user/register", {
+            errors: [{ text: "An error occurred during registration. Please try again later." }],
+            name,
+            email,
+            password,
+            password2,
+        });
+    }
 });
-
-// Back up copy for register
-// router.post("/register", (req, res) => {
-// 	let errors = [];
-// 	let { email, name, password, password2 } = req.body;
-// 	if (password !== password2) {
-// 		errors.push({ text: "Passwords do not match" });
-// 	}
-// 	if (password.length < 4) {
-// 		errors.push({ text: "Password must be at least 4 characters" });
-// 	}
-// 	if (errors.length > 0) {
-// 		res.render("user/register", {
-// 			errors,
-// 			name,
-// 			email,
-// 			password,
-// 			password2,
-// 		});
-// 	} else {
-// 		User.findOne({ where: { email: req.body.email } }).then((user) => {
-// 			if (user) {
-// 				res.render("user/register", {
-// 					errors: user.email + " already registered",
-// 					name,
-// 					email,
-// 					password,
-// 					password2,
-// 				});
-// 			} else {
-// 				bcrypt.genSalt(10, function (err, salt) {
-// 					if (err) return next(err);
-// 					bcrypt.hash(password, salt, function (err, hash) {
-// 						if (err) return next(err);
-// 						password = hash;
-// 						var theid = uuidv1();
-// 						User.create({
-// 							id: theid,
-// 							name,
-// 							email,
-// 							password,
-// 							isadmin: false,
-// 							confirmed: false,
-// 						}).then((user) => {
-// 							alertMessage(
-// 								res,
-// 								"success",
-// 								user.name + " added.Please Verify you account",
-// 								"fas fa-sign-in-alt",
-// 								true
-// 							);
-// 							jwt.sign(
-// 								{
-// 									user: theid,
-// 								},
-// 								SECRET,
-// 								{
-// 									expiresIn: "1d",
-// 								},
-// 								(err, emailToken) => {
-// 									const url = `https://localhost:5000/user/confirmation/${emailToken}`;
-// 									console.log(url);
-// 									transporter.sendMail({
-// 										from: "BellaVista Bookstore Admin <bellavistabookstore@zohomail.com>",
-// 										to: `${name} <${req.body.email}>`,
-// 										subject: "Confirm Email",
-// 										html: `Please click this email to confirm your email: <a href="${url}">${url}</a>`,
-// 									});
-// 								}
-// 							);
-// 							res.redirect("/user/login");
-// 						});
-// 					});
-// 				});
-// 			}
-// 		});
-// 	}
-// });
 
 router.get("/logout", function (req, res) {
 	// Empty the cart

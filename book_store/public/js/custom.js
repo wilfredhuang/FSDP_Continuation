@@ -1,8 +1,4 @@
 $(document).ready(function () {
-  // $('.navbar-toggler').click(function() {
-  //     $('.navbar-collapse').slideToggle();
-  //    });
-
   $("#owl-demo").owlCarousel({
     navigation: true, // Show next and prev buttons
     slideSpeed: 300,
