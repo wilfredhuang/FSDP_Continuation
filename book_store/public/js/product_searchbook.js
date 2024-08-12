@@ -105,6 +105,49 @@ function getBook() {
 		});
 }
 
+
+async function getBook_New() {
+	const title = document.getElementById("product_name").value;
+    const author = document.getElementById("author");
+    const publisher = document.getElementById("publisher");
+    const genre = document.getElementById("genre");
+    const price = document.getElementById("price");
+    const weight = document.getElementById("weight");
+    const details = document.getElementById("details");
+    const rating = document.getElementById("rating");
+    const product_image = document.getElementById("product_image");
+
+    try {
+        const response = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&limit=1`);
+		console.log("=== FETCHING BOOK! ===")
+        const data = await response.json();
+
+        if (data.docs && data.docs.length > 0) {
+            const book = data.docs[0];
+
+            document.getElementById("product_name").value = book.title;
+
+            author.value = book.author_name ? book.author_name[0] : 'Unknown Author';
+            publisher.value = book.publisher ? book.publisher[0] : 'Unknown Publisher';
+            genre.value = book.subject ? book.subject[0] : 'Unknown Genre';
+            weight.value = book.number_of_pages_median ? book.number_of_pages_median * 4.5 : 'Unknown Weight';
+            rating.value = 'N/A';  // Open Library does not provide rating information
+            details.value = book.first_sentence ? book.first_sentence[0] : 'No description available';
+
+            const coverId = book.cover_i;
+            product_image.value = coverId 
+                ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`
+                : 'No image available';
+
+            price.value = 'N/A';  // Open Library does not provide pricing information
+        } else {
+            console.log('No books found');
+        }
+    } catch (error) {
+        console.error('Error fetching book details:', error);
+    }
+}
+
 function search() {
 	// Declare variables
 	var input, filter, ul, li, a, i;

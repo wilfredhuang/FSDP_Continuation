@@ -36,6 +36,50 @@
 </div>
 <section class="static about-sec">
     <div class="container">
+
+        <div class="row">
+            <div class="col-lg-8">
+                <input type="text" id="mySearch" onkeyup="search()" placeholder="Search for books"
+                    title="Type in a category">
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn">Sort By</button>
+                <div class="dropdown-content">
+                    <a href="#" onclick="sortListDir()">Alphabetical Order</a>
+                </div>
+            </div>
+        </div>
+        <h2>Books in our store</h2>
+        <div class="recent-book-sec">
+            <ul id="myMenu">
+                <div class="row">
+                    {{#each productadmin}}
+                    <li name="{{product_name}}" class="col-md-3">
+                        <div>
+                            <div class="item">
+                                <a href="/product/individualProduct/{{id}}"><img src="{{product_image}}"
+                                        alt="{{product_name}}" class="resizable"></a>
+                                <h3><a href="/product/individualProduct/{{id}}">{{product_name}}</a></h3>
+                                <form action="/listproducts">
+                                    <h6><span id="price" class="price">${{price}}</span> / <a
+                                            href="/product/listproduct/{{id}}">Buy Now</a></h6>
+                                </form>
+                            </div>
+                        </div>
+                    </li>
+
+                    {{/each}}
+
+                </div>
+            </ul>
+        </div>
+    </div>
+</section>
+<!-- Add Pica Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pica/8.0.2/pica.min.js"></script>
+        <script src="..\..\public\js\resizeImages.js" defer></script>
+
+
         <!---
             <h2>highly recommended books</h2>
             <div class="recomended-sec">
@@ -91,38 +135,9 @@
                     </div>
                 </div>
             </div--->
-        <div class="row">
-            <div class="col-lg-8">
-                <input type="text" id="mySearch" onkeyup="search()" placeholder="Search for books"
-                    title="Type in a category">
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Sort By</button>
-                <div class="dropdown-content">
-                    <a href="#" onclick="sortListDir()">Alphabetical Order</a>
-                </div>
-            </div>
-        </div>
-        <h2>Books in our store</h2>
-        <div class="recent-book-sec">
-            <ul id="myMenu">
-                <div class="row">
-                    {{#each productadmin}}
-                    <li name="{{product_name}}" class="col-md-3">
-                        <div>
-                            <div class="item">
-                                <a href="/product/individualProduct/{{id}}"><img src="{{product_image}}"
-                                        alt="{{product_name}}"></a>
-                                <h3><a href="/product/individualProduct/{{id}}">{{product_name}}</a></h3>
-                                <form action="/listproducts">
-                                    <h6><span id="price" class="price">${{price}}</span> / <a
-                                            href="/product/listproduct/{{id}}">Buy Now</a></h6>
-                                </form>
-                            </div>
-                        </div>
-                    </li>
 
-                    {{/each}}
+
+
                     <!---
                     <div class="col-md-3">
                         <div class="item">
@@ -157,9 +172,3 @@
                     <!---<div class="btn-sec">
                     <a href="products.html" class="btn gray-btn">load More books</a>
                 </div --->
-                </div>
-            </ul>
-        </div>
-    </div>
-</section>
-

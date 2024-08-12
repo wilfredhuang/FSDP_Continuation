@@ -62,9 +62,6 @@ const options = {
 	cert: fs.readFileSync("cert.crt"),
 };
 
-//admin
-import AdminBroExpress from "admin-bro-expressjs";
-
 // Stripe Payment System
 // Set your secret key. Remember to switch to your live secret key in production!
 import Stripe from "stripe";

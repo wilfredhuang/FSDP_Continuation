@@ -3,10 +3,6 @@ const router = express.Router();
 import moment from "moment";
 import alertMessage from "../helpers/messenger.js";
 
-// const express = require("express");
-// const router = express.Router();
-// const moment = require("moment");
-// const alertMessage = require("../helpers/messenger");
 
 //Models
 import product from "../models/Product.js";
@@ -21,21 +17,10 @@ import ProductAdmin from "../models/ProductAdmin.js";
 import Coupon from "../models/Coupon.js";
 import Discount from "../models/Discount.js";
 
-// const product = require("../models/Product");
-// const productadmin = require("../models/ProductAdmin");
-// const order = require("../models/Order");
-// const order_item = require("../models/OrderItem");
-// const User = require("../models/User");
-// const Pending_Order = require("../models/Pending_Orders");
-// const Pending_OrderItem = require("../models/Pending_OrderItem");
-
-// const ProductAdmin = require("../models/ProductAdmin");
-// const Coupon = require("../models/coupon");
-// const Discount = require("../models/Discount");
 
 //EasyPost API
 import EasyPost from "@easypost/api";
-//const EasyPost = require("@easypost/api");
+
 const apiKey = "EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg";
 const api = new EasyPost(apiKey);
 
@@ -48,18 +33,11 @@ import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 	apiVersion: "2020-03-02",
 });
-// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
-// 	apiVersion: "2020-03-02",
-// });
 
 // PayNow
 
 import paynow from "paynow-generator";
 import QRCode from "qrcode";
-
-//const paynow = require("paynow-generator");
-//const QRCode = require("qrcode");
-//const { CheckboxRadioContainer } = require("admin-bro");
 
 // twilo API - Send SMS
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
@@ -67,16 +45,11 @@ const authToken = process.env.TWILIO_ACCOUNT_AUTHTOKEN;
 
 import Client from "twilio";
 const client = new Client(accountSid, authToken);
-// const client = require("twilio")(accountSid, authToken);
 
 // Authentications
 import ensureAuthenticated from "../helpers/auth.js";
 import ensureAdminAuthenticated from "../helpers/adminauth.js";
 import checkCart from "../helpers/cart.js";
-
-// const ensureAuthenticated = require("../helpers/auth");
-// const ensureAdminAuthenticated = require("../helpers/adminauth");
-// const checkCart = require("../helpers/cart");
 
 // variables below for coupon feature, dont change - wilfred
 // switched req.session.userCart to global variable @app.js
@@ -174,7 +147,7 @@ router.post("/addProduct1", (req, res) => {
 		.catch((err) => console.log(err));
 });
 
-router.get("/createProduct", (req, res) => {
+router.get("/createProduct", ensureAdminAuthenticated, (req, res) => {
 	const title = "Create Product";
 	res.render("products/createProduct", {
 		title,
@@ -1509,209 +1482,204 @@ router.get("/stripepayment", checkCart, async (req, res) => {
 		});
 });
 
+
 router.post("/stripepayment", async (req, res) => {
-	var total_weight_oz = (0).toFixed(2);
+    var total_weight_oz = (0).toFixed(2);
 
-	// Here's the start of the delivery API
-	const parcel = new api.Parcel({
-		predefined_package: "Parcel",
-		weight: 10, //change number according to weight of total books
-	});
+    // Create the parcel object
+    const parcel = {
+        predefined_package: "Parcel",
+        weight: 10, // Adjust according to the total weight of the books
+    };
 
-	parcel.save();
+    const fromAddress = {
+        // Default address of the company
+        name: "Bookstore",
+        street1: "118 2nd Street",
+        street2: "4th Floor",
+        city: "San Francisco",
+        state: "CA",
+        country: "US",
+        zip: "94105",
+        phone: "415-123-4567",
+        email: "example@example.com",
+    };
 
-	const fromAddress = new api.Address({
-		//default address of company
-		name: "Bookstore",
-		street1: "118 2nd Street",
-		street2: "4th Floor",
-		city: "San Francisco",
-		state: "CA",
-		country: "US",
-		zip: "94105",
-		phone: "415-123-4567",
-		email: "example@example.com",
-	});
-	//fromAddress.save().then(console.log);
+    const toAddress = {
+        verify: ["delivery"],
+        // Example data for the recipient
+        name: "George Costanza",
+        company: "Vandelay Industries",
+        street1: "1 E 161st St.",
+        phone: process.env.DEV_PHONENO,
+        city: "Bronx",
+        state: "NY",
+        zip: "10451", // Example ZIP code
+    };
 
-	const toAddress = new api.Address({
-		verify: ["delivery"],
-		/*name: fullName,
-        company: "-",
-        street1: address,
-        city: city,
-        state: "-",
-        phone: phoneNumber,
-        country: country,
-        zip: postalCode,*/
-		//example code cos too lazy to type down
-		name: "George Costanza",
-		company: "Vandelay Industries",
-		street1: "1 E 161st St.",
-		phone: process.env.DEV_PHONENO,
-		city: "Bronx",
-		state: "NY",
-		//zip: "10451", //Actual zipcode
-		zip: "12412352551",
-	});
-	toAddress
-		.save()
-		.then((addr) => {
-			//console.log(addr);
-			//console.log(addr.verifications)
-			let checkAddress = addr.verifications.delivery.success;
-			//console.log(addr.verifications.delivery.errors[0])
-			if (checkAddress == true) {
-				const shipment = new api.Shipment({
-					to_address: toAddress,
-					from_address: fromAddress,
-					parcel: parcel,
-				});
-				//shipment.save()//.then(console.log);
-				shipment.save().then((s) => {
-					s.buy(shipment.lowestRate(["USPS"], ["First"])).then((t) => {
-						console.log("=============");
-						console.log(t.id);
-						let fullName = req.session.recipientName;
-						let phoneNumber = req.session.recipientPhoneNo;
-						let address = req.session.address;
-						let address1 = req.session.address1;
-						let city = req.session.city;
-						let country = req.session.countryShipment;
-						let postalCode = req.session.postalCode;
-						let deliverFee = 0;
-						let subtotalPrice = req.session.full_subtotal_price;
-						let totalPrice = req.session.full_total_price;
-						let shippingId = t.id;
-						let addressId = t.to_address.id;
-						let trackingId = t.tracker.id;
-						let trackingCode = t.tracker.tracking_code;
-						let dateStart = t.created_at;
-						let dateEnd = t.tracker.est_delivery_date;
-						let deliveryStatus = t.tracker.status;
-						let userId = req.user.id;
-						order
-							.create({
-								fullName,
-								phoneNumber,
-								address,
-								address1,
-								city,
-								country,
-								postalCode,
-								deliverFee,
-								subtotalPrice,
-								totalPrice,
-								shippingId,
-								addressId,
-								trackingId,
-								trackingCode,
-								dateStart,
-								dateEnd,
-								deliveryStatus,
-								userId,
-							})
+    try {
+        // Create the address
+        const addressResponse = await api.Address.create(toAddress);
+        console.log("Address Response:", addressResponse); // Log the response for debugging
+        const savedToAddress = addressResponse.address;
 
-							.then((order) => {
-								for (var i in req.session.userCart) {
-									//   let id = req.session.userCart[i].ID;
-									let product_name = req.session.userCart[i].Name;
-									let author = req.session.userCart[i].Author;
-									let publisher = req.session.userCart[i].Publisher;
-									let genre = req.session.userCart[i].Genre;
-									let price = req.session.userCart[i].SubtotalPrice;
-									let stock = req.session.userCart[i].Quantity;
-									let details = "";
-									let weight = req.session.userCart[i].SubtotalWeight;
-									let product_image = req.session.userCart[i].Image;
-									let orderId = order.id;
-									total_weight_oz = (
-										parseFloat(total_weight_oz) + parseFloat(weight)
-									).toFixed(2);
-									const new_order_item = order_item.create({
-										product_name,
-										author,
-										publisher,
-										genre,
-										price,
-										stock,
-										details,
-										weight,
-										product_image,
-										orderId,
-									});
-								}
-								console.log(order);
-								res.redirect("/product/stripetxn_end");
-								let trackingCode = order.dataValues.trackingCode;
-								api.Tracker.retrieve(trackingCode).then((t) => {
-									console.log(t.public_url);
-									let trackingURL = t.public_url;
-									client.messages
-										.create({
-											body:
-												"Thank you for your purchase from the Book Store. Your tracking code is " +
-												trackingCode +
-												" and check your delivery here!\n" +
-												trackingURL,
-											from: process.env.TWILIO_ACCOUNT_PHONENO,
-											to: process.env.DEV_PHONENO,
-										})
-										.then((message) => console.log(message.sid));
+        if (!savedToAddress || !savedToAddress.id) {
+            throw new Error('Failed to create address or address ID is missing.');
+        }
 
-									console.log("hello");
-									// Empty the cart
-									req.session.userCart = {};
-									req.session.coupon_type = null;
-									req.session.discount = 0;
-									req.session.discount_limit = 0;
-									req.session.discounted_price = (0).toFixed(2);
-									req.session.shipping_discount = 0;
-									req.session.shipping_discount_limit = 0;
-									req.session.shipping_discounted_price = 0;
-									req.session.sub_discount = 0;
-									req.session.sub_discount_limit = 0;
-									req.session.sub_discounted_price = 0;
-									req.session.full_subtotal_price = 0;
-									req.session.full_total_price = 0;
-									req.session.deducted = 0;
-									req.session.coupon_type = null;
-									req.session.save();
-								});
-							});
-					});
-				});
+        // Verify the address
+        const verificationResponse = await api.Address.verify(savedToAddress.id);
+        const verification = verificationResponse.address;
 
-				console.log("its true");
-				//res.redirect("/delivery/checkout2");
-			} else {
-				console.log("its false");
-				alertMessage(
-					res,
-					"danger",
-					"Please enter a valid address",
-					"fas faexclamation-circle",
-					true
-				);
-				res.redirect("/delivery/checkout");
-			}
-			//console.log(addr.verifications.errors);
-		})
-		.catch((e) => {
-			console.log(e); //check errors
-		});
+        if (!verification || !verification.verifications || !verification.verifications.delivery) {
+            throw new Error('Failed to verify address or verification details are missing.');
+        }
 
-	// End of delivery api
+        if (verification.verifications.delivery.success) {
+            const shipment = {
+                to_address: savedToAddress.id,
+                from_address: fromAddress,
+                parcel: parcel,
+            };
 
-	alertMessage(
-		res,
-		"success",
-		"Order placed",
-		"fas fa-exclamation-circle",
-		true
-	);
-	// res.redirect("/delivery/checkout2");
+            // Create the shipment
+            const shipmentResponse = await api.Shipment.create(shipment);
+            console.log("Shipment Response:", shipmentResponse); // Log the response for debugging
+            const savedShipment = shipmentResponse.shipment;
+
+            if (!savedShipment || !savedShipment.id) {
+                throw new Error('Failed to create shipment or shipment ID is missing.');
+            }
+
+            // Buy the shipment
+            const transaction = await savedShipment.buy(
+                savedShipment.lowestRate(["USPS"], ["First"])
+            );
+
+            if (!transaction || !transaction.id) {
+                throw new Error('Failed to buy shipment or transaction ID is missing.');
+            }
+
+            console.log("Shipment ID:", transaction.id);
+
+            // Assuming `req.session` has the necessary order details
+            let fullName = req.session.recipientName;
+            let phoneNumber = req.session.recipientPhoneNo;
+            let address = req.session.address;
+            let address1 = req.session.address1;
+            let city = req.session.city;
+            let country = req.session.countryShipment;
+            let postalCode = req.session.postalCode;
+            let deliverFee = 0;
+            let subtotalPrice = req.session.full_subtotal_price;
+            let totalPrice = req.session.full_total_price;
+            let shippingId = transaction.id;
+            let addressId = savedToAddress.id; // Use the address ID from the created address
+            let trackingId = transaction.tracker?.id || '';
+            let trackingCode = transaction.tracker?.tracking_code || '';
+            let dateStart = transaction.created_at;
+            let dateEnd = transaction.tracker?.est_delivery_date || '';
+            let deliveryStatus = transaction.tracker?.status || '';
+            let userId = req.user.id;
+
+            // Create the order
+            await order.create({
+                fullName,
+                phoneNumber,
+                address,
+                address1,
+                city,
+                country,
+                postalCode,
+                deliverFee,
+                subtotalPrice,
+                totalPrice,
+                shippingId,
+                addressId,
+                trackingId,
+                trackingCode,
+                dateStart,
+                dateEnd,
+                deliveryStatus,
+                userId,
+            }).then(async (order) => {
+                for (var i in req.session.userCart) {
+                    let product_name = req.session.userCart[i].Name;
+                    let author = req.session.userCart[i].Author;
+                    let publisher = req.session.userCart[i].Publisher;
+                    let genre = req.session.userCart[i].Genre;
+                    let price = req.session.userCart[i].SubtotalPrice;
+                    let stock = req.session.userCart[i].Quantity;
+                    let details = "";
+                    let weight = req.session.userCart[i].SubtotalWeight;
+                    let product_image = req.session.userCart[i].Image;
+                    let orderId = order.id;
+                    total_weight_oz = (
+                        parseFloat(total_weight_oz) + parseFloat(weight)
+                    ).toFixed(2);
+
+                    await order_item.create({
+                        product_name,
+                        author,
+                        publisher,
+                        genre,
+                        price,
+                        stock,
+                        details,
+                        weight,
+                        product_image,
+                        orderId,
+                    });
+                }
+
+                // Send the tracking URL via SMS
+                const tracker = await api.Tracker.retrieve(trackingCode);
+                let trackingURL = tracker.public_url;
+                await client.messages.create({
+                    body: `Thank you for your purchase from the Book Store. Your tracking code is ${trackingCode} and you can check your delivery here: ${trackingURL}`,
+                    from: process.env.TWILIO_ACCOUNT_PHONENO,
+                    to: process.env.DEV_PHONENO,
+                }).then((message) => console.log(message.sid));
+
+                // Empty the cart
+                req.session.userCart = {};
+                req.session.coupon_type = null;
+                req.session.discount = 0;
+                req.session.discount_limit = 0;
+                req.session.discounted_price = (0).toFixed(2);
+                req.session.shipping_discount = 0;
+                req.session.shipping_discount_limit = 0;
+                req.session.shipping_discounted_price = 0;
+                req.session.sub_discount = 0;
+                req.session.sub_discount_limit = 0;
+                req.session.sub_discounted_price = 0;
+                req.session.full_subtotal_price = 0;
+                req.session.full_total_price = 0;
+                req.session.deducted = 0;
+                req.session.coupon_type = null;
+                req.session.save();
+
+                res.redirect("/product/stripetxn_end");
+            });
+        } else {
+            console.log("Address verification failed");
+            alertMessage(
+                res,
+                "danger",
+                "Please enter a valid address",
+                "fas fa-exclamation-circle",
+                true
+            );
+            res.redirect("/delivery/checkout");
+        }
+    } catch (error) {
+        console.error("Error:", error.message);
+        res.status(500).send("An error occurred while processing your request.");
+    }
 });
+
+
+
 
 router.get("/paynow", checkCart, (req, res) => {
 	var title = "PayNow Payment";
