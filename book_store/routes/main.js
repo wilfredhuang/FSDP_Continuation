@@ -6,14 +6,7 @@ import moment from "moment";
 import userAuth from "../helpers/auth.js";
 import productadmin from "../models/ProductAdmin.js";
 
-// const express = require("express");
-// const router = express.Router();
-// const alertMessage = require("../helpers/messenger");
-// const Coupon = require("../models/coupon");
-// const moment = require("moment");
-// const userAuth = require("../helpers/auth");
-// const productadmin = require("../models/ProductAdmin");
-
+/* Old Root Router function where user cart session object is initialized here, moved to app.js middleware*
 router.get("/", async (req, res, next) => {
 	const title = "Bookstore Home Page";
 	const navStatusHome = "active";
@@ -106,34 +99,63 @@ router.get("/", async (req, res, next) => {
 	}
 });
 
-router.get("/index", (req, res) => {
-	const title = "Bookstore Home Page";
-	const navStatusHome = "active";
-	if (!req.session.userCart) {
-		req.session.userCart = {};
-		// ssn = req.session.userCart;
-	}
-	var count = [5, 4, 3, 2, 1];
-	console.log(req.session);
-	productadmin
-		.findAll({
-			order: [["rating", "DESC"]],
-		})
-		.then((productadmin) => {
-			res.render("index", {
-				productadmin: productadmin,
-				title,
-				navStatusHome,
-				count,
-			});
-		});
+*/
+router.get("/", async (req, res, next) => {
+    const title = "Bookstore Home Page";
+    const navStatusHome = "active";
 
-	//console.log(req.session)
-	//res.render("index", {
-	// renders views/index.handlebars
-	//  title,
-	//  navStatusHome
-	//});
+    console.log(`Req Body: ${JSON.stringify(req.body)}`);
+    // Check if logged in or not
+    if (req.user) {
+        console.log("LOGGED IN");
+        console.log(req.user.email);
+    } else {
+        console.log("NOT LOGGED IN");
+    }
+
+    try {
+        const pa = await productadmin.findAll({
+            order: [["rating", "DESC"]],
+        });
+
+        res.render("index", {
+            title,
+            navStatusHome,
+            productadmin: pa,
+        });
+    } catch (error) {
+        console.error("Error rendering the index page:", error);
+        next(error); // Pass the error to the default error handler
+    }
+});
+
+router.get("/index", async (req, res) => {
+	const title = "Bookstore Home Page";
+    const navStatusHome = "active";
+
+    console.log(`Req Body: ${JSON.stringify(req.body)}`);
+    // Check if logged in or not
+    if (req.user) {
+        console.log("LOGGED IN");
+        console.log(req.user.email);
+    } else {
+        console.log("NOT LOGGED IN");
+    }
+
+    try {
+        const pa = await productadmin.findAll({
+            order: [["rating", "DESC"]],
+        });
+
+        res.render("index", {
+            title,
+            navStatusHome,
+            productadmin: pa,
+        });
+    } catch (error) {
+        console.error("Error rendering the index page:", error);
+        next(error); // Pass the error to the default error handler
+    }
 });
 
 router.get("/about", (req, res) => {

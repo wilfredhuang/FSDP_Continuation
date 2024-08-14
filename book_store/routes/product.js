@@ -73,24 +73,6 @@ router.get("/listProduct", (req, res) => {
 
 router.get("/individualProduct/:id", async (req, res) => {
 	const title = "Product Information";
-	// Discount.findOne({
-	//     where: {
-	//         uid: req.params.id
-	//     }
-	// }).then((discount) => {
-	//     let disc = discount;
-	//     productadmin.findOne({
-	//         where: {
-	//             id: req.params.id
-	//         }
-	//     })
-	//         .then((product) => {
-	//             res.render('products/individualProduct', {
-	//                 product,
-	//                 disc
-	//             });
-	//         })
-	// })
 	const disc = await Discount.findOne({
 		where: { target_id: req.params.id },
 	});
@@ -453,9 +435,17 @@ router.get("/listproduct/:id", async (req, res, next) => {
 		// console.log(req.session.userCart)
 	}
 
+
+	var cartQty = Object.values(req.session.userCart).reduce((acc, item) => acc + item.Quantity, 0);
+	console.log(`Cart Quantity is ${cartQty}`)
+
+	res.cookie('cartQty', cartQty, { expires: new Date(Date.now() + 900000), httpOnly: false });
 	res.redirect("/product/listproduct");
-	console.log("Added to cart");
-	console.log(req.session.userCart);
+	
+		//res.cookie('cartQty', cartQty, { httpOnly: true });
+	//res.redirect(`/product/listproduct?cartQty=${cartQty}`);
+	// console.log("Added to cart");
+	// console.log(req.session.userCart);
 });
 
 // Add to Cart - individual page

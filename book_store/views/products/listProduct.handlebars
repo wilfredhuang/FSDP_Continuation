@@ -51,6 +51,9 @@
         </div>
         <h2>Books in our store</h2>
         <div class="recent-book-sec">
+            <div class="spinner-border d-none" role="status">
+  <span class="sr-only">Loading...</span>
+</div>
             <ul id="myMenu">
                 <div class="row">
                     {{#each productadmin}}
@@ -62,7 +65,7 @@
                                 <h3><a href="/product/individualProduct/{{id}}">{{product_name}}</a></h3>
                                 <form action="/listproducts">
                                     <h6><span id="price" class="price">${{price}}</span> / <a
-                                            href="/product/listproduct/{{id}}">Buy Now</a></h6>
+                                            href="/product/listproduct/{{id}}" class="buy-now-btn" data-product-id="{{id}}" data-product-name="{{product_name}}">Buy Now</a></h6>
                                 </form>
                             </div>
                         </div>
@@ -78,7 +81,7 @@
 <!-- Add Pica Library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pica/8.0.2/pica.min.js"></script>
         <script src="..\..\public\js\resizeImages.js" defer></script>
-
+        <script src="..\..\public\js\cart_functions.js" defer></script>
 
         <!---
             <h2>highly recommended books</h2>

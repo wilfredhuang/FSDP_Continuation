@@ -478,6 +478,65 @@ app.post("/deliveryUpdates", (req, res) => {
 	}
 });
 
+
+// EXPERIMENTAL Middleware to check and initialize important session variables like userCart
+// Previously in root router function
+import Coupon from "./models/Coupon.js";
+import moment from "moment";
+app.use(async (req, res, next) => {
+    try {
+        if (!req.session.userCart) {
+            req.session.userCart = {};
+            req.session.coupon_type = null;
+            req.session.discount = 0;
+            req.session.discount_limit = 0;
+            req.session.discounted_price = (0).toFixed(2);
+            req.session.shipping_discount = 0;
+            req.session.shipping_discount_limit = 0;
+            req.session.shipping_discounted_price = 0;
+            req.session.sub_discount = 0;
+            req.session.sub_discount_limit = 0;
+            req.session.sub_discounted_price = 0;
+            req.session.full_total_price = 0;
+            req.session.deducted = (0).toFixed(2);
+        }
+
+        // Check and set the public coupon in the session
+        if (!req.session.public_coupon) {
+            console.log("No coupon value found in session var, searching...");
+            const coupon_object = await Coupon.findOne({ where: { public: 1 } });
+            req.session.public_coupon = coupon_object;
+            req.session.save();
+        } else {
+            try {
+                console.log("Existing coupon value found in session, validating...");
+                const coupon_object = await Coupon.findOne({ where: { public: 1 } });
+
+                if (coupon_object) {
+                    console.log("Public Coupon " + coupon_object.code + " found");
+
+                    // Handle Coupon Expiry
+                    if (moment().isAfter(coupon_object.expiry)) {
+                        await coupon_object.destroy();
+                        console.log(`Coupon ${coupon_object.code} expired and destroyed.`);
+                        req.session.public_coupon = null;
+                        req.session.save();
+                    }
+                } else {
+                    req.session.public_coupon = null;
+                    req.session.save();
+                }
+            } catch (error) {
+                console.log("Error validating public coupon:", error);
+            }
+        }
+    } catch (error) {
+        console.error("Error initializing session variables:", error);
+    }
+    next();
+});
+
+
 // Use Routes
 app.use("/", mainRoute); // uses main.js routing under ./routes
 app.use("/user", userRoute);

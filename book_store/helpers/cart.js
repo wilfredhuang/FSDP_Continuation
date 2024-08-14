@@ -1,4 +1,3 @@
-//const alertMessage = require("./messenger"); // Bring in alert messenger
 import alertMessage from "./messenger.js";
 
 // Checkout auth
