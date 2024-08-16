@@ -4,10 +4,6 @@ import { fileURLToPath } from "url";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
-
-// import pkg from "express-handlebars";
-// const { engine } = pkg;
-// import exphbs from "express-handlebars";
 import { engine } from 'express-handlebars';
 
 import methodOverride from "method-override";
@@ -98,81 +94,12 @@ setUpDB(false); // To set up database with new tables set (true)
 import localStrategy from "./config/passport.js";
 localStrategy(passport);
 
-// global.userCart = {};
-// Bring in Handlebars Helpers here
-// const {
-// 	convertUpper,
-// 	adminCheck,
-// 	emptyCart,
-// 	cartQty,
-// 	formatDate,
-// 	capitaliseFirstLetter,
-// 	isSg,
-// 	checkPromo,
-// 	convertDiscount,
-// 	displayCouponType,
-// 	get_old_subtotal,
-// 	check_subtotal,
-// 	check_for_discount_msg,
-// 	formatDeliveryStatus,
-// 	loop_n_times,
-// 	check_page,
-// } = require("./helpers/hbs");
-
-// import {
-// 	convertUpper,
-// 	adminCheck,
-// 	emptyCart,
-// 	cartQty,
-// 	formatDate,
-// 	capitaliseFirstLetter,
-// 	isSg,
-// 	checkPromo,
-// 	convertDiscount,
-// 	displayCouponType,
-// 	get_old_subtotal,
-// 	check_subtotal,
-// 	check_for_discount_msg,
-// 	formatDeliveryStatus,
-// 	loop_n_times,
-// 	check_page,
-// } from "./helpers/hbs.js";
-
 import helper from "./helpers/hbs.js";
 
 import when from "./helpers/for_loop.js";
 
 // creates an express server
 const app = express();
-
-// Handlebars Middleware
-// app.engine(
-// 	"handlebars",
-// 	exphbs({
-// 		defaultLayout: "main", // Specify default template views/layout/main.handlebar
-// 		helpers: {
-// 			convertUpper: helper.convertUpper,
-// 			adminCheck: helper.adminCheck,
-// 			emptyCart: helper.emptyCart,
-// 			cartQty: helper.cartQty,
-// 			formatDate: helper.formatDate,
-// 			capitaliseFirstLetter: helper.capitaliseFirstLetter,
-// 			isSg: helper.isSg,
-// 			checkPromo: helper.checkPromo,
-// 			convertDiscount: helper.convertDiscount,
-// 			displayCouponType: helper.displayCouponType,
-// 			get_old_subtotal: helper.get_old_subtotal,
-// 			check_subtotal: helper.check_subtotal,
-// 			check_for_discount_msg: helper.check_for_discount_msg,
-// 			formatDeliveryStatus: helper.formatDeliveryStatus,
-// 			when: when.when,
-// 			loop_n_times: helper.loop_n_times,
-// 			check_page: helper.check_page,
-// 		},
-// 		handlebars: allowInsecurePrototypeAccess(Handlebars),
-// 	})
-// );
-// app.set("view engine", "handlebars");
 
 app.engine(
 	'handlebars',
@@ -256,29 +183,6 @@ app.use(
 		},
 	})
 );
-// app.use(
-// 	session({
-// 		key: "vidjot_session",
-// 		secret: "tojiv",
-// 		store: new MySQLStore({
-// 			host: process.env.MYSQLDB_HOST,
-// 			port: 3306,
-// 			user: process.env.MYSQLDB_USERNAME,
-// 			password: process.env.MYSQLDB_PASSWORD,
-// 			database: process.env.MYSQLDB_DATABASE,
-// 			clearExpired: true,
-// 			// How frequently expired sessions will be cleared; milliseconds:
-// 			checkExpirationInterval: 900000,
-// 			// The maximum age of a valid session; milliseconds:
-// 			expiration: 900000,
-// 		}),
-// 		resave: false,
-// 		saveUninitialized: false,
-// 		cookie: {
-// 			secure: true,
-// 		},
-// 	})
-// );
 
 app.use((req, res, next) => {
 	console.log("End Session Store");

@@ -91,15 +91,71 @@ function updateCartUI() {
 }
 
 
+// Function to display flash messages client-side when paired up with axios and ajax, mimics behavior of flash-messenger
+const flashMessage = (messageType, message, icon = '', dismissible = true, timeout = 5000) => {
+    const flashContainer = document.getElementById('flash-container');
+
+    // Create the alert element
+    const flashElement = document.createElement('div');
+    flashElement.className = `alert alert-${messageType}`;
+    flashElement.style.zIndex = '9999';
+    flashElement.style.position = 'relative'; // Ensure relative positioning for the close button
+
+    // Create the message content
+    const messageContent = document.createElement('h6');
+
+    // Add the icon if provided
+    if (icon) {
+        const iconElement = document.createElement('i');
+        iconElement.className = icon;
+        iconElement.setAttribute('aria-hidden', 'true');
+        messageContent.appendChild(iconElement);
+    }
+
+    // Add the message text
+    messageContent.appendChild(document.createTextNode(` ${message}`));
+    
+    // Append the content to the alert element
+    flashElement.appendChild(messageContent);
+
+    // If dismissible, add the close button
+    if (dismissible) {
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'close';
+        closeButton.setAttribute('data-dismiss', 'alert');
+        closeButton.setAttribute('aria-label', 'Close');
+
+        const closeIcon = document.createElement('span');
+        closeIcon.setAttribute('aria-hidden', 'true');
+        closeIcon.innerHTML = '&times;'; // HTML entity for "×"
+
+        closeButton.appendChild(closeIcon);
+        flashElement.appendChild(closeButton);
+    }
+
+    // Append the flash message to the container
+    flashContainer.appendChild(flashElement);
+
+    // Automatically remove the alert after `timeout` milliseconds
+    setTimeout(() => {
+        flashElement.classList.remove('show');
+        flashElement.classList.add('fade');
+        setTimeout(() => {
+            flashElement.remove();
+        }, 150); // Duration to match fade transition
+    }, timeout);
+};
+
+
 // List All Products Page - Add to Cart AJAX with Axios
-// Select all elements with the class 'buy-now-btn'
 document.querySelectorAll('.buy-now-btn').forEach(button => {
     button.addEventListener('click', async function (e) {
         e.preventDefault();
         const productId = this.dataset.productId;
         const productName = this.dataset.productName;
 
-        // To show the spinner
+        // To show the spinner when user added item to cart
         document.querySelector('.spinner-border').classList.remove('d-none');
 
         // Hide the products while request is being handled
@@ -107,52 +163,64 @@ document.querySelectorAll('.buy-now-btn').forEach(button => {
         
         try {
         // Simulate a loading delay before sending the request
-        await delay(5000); // Simulate a 2-second delay
+        await delay(2000); // Simulate a 2-second delay
         }
         catch {
             console.log("error")
         }
 
-
-        axios.get(`/product/listproduct/${productId}`, {
+        // Axios AJAX call
+        axios
+          .get(`/product/listproduct/${productId}`, {
             headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => {
+              "X-Requested-With": "XMLHttpRequest",
+            },
+          })
+          .then((response) => {
+            // On Successful response, hide spinner, unhide products
             if (response.status >= 200 && response.status < 300) {
-                // To hide the spinner
-                document.querySelector('.spinner-border').classList.add('d-none');
-                // To show the products list after successful request
-                document.getElementById('myMenu').style.display = 'block';
+              document.querySelector(".spinner-border").classList.add("d-none");
+              document.getElementById("myMenu").style.display = "block";
+              // Flash MSG
+              if (response.data.success) {
+                const flashMessages = response.data.flashMessage;
+                flashMessages.forEach((msg) => {
+                  // Example usage of flashMessage function with a 5-second timeout
+                  flashMessage(
+                    "success",
+                    msg,
+                    "fas fa-exclamation-circle",
+                    true,
+                    5000
+                  );
+                });
+              }
 
-                // Successful response
-                //console.log('Response data:', response.data);
-                console.log(` ${productName}  added to cart!`);
-                
-
-
-                // Update Cart UI here
-                updateCartUI();
+              // Update quantity of cart items in Cart UI here
+              updateCartUI();
             } else {
-                // Handle non-successful status codes
-                console.error('Unexpected status code:', response.status);
-                alert('Failed to add product to cart.');
+              // Handle non-successful status codes
+              console.error("Unexpected status code:", response.status);
+              alert("Failed to add product to cart.");
             }
-
-        })
-        .catch(error => {
+          })
+          // might need to touch up here
+          .catch((error) => {
             // Handle errors
             if (error.response) {
-                // Server responded with a status code outside 2xx
-                console.error('Response error:', error.response.status, error.response.data);
+              // Server responded with a status code outside 2xx
+              console.error(
+                "Response error:",
+                error.response.status,
+                error.response.data
+              );
             } else if (error.request) {
-                // No response received
-                console.error('Request error:', error.request);
+              // No response received
+              console.error("Request error:", error.request);
             } else {
-                // Error setting up the request
-                console.error('Error:', error.message);
+              // Error setting up the request
+              console.error("Error:", error.message);
             }
-    });
+          });
 });
 })

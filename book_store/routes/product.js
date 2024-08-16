@@ -440,12 +440,15 @@ router.get("/listproduct/:id", async (req, res, next) => {
 	console.log(`Cart Quantity is ${cartQty}`)
 
 	res.cookie('cartQty', cartQty, { expires: new Date(Date.now() + 900000), httpOnly: false });
-	res.redirect("/product/listproduct");
-	
-		//res.cookie('cartQty', cartQty, { httpOnly: true });
-	//res.redirect(`/product/listproduct?cartQty=${cartQty}`);
-	// console.log("Added to cart");
-	// console.log(req.session.userCart);
+
+
+	// Directly create the message
+    const flashMessage_clientside = `${name} added to cart!`;
+
+	res.json({
+		success:true, // Send this to show that the request has successfully completed
+		flashMessage:[flashMessage_clientside] // Wrapping in an array to mimic req.flash behavior
+	});
 });
 
 // Add to Cart - individual page
