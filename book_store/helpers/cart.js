@@ -1,7 +1,8 @@
 import alertMessage from "./messenger.js";
 
+
 // Checkout auth
-const checkCart = (req, res, next) => {
+export const checkCart = (req, res, next) => {
 	if (req.isAuthenticated()) {
 		// If user is authenticated
 		console.log(req.user.confirmed);
@@ -28,25 +29,3 @@ const checkCart = (req, res, next) => {
 	);
 	res.redirect("/user/login");
 };
-
-// // Payment Auth
-// const ensureAuthenticated = (req, res, next) => {
-//     if(req.isAuthenticated() ) { // If user is authenticated
-//         console.log(req.user.confirmed);
-//         if (req.user.confirmed == true){
-//                 return next(); // Calling next() to proceed to the next statement
-//             }
-//         else if(req.user.confirmed === null){
-//             return next();
-//         }else{
-//         alertMessage(res, 'danger', 'Access Denied', 'fas fa-exclamation-circle', true);
-//         res.redirect('/');
-//         }
-//     }
-//         // If not authenticated, show alert message and redirect to ‘/’
-//     alertMessage(res, 'danger', 'Access Denied', 'fas fa-exclamation-circle', true);
-//     res.redirect('/');
-// };
-
-// Don't put {} at the ends of each side, doesn't work anymore(?)
-export default checkCart;

@@ -14,8 +14,6 @@ import alertMessage from "../helpers/messenger.js";
 import moment from "moment";
 import Coupon from "../models/Coupon.js";
 
-// const Order = require('../models/order');
-// const OrderItem = require('../models/order');
 // const userCart = {1:{"ID":1, "Name":"Dynamic Book Name", "Image":"r1", "Quantity":5, "SubtotalPrice":10.00},
 // 2:{"ID":2, "Name":"Dynamic Book Name 2", "Image":"r2", "Quantity":10, "SubtotalPrice":20.00}}
 // const userCart = {1:{"ID":1, "Name":"r1", "Author":"John Doe",
@@ -40,15 +38,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 	apiVersion: "2020-03-02",
 });
 
-// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY, {
-// 	apiVersion: "2020-03-02",
-// });
-
-// router.get('/123', (req, res) => {
-//     res.render('checkout/checkout', {
-//         title:"Testing"
-//     })
-// })
 
 router.get("/listproduct/:id", (req, res, next) => {
 	// 'Add to Cart' button passes value of product id to server

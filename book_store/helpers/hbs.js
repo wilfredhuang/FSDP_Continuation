@@ -1,5 +1,3 @@
-//const moment = require("moment");
-
 import moment from "moment";
 export default {
 	formatDate: function (date, targetFormat) {

@@ -224,3 +224,112 @@ document.querySelectorAll('.buy-now-btn').forEach(button => {
           });
 });
 })
+
+
+// Individual Product Page - Add to Cart
+document.querySelectorAll('.buy-now-btn2').forEach(button => {
+  button.addEventListener('click', async function (e) {
+      e.preventDefault();
+      const productId = this.dataset.productId;
+      const productName = this.dataset.productName;
+
+      // Show the spinner when the user adds an item to the cart
+      document.querySelector('.spinner-border').classList.remove('d-none');
+
+      // Hide the button while the request is being handled
+      document.getElementById('buy-now-btn2').style.display = 'none';
+
+      try {
+          // Simulate a loading delay before sending the request
+          await delay(2000); // 2-second delay
+      } catch (error) {
+          console.log("Error during delay:", error);
+      }
+
+      // Axios AJAX POST request
+      axios.post(`/product/individualProduct/${productId}`, {
+          productId: productId,   // Sending the productId in the request body
+          productName: productName // Include other data as needed
+      }, {
+          headers: {
+              "X-Requested-With": "XMLHttpRequest",
+              "Content-Type": "application/json"
+          },
+      })
+      .then((response) => {
+          // Handle successful response
+          if (response.status >= 200 && response.status < 300) {
+              // Hide spinner and show the button again
+              document.querySelector(".spinner-border").classList.add("d-none");
+              document.getElementById("buy-now-btn2").style.display = "block";
+              
+              // Flash messages if available
+              if (response.data.success) {
+                  const flashMessages = response.data.flashMessage;
+                  flashMessages.forEach((msg) => {
+                      flashMessage(
+                          "success",
+                          msg,
+                          "fas fa-exclamation-circle",
+                          true,
+                          5000
+                      );
+                  });
+              }
+
+              // Update quantity of cart items in Cart UI
+              updateCartUI();
+          } else {
+              // Handle non-successful status codes
+              console.error("Unexpected status code:", response.status);
+              alert("Failed to add product to cart.");
+          }
+      })
+      .catch((error) => {
+          // Handle errors
+          if (error.response) {
+              // Server responded with a status code outside 2xx
+              console.error("Response error:", error.response.status, error.response.data);
+          } else if (error.request) {
+              // No response received
+              console.error("Request error:", error.request);
+          } else {
+              // Error setting up the request
+              console.error("Error:", error.message);
+          }
+      });
+  });
+});
+
+
+// Update Cart - Cart Page [Not in Use for now]
+document.getElementById('cartForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // Prevent the default form submission
+
+    // Gather the form data
+    let formData = new FormData(this);
+
+    axios.post('/cart', formData)
+        .then(function(response) {
+            // Handle the response here (e.g., redirect to checkout page)
+            if (response.data.redirectToCheckout) {
+                window.location.href = '/checkout';
+            } else {
+                // Reload the cart page or show a success message
+                window.location.href = '/cart';
+            }
+        })
+        .catch(function(error) {
+            console.error('There was an error updating the cart:', error);
+            // Optionally display an error message to the user
+        });
+});
+
+function submitCartForm() {
+    document.getElementById('cartForm').submit();
+}
+
+// Attach the submitCartForm function to the Checkout button click
+document.getElementById('checkoutButton').addEventListener('click', function() {
+    submitCartForm();
+});

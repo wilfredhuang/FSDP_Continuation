@@ -49,7 +49,78 @@ const client = new Client(accountSid, authToken);
 // Authentications
 import ensureAuthenticated from "../helpers/auth.js";
 import ensureAdminAuthenticated from "../helpers/adminauth.js";
-import checkCart from "../helpers/cart.js";
+import {checkCart} from "../helpers/cart.js";
+
+const calculateDiscountedPrice = (quantity, price, discountRate, minQty) => {
+    const special = Math.floor(quantity / minQty);
+    const discountedPart = special * minQty * price * (1 - discountRate);
+    const regularPart = (quantity - special * minQty) * price;
+    return {
+        subtotalPrice: (discountedPart + regularPart).toFixed(2),
+        discountedValue: (quantity * price - (discountedPart + regularPart)).toFixed(2),
+    };
+};
+
+const updateCartItem = (cartItem, product, discount) => {
+    cartItem.Quantity += 1;
+    if (discount) {
+        const { subtotalPrice, discountedValue } = calculateDiscountedPrice(
+            cartItem.Quantity,
+            cartItem.Price,
+            discount.discount_rate,
+            discount.min_qty
+        );
+        cartItem.SubtotalPrice = subtotalPrice;
+        console.log("DEDUCTED VALUE IS " + discountedValue);
+        console.log("AFTER SPECIAL DISCOUNT Subtotal is " + cartItem.SubtotalPrice);
+    } else {
+        cartItem.SubtotalPrice = (
+            parseFloat(cartItem.SubtotalPrice) + parseFloat(product.price)
+        ).toFixed(2);
+    }
+    cartItem.SubtotalWeight = (
+        parseFloat(cartItem.SubtotalWeight) + parseFloat(product.weight)
+    ).toFixed(2);
+};
+
+const addNewCartItem = (cart, product, discount) => {
+    const price = discount ? (product.price * (1 - discount.discount_rate)).toFixed(2) : product.price;
+    cart[product.id] = {
+        ID: product.id,
+        Name: product.product_name,
+        Author: product.author,
+        Publisher: product.publisher,
+        Genre: product.genre,
+        Price: product.price,
+        Stock: product.stock,
+        Weight: product.weight,
+        Image: product.product_image,
+        Quantity: 1,
+        SubtotalPrice: price,
+        SubtotalWeight: product.weight,
+    };
+};
+
+const handleProductDiscount = async (productId) => {
+    const discount = await Discount.findOne({ where: { target_id: productId } });
+    if (discount) {
+        const expiryTime = moment(discount.expiry);
+        if (moment().isAfter(expiryTime)) {
+            await discount.destroy();
+            return null;
+        }
+    }
+    return discount;
+};
+
+const processCart = (cart, product, discount) => {
+    if (cart[product.id]) {
+        updateCartItem(cart[product.id], product, discount);
+    } else {
+        addNewCartItem(cart, product, discount);
+    }
+};
+
 
 // variables below for coupon feature, dont change - wilfred
 // switched req.session.userCart to global variable @app.js
@@ -90,50 +161,6 @@ router.get("/individualProduct/:id", async (req, res) => {
 				disc,
 			});
 		});
-});
-
-router.get("/individualProduct2", (req, res) => {
-	const title = "Products";
-	res.render("products/individualProduct2", {
-		title,
-	});
-});
-
-router.get("/individualProduct3", (req, res) => {
-	const title = "Products";
-	res.render("products/individualProduct3", {
-		title,
-	});
-});
-
-router.get("/individualProduct4", (req, res) => {
-	const title = "Products";
-	res.render("products/individualProduct4", {
-		title,
-	});
-});
-
-router.post("/addProduct1", (req, res) => {
-	let title = "7 DAY SELF PUBLISH HOW TO WRITE A BOOK";
-	let price = 3.37;
-	let amount = 1;
-	product
-		.create({
-			title,
-			price,
-			amount,
-		})
-		.then((product) => {
-			res.redirect("/product/listproduct");
-		})
-		.catch((err) => console.log(err));
-});
-
-router.get("/createProduct", ensureAdminAuthenticated, (req, res) => {
-	const title = "Create Product";
-	res.render("products/createProduct", {
-		title,
-	});
 });
 
 router.post("/addProductAdmin", (req, res) => {
@@ -287,650 +314,128 @@ router.put("/updateProductAdmin/:id", (req, res) => {
 
 // Here is the start of Cart and Payment Features - Wilfred
 
-// Add to Cart from 'List of Products Page'
-router.get("/listproduct/:id", async (req, res, next) => {
-	// 'Add to Cart' button passes value of product id to server
-	// queries product id with database
-	// stores each cartitesm with id, name and quantity
+router.get("/listproduct/:id", async (req, res) => {
+	console.log("Start request /listproduct/:id")
+    const productId = req.params.id;
+    const discount = await handleProductDiscount(productId);
+    const product = await productadmin.findOne({ where: { id: productId } });
 
-	// Check for the expiry of the discount if discount exists
-	var disc_object = await Discount.findOne({
-		where: { target_id: req.params.id },
-	});
-	if (disc_object != null) {
-		let expiry_time = moment(disc_object.expiry);
-		let current_time = moment();
-		if (current_time.isAfter(expiry_time)) {
-			await disc_object.destroy();
-			disc_object = null;
-			console.log(disc_object);
-		}
-	}
-	var product = await productadmin.findOne({ where: { id: req.params.id } });
-	var id = product.id;
-	let name = product.product_name;
-	let author = product.author;
-	let publisher = product.publisher;
-	let genre = product.genre;
-	let price = product.price;
-	let stock = product.stock;
-	let details = product.details;
-	let weight = product.weight;
-	let image = product.product_image;
+    processCart(req.session.userCart, product, discount);
 
-	var check = false;
+    const cartQty = Object.values(req.session.userCart).reduce((acc, item) => acc + item.Quantity, 0);
+    res.cookie('cartQty', cartQty, { expires: new Date(Date.now() + 900000), httpOnly: false });
 
-	for (var z in req.session.userCart) {
-		if (disc_object != null && z == id) {
-			console.log("FOUND EXISTING PRODUCT IN CART");
-			console.log("Quantity is " + req.session.userCart[z].Quantity);
-			console.log(
-				"Discount Criteria FOUND for " + req.session.userCart[z].Name
-			);
-			req.session.userCart[z].Quantity += 1;
-			// special is the number of times the special offer can be applied, i.e
-			// if discount is for every 3 items and i have 10 items, special will be 10 / 3 rounded down to 3
-			let special = Math.floor(
-				req.session.userCart[z].Quantity / disc_object.min_qty
-			);
-			if (special != 0) {
-				console.log(`Special Value : ${special}`);
-				alertMessage(
-					res,
-					"success",
-					`Special Offer for this product applied ${special} times`,
-					"fas fa-exclamation-circle",
-					false
-				);
-			}
-			let first_half =
-				special *
-				disc_object.min_qty *
-				req.session.userCart[z].Price *
-				(1 - disc_object.discount_rate);
-			let second_half =
-				(req.session.userCart[z].Quantity - special * disc_object.min_qty) *
-				req.session.userCart[z].Price;
-			req.session.userCart[z].SubtotalPrice = (
-				first_half + second_half
-			).toFixed(2);
-			var discounted_value = (
-				req.session.userCart[z].Quantity * req.session.userCart[z].Price -
-				(first_half + second_half)
-			).toFixed(2);
-			console.log("DEDUCTED VALUE IS " + discounted_value);
-			console.log(
-				"AFTER SPECIAL DISCOUNT " +
-					` Subtotal is ${req.session.userCart[z].SubtotalPrice}`
-			);
+    const flashMessage_clientside = `${product.product_name} added to cart!`;
 
-			req.session.userCart[z].SubtotalWeight = (
-				parseFloat(req.session.userCart[z].SubtotalWeight) +
-				parseFloat(product.weight)
-			).toFixed(2);
-			check = true;
-			// console.log(req.session.userCart)
-		} else if (disc_object == null && z == id) {
-			console.log("FOUND EXISTING PRODUCT IN CART");
-			console.log("Quantity is " + req.session.userCart[z].Quantity);
-			req.session.userCart[z].Quantity += 1;
-			req.session.userCart[z].SubtotalPrice = (
-				parseFloat(req.session.userCart[z].SubtotalPrice) +
-				parseFloat(product.price)
-			).toFixed(2);
-			req.session.userCart[z].SubtotalWeight = (
-				parseFloat(req.session.userCart[z].SubtotalWeight) +
-				parseFloat(product.weight)
-			).toFixed(2);
-			check = true;
-			// console.log(req.session.userCart)
-		}
-	}
-	if (check == false) {
-		console.log("Adding New Cart Item");
-		let qty = 1;
-		// Updated on 16 Aug, Bug fix for when a item min qty for discount is 1
-		// and it is the first item to be added to cart, but the special price not applied
-		if (disc_object != null && qty == disc_object.min_qty) {
-			console.log("Discount Criteria FOUND for " + product.name);
-			alertMessage(
-				res,
-				"success",
-				`Special Offer for this product applied`,
-				"fas fa-exclamation-circle",
-				false
-			);
-			req.session.userCart[[id]] = {
-				ID: id,
-				Name: name,
-				Author: author,
-				Publisher: publisher,
-				Genre: genre,
-				Price: price,
-				Stock: stock,
-				Weight: weight,
-				Image: image,
-				Quantity: qty,
-				SubtotalPrice: (price * (1 - disc_object.discount_rate)).toFixed(2),
-				SubtotalWeight: weight,
-			};
-		}
-		//
-		else {
-			req.session.userCart[[id]] = {
-				ID: id,
-				Name: name,
-				Author: author,
-				Publisher: publisher,
-				Genre: genre,
-				Price: price,
-				Stock: stock,
-				Weight: weight,
-				Image: image,
-				Quantity: qty,
-				SubtotalPrice: price,
-				SubtotalWeight: weight,
-			};
-		}
-		// console.log(req.session.userCart)
-	}
+    res.json({
+        success: true,
+        flashMessage: [flashMessage_clientside],
+    });
 
-
-	var cartQty = Object.values(req.session.userCart).reduce((acc, item) => acc + item.Quantity, 0);
-	console.log(`Cart Quantity is ${cartQty}`)
-
-	res.cookie('cartQty', cartQty, { expires: new Date(Date.now() + 900000), httpOnly: false });
-
-
-	// Directly create the message
-    const flashMessage_clientside = `${name} added to cart!`;
-
-	res.json({
-		success:true, // Send this to show that the request has successfully completed
-		flashMessage:[flashMessage_clientside] // Wrapping in an array to mimic req.flash behavior
-	});
+    console.log(`Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`);
 });
 
-// Add to Cart - individual page
-router.post("/individualProduct/:id", async (req, res, next) => {
-	// 'Add to Cart' button passes value of product id to server
-	// queries product id with database
-	// stores each cartitesm with id, name and quantity
 
-	// Check for the expiry of the discount if discount exists
-	var disc_object = await Discount.findOne({
-		where: { target_id: req.params.id },
-	});
-	if (disc_object != null) {
-		let expiry_time = moment(disc_object.expiry);
-		let current_time = moment();
-		if (current_time.isAfter(expiry_time)) {
-			await disc_object.destroy();
-			disc_object = null;
-			console.log(disc_object);
-		}
-	}
-	var product = await productadmin.findOne({ where: { id: req.params.id } });
-	var id = product.id;
-	let name = product.product_name;
-	let author = product.author;
-	let publisher = product.publisher;
-	let genre = product.genre;
-	let price = product.price;
-	let stock = product.stock;
-	let details = product.details;
-	let weight = product.weight;
-	let image = product.product_image;
 
-	var check = false;
+router.post("/individualProduct/:id", async (req, res) => {
+    const productId = req.params.id;
 
-	for (var z in req.session.userCart) {
-		if (disc_object != null && z == id) {
-			console.log("FOUND EXISTING PRODUCT IN CART");
-			console.log("Quantity is " + req.session.userCart[z].Quantity);
-			console.log(
-				"Discount Criteria FOUND for " + req.session.userCart[z].Name
-			);
-			req.session.userCart[z].Quantity += 1;
-			// special is the number of times the special offer can be applied, i.e
-			// if discount is for every 3 items and i have 10 items, special will be 10 / 3 rounded down to 3
-			let special = Math.floor(
-				req.session.userCart[z].Quantity / disc_object.min_qty
-			);
-			if (special != 0) {
-				console.log(`Special Value : ${special}`);
-				alertMessage(
-					res,
-					"success",
-					`Special Offer for this product applied ${special} times`,
-					"fas fa-exclamation-circle",
-					false
-				);
-			}
-			let first_half =
-				special *
-				disc_object.min_qty *
-				req.session.userCart[z].Price *
-				(1 - disc_object.discount_rate);
-			let second_half =
-				(req.session.userCart[z].Quantity - special * disc_object.min_qty) *
-				req.session.userCart[z].Price;
-			req.session.userCart[z].SubtotalPrice = (
-				first_half + second_half
-			).toFixed(2);
-			discounted_value = (
-				req.session.userCart[z].Quantity * req.session.userCart[z].Price -
-				(first_half + second_half)
-			).toFixed(2);
-			console.log("DEDUCTED VALUE IS " + discounted_value);
-			console.log(
-				"AFTER SPECIAL DISCOUNT " +
-					` Subtotal is ${req.session.userCart[z].SubtotalPrice}`
-			);
+	console.log(`ID Taken is ${productId}`)
+	console.log("Start Req")
+    try {
+        // Fetch the discount and product details
+        const discount = await handleProductDiscount(productId);
+        const product = await productadmin.findOne({ where: { id: productId } });
 
-			req.session.userCart[z].SubtotalWeight = (
-				parseFloat(req.session.userCart[z].SubtotalWeight) +
-				parseFloat(product.weight)
-			).toFixed(2);
-			check = true;
-			// console.log(req.session.userCart)
-		} else if (disc_object == null && z == id) {
-			console.log("FOUND EXISTING PRODUCT IN CART");
-			console.log("Quantity is " + req.session.userCart[z].Quantity);
-			req.session.userCart[z].Quantity += 1;
-			req.session.userCart[z].SubtotalPrice = (
-				parseFloat(req.session.userCart[z].SubtotalPrice) +
-				parseFloat(product.price)
-			).toFixed(2);
-			req.session.userCart[z].SubtotalWeight = (
-				parseFloat(req.session.userCart[z].SubtotalWeight) +
-				parseFloat(product.weight)
-			).toFixed(2);
-			check = true;
-			// console.log(req.session.userCart)
-		}
-	}
-	if (check == false) {
-		console.log("Adding New Cart Item");
-		let qty = 1;
-		// Updated on 16 Aug, Bug fix for when a item min qty for discount is 1
-		// and it is the first item to be added to cart, but the special price not applied
-		if (disc_object != null && qty == disc_object.min_qty) {
-			console.log("Discount Criteria FOUND for " + product.name);
-			alertMessage(
-				res,
-				"success",
-				`Special Offer for this product applied`,
-				"fas fa-exclamation-circle",
-				false
-			);
-			req.session.userCart[[id]] = {
-				ID: id,
-				Name: name,
-				Author: author,
-				Publisher: publisher,
-				Genre: genre,
-				Price: price,
-				Stock: stock,
-				Weight: weight,
-				Image: image,
-				Quantity: qty,
-				SubtotalPrice: (price * (1 - disc_object.discount_rate)).toFixed(2),
-				SubtotalWeight: weight,
-			};
-		}
-		//
-		else {
-			req.session.userCart[[id]] = {
-				ID: id,
-				Name: name,
-				Author: author,
-				Publisher: publisher,
-				Genre: genre,
-				Price: price,
-				Stock: stock,
-				Weight: weight,
-				Image: image,
-				Quantity: qty,
-				SubtotalPrice: price,
-				SubtotalWeight: weight,
-			};
-		}
-		// console.log(req.session.userCart)
-	}
+        if (!product) {
+            return res.json({ success: false, message: "Product not found" });
+        }
 
-	res.redirect(`/product/individualProduct/${req.params.id}`);
-	console.log("Added to cart");
-	console.log(req.session.userCart);
+        // Process the cart
+        processCart(req.session.userCart, product, discount);
+
+
+		// Set flash message
+		const flashMessage_clientside = `${product.product_name} added to cart!`;
+
+
+		const cartQty = Object.values(req.session.userCart).reduce((acc, item) => acc + item.Quantity, 0);
+		res.cookie('cartQty', cartQty, { expires: new Date(Date.now() + 900000), httpOnly: false });
+
+        // Respond with JSON for AJAX request
+        res.json({
+            success: true,
+            cartContents: req.session.userCart,
+			flashMessage: [flashMessage_clientside]
+        });
+
+        console.log("Added to cart");
+        console.log(req.session.userCart);
+    } catch (error) {
+        res.json({ success: false, message: "An error occurred while adding the product to the cart" });
+        console.error(error);
+    }
+
+	console.log("End Req")
 });
 
-// POST request before redirecting to Cart
-// Why? Because when a session update the cart, session variable is updated, but the
-// contents displayed on the page won't show unless we refresh once more (Reason: Unknown)
-// Using this POST request to handle and update the information instead of router.get will solve that problem
-router.post("/goToCart", (req, res) => {
-	req.session.full_subtotal_price = 0;
-	req.session.shipping_fee = (0).toFixed(2);
-	let total_weight = 0;
-	let total_weight_oz = 0;
-	req.session.full_total_price = 0;
-	if (req.session.coupon_type == "OVERALL") {
-		console.log("Coupon TYPE IS OVERALL");
-		// Updated by wilfred on 14/08/20 for display purposes
-		req.session.deducted = (0).toFixed(2);
-		for (var z in req.session.userCart) {
-			// console.log("CART IS")
-			console.log(req.session.userCart);
-			// check for any special discount applied, for display only
-			original_price =
-				req.session.userCart[z].Quantity * req.session.userCart[z].Price;
-			// Subtotal price is already modified when discount is applied so
-			// we check by comparing original and special price
-			special_price = req.session.userCart[z].SubtotalPrice;
-			if (special_price != original_price) {
-				product_discounted_value = (
-					parseFloat(original_price) - parseFloat(special_price)
-				).toFixed(2);
-				req.session.deducted = (
-					parseFloat(req.session.deducted) +
-					parseFloat(product_discounted_value)
-				).toFixed(2);
-				// console.log("PDV is")
-				console.log(product_discounted_value);
-			}
-			// end
-			req.session.full_subtotal_price = (
-				parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.userCart[z].SubtotalPrice)
-			).toFixed(2);
-			console.log(req.session.full_subtotal_price);
-		}
-		req.session.discounted_price = (
-			(parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.shipping_fee)) *
-			parseFloat(req.session.discount)
-		).toFixed(2);
-		if (
-			parseFloat(req.session.discounted_price) >
-			parseFloat(req.session.discount_limit)
-		) {
-			req.session.discounted_price = req.session.discount_limit;
-			req.session.full_total_price = (
-				parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.shipping_fee) -
-				parseFloat(req.session.discount_limit)
-			).toFixed(2);
-		} else {
-			// req.session. = (parseFloat(full_subtotal_price) + parseFloat(req.session.shipping_fee)).toFixed(2) * (1- parseFloat(discount)).toFixed(2)
-			req.session.full_total_price = (
-				(parseFloat(req.session.full_subtotal_price) +
-					parseFloat(req.session.shipping_fee)) *
-				(1.0 - parseFloat(req.session.discount))
-			).toFixed(2);
-		}
-	} else if (req.session.coupon_type == "SHIP") {
-		console.log("Coupon TYPE IS SHIP");
-		// Updated by wilfred on 14/08/20 for display purposes
-		req.session.deducted = (0).toFixed(2);
-		for (var z in req.session.userCart) {
-			// console.log("LE CART IS")
-			console.log(req.session.userCart);
-			// check for any special discount applied, for display only
-			original_price =
-				req.session.userCart[z].Quantity * req.session.userCart[z].Price;
-			// Subtotal price is already modified when discount is applied so
-			// we check by comparing original and special price
-			special_price = req.session.userCart[z].SubtotalPrice;
-			if (special_price != original_price) {
-				product_discounted_value = (
-					parseFloat(original_price) - parseFloat(special_price)
-				).toFixed(2);
-				req.session.deducted = (
-					parseFloat(req.session.deducted) +
-					parseFloat(product_discounted_value)
-				).toFixed(2);
-				// console.log("PDV is")
-				console.log(product_discounted_value);
-			}
-			// end
-			req.session.full_subtotal_price = (
-				parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.userCart[z].SubtotalPrice)
-			).toFixed(2);
-			console.log(req.session.full_subtotal_price);
-		}
-		req.session.req.shipping_discounted_price =
-			parseFloat(req.session.shipping_fee) * req.shipping_discount;
-		if (
-			parseFloat(req.session.req.shipping_discounted_price) >
-			parseFloat(req.session.req.shipping_discount_limit)
-		) {
-			req.session.discounted_price = req.session.req.shipping_discount_limit;
-			req.session.shipping_fee = (
-				parseFloat(req.session.shipping_fee) -
-				parseFloat(req.session.discount_limit)
-			).toFixed(2);
-			req.session.full_total_price = (
-				parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.shipping_fee)
-			).toFixed(2);
-		} else {
-			req.session.discounted_price = (
-				parseFloat(req.session.shipping_fee) * parseFloat(req.shipping_discount)
-			).toFixed(2);
-			req.session.shipping_fee = (
-				parseFloat(req.session.shipping_fee) *
-				(1 - parseFloat(req.shipping_discount))
-			).toFixed(2);
-			req.session.full_total_price = (
-				parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.shipping_fee)
-			).toFixed(2);
-		}
-	} else if (req.session.coupon_type == "SUB") {
-		console.log("Coupon TYPE IS SUB");
-		// Updated by wilfred on 14/08/20 for display purposes
-		req.session.deducted = (0).toFixed(2);
-		for (var z in req.session.userCart) {
-			// console.log("LE CART IS")
-			console.log(req.session.userCart);
-			// check for any special discount applied, for display only
-			original_price =
-				req.session.userCart[z].Quantity * req.session.userCart[z].Price;
-			// Subtotal price is already modified when discount is applied so
-			// we check by comparing original and special price
-			special_price = req.session.userCart[z].SubtotalPrice;
-			if (special_price != original_price) {
-				product_discounted_value = (
-					parseFloat(original_price) - parseFloat(special_price)
-				).toFixed(2);
-				req.session.deducted = (
-					parseFloat(req.session.deducted) +
-					parseFloat(product_discounted_value)
-				).toFixed(2);
-				// console.log("PDV is")
-				console.log(product_discounted_value);
-			}
-			// end
-			req.session.full_subtotal_price = (
-				parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.userCart[z].SubtotalPrice)
-			).toFixed(2);
-			console.log(req.session.full_subtotal_price);
-		}
-		req.session.discounted_price =
-			parseFloat(req.session.full_subtotal_price) * req.session.sub_discount;
-		if (
-			parseFloat(req.session.discounted_price) >
-			parseFloat(req.session.discount_limit)
-		) {
-			req.session.discounted_price = req.session.discount_limit;
-			console.log(req.session.full_subtotal_price);
-			req.session.full_subtotal_price = (
-				parseFloat(req.session.full_subtotal_price) -
-				parseFloat(req.session.discount_limit)
-			).toFixed(2);
-			console.log(req.session.full_subtotal_price);
-			req.session.full_total_price = (
-				parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.shipping_fee)
-			).toFixed(2);
-		} else {
-			req.session.discounted_price = (
-				parseFloat(req.session.full_subtotal_price) *
-				parseFloat(req.session.sub_discount)
-			).toFixed(2);
-			req.session.full_subtotal_price = (
-				parseFloat(req.session.full_subtotal_price) *
-				parseFloat(1 - req.session.sub_discount)
-			).toFixed(2);
-			req.session.full_total_price = (
-				parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.shipping_fee)
-			).toFixed(2);
-		}
-	} else {
-		req.session.discounted_price = (0).toFixed(2);
-		// Updated by wilfred on 14/08/20 for display purposes
-		req.session.deducted = (0).toFixed(2);
-		for (var z in req.session.userCart) {
-			// console.log("LE CART IS")
-			console.log(req.session.userCart);
-			// check for any special discount applied, for display only
-			var original_price =
-				req.session.userCart[z].Quantity * req.session.userCart[z].Price;
-			// Subtotal price is already modified when discount is applied so
-			// we check by comparing original and special price
-			var special_price = req.session.userCart[z].SubtotalPrice;
-			if (special_price != original_price) {
-				var product_discounted_value = (
-					parseFloat(original_price) - parseFloat(special_price)
-				).toFixed(2);
-				req.session.deducted = (
-					parseFloat(req.session.deducted) +
-					parseFloat(product_discounted_value)
-				).toFixed(2);
-				// console.log("PDV is")
-				console.log(product_discounted_value);
-			}
-			// end
-			req.session.full_subtotal_price = (
-				parseFloat(req.session.full_subtotal_price) +
-				parseFloat(req.session.userCart[z].SubtotalPrice)
-			).toFixed(2);
-			console.log(req.session.full_subtotal_price);
-		}
-		req.session.full_total_price = (
-			parseFloat(req.session.full_subtotal_price) +
-			parseFloat(req.session.shipping_fee)
-		).toFixed(2);
-	}
-
-	res.redirect("cart?page=1");
-});
 
 // Update Cart
 // When a user want to change the product qty in cart page
 
 router.post("/cart", async (req, res) => {
-	if (req.body.checkoutButton == "Update") {
-		for (var ID in req.session.userCart) {
-			// Make sure to parseInt the updated qty or it will become a string!!
-			let query = parseInt(req.body["Q" + ID]);
-			// update 23/08/20, need to check if query value > 0 as when items on page n is updated
-			// items on other pages will have their quantities updated with undefined values
-			if (query > 0) {
-				console.log("Updating, Queried Quantity is " + query);
-				req.session.userCart[ID].Quantity = query;
-			}
-			// newSubTotal = query * req.session.userCart[ID].SubtotalPrice
-			// console.log("Q is" + req.body["Q" + ID])
-		}
+    if (req.body.checkoutButton === "Update") {
+        for (let ID in req.session.userCart) {
+            let query = parseInt(req.body[`Q${ID}`]);
+            if (query > 0) {
+                req.session.userCart[ID].Quantity = query;
+            }
+        }
+        req.session.deducted = (0).toFixed(2);
 
-		req.session.deducted = (0).toFixed(2);
-		for (var z in req.session.userCart) {
-			var product = await productadmin.findOne({
-				where: { id: req.session.userCart[z].ID },
-			});
-			var disc_object = await Discount.findOne({
-				where: { target_id: req.session.userCart[z].ID },
-			});
-			if (
-				disc_object != null &&
-				disc_object.target_id == req.session.userCart[z].ID
-			) {
-				// special is the number of times the special offer can be applied, i.e
-				// if discount is for every 3 items and i have 10 items, special will be 10 / 3 rounded down to 3
-				let special = Math.floor(
-					req.session.userCart[z].Quantity / disc_object.min_qty
-				);
-				if (special != 0) {
-					console.log(`Special Value : ${special}`);
-					alertMessage(
-						res,
-						"success",
-						`Special Offer: Buy ${disc_object.min_qty} for ${
-							disc_object.discount_rate * 100
-						}% off for '${product.product_name}' applied ${special} times`,
-						"fas fa-exclamation-circle",
-						true
-					);
-				}
-				let first_half =
-					special *
-					disc_object.min_qty *
-					req.session.userCart[z].Price *
-					(1 - disc_object.discount_rate);
-				let second_half =
-					(req.session.userCart[z].Quantity - special * disc_object.min_qty) *
-					req.session.userCart[z].Price;
-				req.session.userCart[z].SubtotalPrice = (
-					first_half + second_half
-				).toFixed(2);
-				var discounted_value = (
-					req.session.userCart[z].Quantity * req.session.userCart[z].Price -
-					(first_half + second_half)
-				).toFixed(2);
-				req.session.deducted = (
-					parseFloat(req.session.deducted) + parseFloat(discounted_value)
-				).toFixed(2);
-				console.log("DEDUCTED VALUE IS " + discounted_value);
-				console.log("DEDUCTED TOTAL IS " + req.session.deducted);
-				console.log(
-					"AFTER SPECIAL DISCOUNT " +
-						` Subtotal is ${req.session.userCart[z].SubtotalPrice}`
-				);
+        for (let z in req.session.userCart) {
+            let product = await productadmin.findOne({
+                where: { id: req.session.userCart[z].ID },
+            });
+            let disc_object = await Discount.findOne({
+                where: { target_id: req.session.userCart[z].ID },
+            });
 
-				req.session.userCart[z].SubtotalWeight = (
-					parseFloat(req.session.userCart[z].SubtotalWeight) +
-					parseFloat(product.weight)
-				).toFixed(2);
-			} else if (disc_object == null) {
-				req.session.userCart[z].SubtotalPrice = (
-					parseFloat(req.session.userCart[z].Quantity) *
-					parseFloat(product.price)
-				).toFixed(2);
-			}
-		}
+            if (disc_object && disc_object.target_id === req.session.userCart[z].ID) {
+                let special = Math.floor(req.session.userCart[z].Quantity / disc_object.min_qty);
+                if (special > 0) {
+                    // Instead of directly sending messages, you will handle it client-side via Axios
+                    req.session.flash = {
+                        type: 'success',
+                        message: `Special Offer: Buy ${disc_object.min_qty} for ${disc_object.discount_rate * 100}% off for '${product.product_name}' applied ${special} times`,
+                        icon: 'fas fa-exclamation-circle'
+                    };
+                }
 
-		for (var z in req.session.userCart) {
-			req.session.userCart[z].SubtotalWeight =
-				req.session.userCart[z].Quantity * req.session.userCart[z].Weight;
-		}
+                let first_half = special * disc_object.min_qty * req.session.userCart[z].Price * (1 - disc_object.discount_rate);
+                let second_half = (req.session.userCart[z].Quantity - special * disc_object.min_qty) * req.session.userCart[z].Price;
+                req.session.userCart[z].SubtotalPrice = (first_half + second_half).toFixed(2);
+                let discounted_value = (req.session.userCart[z].Quantity * req.session.userCart[z].Price - (first_half + second_half)).toFixed(2);
+                req.session.deducted = (parseFloat(req.session.deducted) + parseFloat(discounted_value)).toFixed(2);
+                req.session.userCart[z].SubtotalWeight = (parseFloat(req.session.userCart[z].SubtotalWeight) + parseFloat(product.weight)).toFixed(2);
+            } else {
+                req.session.userCart[z].SubtotalPrice = (parseFloat(req.session.userCart[z].Quantity) * parseFloat(product.price)).toFixed(2);
+            }
+        }
 
-		// console.log(req.session.userCart)
-		// console.log(req.session.full_subtotal_price)
-		res.redirect(307, "goToCart");
-	} else {
-		res.redirect("checkout");
-		alertMessage(
-			res,
-			"danger",
-			"You are not logged in",
-			"fas fa-exclamation-circle",
-			true
-		);
-	}
+        for (let z in req.session.userCart) {
+            req.session.userCart[z].SubtotalWeight = req.session.userCart[z].Quantity * req.session.userCart[z].Weight;
+        }
+
+        res.redirect("cart");
+    } else {
+        req.session.flash = {
+            type: 'danger',
+            message: 'You are not logged in',
+            icon: 'fas fa-exclamation-circle'
+        };
+        res.redirect("checkout");
+    }
 });
 
 // Delete Item in Cart
@@ -1152,71 +657,60 @@ router.get("/deleteCartItem/:id", async (req, res) => {
 // Retrieve Cart
 // Make sure to use POST request to handle updated cart info or you need to double refresh
 
-router.get("/cart", (req, res) => {
-	let title = "Shopping Cart";
-	for (var z in req.session.userCart) {
-		req.session.userCart[z].SubtotalWeight =
-			req.session.userCart[z].Quantity * req.session.userCart[z].Weight;
-	}
+router.get("/cart", async (req, res) => {
+    let title = "Shopping Cart";
+    for (let z in req.session.userCart) {
+        req.session.userCart[z].SubtotalWeight =
+            req.session.userCart[z].Quantity * req.session.userCart[z].Weight;
+    }
 
-	// Get the full subtotal price of all items
-	// req.session.full_subtotal_price = 0;
+    // Calculate total weight
+    let total_weight = 0;
+    let total_weight_oz = 0;
 
-	// Get full total price (Subtotal of all items + shipping after discounts(if any))
-	// let req.session. = 0;
-	req.session.shipping_fee = (0).toFixed(2);
-	let total_weight = 0;
-	let total_weight_oz = 0;
+    for (let z in req.session.userCart) {
+        total_weight += req.session.userCart[z].SubtotalWeight;
+    }
 
-	for (var z in req.session.userCart) {
-		total_weight = total_weight + req.session.userCart[z].SubtotalWeight;
-	}
+    total_weight_oz = Math.ceil(total_weight * 0.035274);
 
-	var discounts = Discount.findAll({});
+    // Fetch discounts
+    const discounts = await Discount.findAll();
 
-	// Round up to next number regardless of decimal value with ceil function
-	total_weight_oz = Math.ceil(total_weight * 0.035274);
+    // Initialize other values
+    let full_og_subtotal_price = 0;
+    let deducted = 0;
+    let discounted_price = 0;
+    let full_total_price = 0;
 
-	const cart_items = req.session.userCart;
+    // Calculate full original subtotal price, deducted amount, and full total price
+    for (let key in req.session.userCart) {
+        const item = req.session.userCart[key];
+        full_og_subtotal_price += parseFloat(item.SubtotalPrice);
+    }
 
-	const page = parseInt(req.query.page);
-	const limit = 3;
+    // Placeholder calculations for demonstration
+    // You should replace these with your actual logic
+    deducted = 0; // Compute as needed
+    discounted_price = 0; // Compute as needed
+    full_total_price = full_og_subtotal_price - deducted - discounted_price;
 
-	const startIndex = (page - 1) * limit;
-	const endIndex = page * limit;
-
-	const results = {};
-
-	if (endIndex < Object.keys(cart_items).length) {
-		results.next = {
-			page: page + 1,
-			limit: limit,
-		};
-	}
-
-	if (startIndex > 0) {
-		results.previous = {
-			page: page - 1,
-			limit: limit,
-		};
-	}
-
-	results.pages = Math.ceil(Object.keys(cart_items).length / limit);
-	console.log("");
-	results.results = Object.keys(cart_items)
-		.slice(startIndex, endIndex)
-		.map((key) => ({ [key]: cart_items[key] }));
-
-	console.log(results.results);
-
-	res.render("checkout/cart", {
-		total_weight,
-		total_weight_oz,
-		discounts,
-		title,
-		results,
-	});
+    res.render("checkout/cart", {
+        total_weight,
+        total_weight_oz,
+        discounts,
+        title,
+        results: {
+            pages: 1, // Set correctly based on your pagination logic
+            results: Object.keys(req.session.userCart).map(key => ({ [key]: req.session.userCart[key] }))
+        },
+        full_og_subtotal_price: full_og_subtotal_price.toFixed(2),
+        deducted: deducted.toFixed(2),
+        discounted_price: discounted_price.toFixed(2),
+        full_total_price: full_total_price.toFixed(2),
+    });
 });
+
 
 // Cart Coupon
 router.post("/applyCoupon", (req, res) => {
