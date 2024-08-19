@@ -92,7 +92,7 @@ import localStrategy from "./config/passport.js";
 localStrategy(passport);
 
 import helper from "./helpers/hbs.js";
-
+import carthelper from  "./helpers/cartHelper.js";
 import when from "./helpers/for_loop.js";
 
 // creates an express server
@@ -105,21 +105,26 @@ app.engine(
 	  helpers: {
 		convertUpper: helper.convertUpper,
 		adminCheck: helper.adminCheck,
-		emptyCart: helper.emptyCart,
-		cartQty: helper.cartQty,
+		emptyCart: carthelper.emptyCart,
 		formatDate: helper.formatDate,
-		capitaliseFirstLetter: helper.capitaliseFirstLetter,
-		isSg: helper.isSg,
-		checkPromo: helper.checkPromo,
-		convertDiscount: helper.convertDiscount,
-		displayCouponType: helper.displayCouponType,
-		get_old_subtotal: helper.get_old_subtotal,
-		check_subtotal: helper.check_subtotal,
 		check_for_discount_msg: helper.check_for_discount_msg,
 		formatDeliveryStatus: helper.formatDeliveryStatus,
 		when: when.when,
 		loop_n_times: helper.loop_n_times,
 		check_page: helper.check_page,
+
+		// Cart Helpers
+		count_cartQty: carthelper.count_cartQty,
+		capitaliseFirstLetter: carthelper.capitaliseFirstLetter,
+		isSg: carthelper.isSg,
+		checkPromo: carthelper.checkPromo,
+		convertDiscount: carthelper.convertDiscount,
+		displayCouponType: carthelper.displayCouponType,
+		displayAnyPrice: carthelper.displayAnyPrice,
+		check_product_discounted: carthelper.check_product_discounted,
+		calculate_cart_initial_subtotal: carthelper.calculate_cart_initial_subtotal,
+		calculate_cart_discounted_subtotal: carthelper.calculate_cart_discounted_subtotal,
+		calculate_cart_total_discount_savings: carthelper.calculate_cart_total_discount_savings,
 	  },
 	  handlebars: allowInsecurePrototypeAccess(Handlebars), // Ensure `allowInsecurePrototypeAccess` is used correctly
 	})
@@ -194,89 +199,48 @@ app.use(passport.session());
 app.use(flash());
 app.use(FlashMessenger.middleware);
 
-// Global variables
+// Global variables for view template
+// make the session data available to the view templates without needing to pass them explicitly
 app.use(function (req, res, next) {
 	res.locals.success_msg = req.flash("success_msg");
 	res.locals.error_msg = req.flash("error_msg");
 	res.locals.error = req.flash("error");
 	res.locals.user = req.user || null;
-
-
-
-	res.locals.UC = req.session.userCart;
 	res.locals.billingAddress = req.session.billingAddress;
 	res.locals.countryShipment = req.session.countryShipment;
-	res.locals.coupon_type = req.session.coupon_type;
-	res.locals.discount = req.session.discount;
-	res.locals.discount_limit = req.session.discount_limit;
-	res.locals.discounted_price = req.session.discounted_price;
-	res.locals.shipping_discount = req.session.shipping_discount;
-	res.locals.shipping_discount_limit = req.session.shipping_discount_limit;
-	res.locals.shipping_discounted_price = req.session.shipping_discounted_price;
-	res.locals.sub_discount = req.session.sub_discount;
-	res.locals.sub_discount_limit = req.session.sub_discount_limit;
-	res.locals.sub_discounted_price = req.session.sub_discounted_price;
-	res.locals.full_subtotal_price = req.session.full_subtotal_price;
-	res.locals.full_total_price = req.session.full_total_price;
-	res.locals.shipping_fee = req.session.shipping_fee;
+	res.locals.UC = req.session.userCart;
+	// TODO
 	res.locals.public_coupon = req.session.public_coupon;
-	res.locals.deducted = req.session.deducted;
-	// Fixed this 16/08/20, cause if you use SUB coupon, the subtotal would display like
-	// e.g i use a coupon with 50% off and $20 limit with a $60 order on 3 identical items with a discount of buy 3 save 10%
-	// it would calculate like this first, 60-6 = 54, 54-20, the subtotal would be like 34 the previous time with discount 6 and
-	// coupon 20.00
-	res.locals.full_og_subtotal_price = (0).toFixed(2);
-	for (var i in req.session.userCart) {
-		res.locals.full_og_subtotal_price = (
-			parseFloat(res.locals.full_og_subtotal_price) +
-			parseFloat(req.session.userCart[i].SubtotalPrice)
-		).toFixed(2);
-	}
-	//  Update 16 Aug, To fix another display issue, in the case of when we have 1 item that costs $10
-	// and SUB / OVERALL coupons with same rate and limit of 10% and $10 respectively
-	// Have to calculate the full_og_subtotal_price differently based on coupon type to match
-	// The calculated amounts
-	if (req.session.coupon_type == "OVERALL") {
-		res.locals.full_og_subtotal_price = (
-			parseFloat(req.session.full_subtotal_price) +
-			parseFloat(req.session.deducted)
-		).toFixed(2);
-	} else {
-		res.locals.full_og_subtotal_price = (
-			parseFloat(req.session.full_subtotal_price) +
-			parseFloat(req.session.deducted) +
-			parseFloat(req.session.discounted_price)
-		).toFixed(2);
-	}
-	// Use when 'OVERALL' coupon applied
-	// res.locals.full_og_subtotal_price = (parseFloat(req.session.full_subtotal_price) + parseFloat(req.session.deducted)).toFixed(2);
-	// Use when 'SUB' coupon applied.
-	// res.locals.full_og_subtotal_price = (parseFloat(req.session.full_subtotal_price) + parseFloat(req.session.deducted) + parseFloat(req.session.discounted_price)).toFixed(2);
+	res.locals.cart_subtotal_initial = req.session.cart_subtotal_initial;
+	res.locals.cart_subtotal_final = req.session.cart_subtotal_final;
+	res.locals.cart_discount_savings = req.session.cart_discount_savings;
+	res.locals.cart_coupon_savings = req.session.cart_coupon_savings
+	res.locals.cart_shipping_fee = req.session.cart_shipping_fee;
+	res.locals.cart_grandtotal = req.session.cart_grandtotal
 	next();
+	
 });
 
 
-// EXPERIMENTAL Middleware to check and initialize important session variables like userCart
-// Previously in root router function
+// Initialize important session variables like userCart
 import Coupon from "./models/Coupon.js";
 import moment from "moment";
 app.use(async (req, res, next) => {
     try {
         if (!req.session.userCart) {
             req.session.userCart = {};
-            req.session.coupon_type = null;
-            req.session.discount = 0;
-            req.session.discount_limit = 0;
-            req.session.discounted_price = (0).toFixed(2);
-            req.session.shipping_discount = 0;
-            req.session.shipping_discount_limit = 0;
-            req.session.shipping_discounted_price = 0;
-            req.session.sub_discount = 0;
-            req.session.sub_discount_limit = 0;
-            req.session.sub_discounted_price = 0;
-            req.session.full_total_price = 0;
-            req.session.deducted = (0).toFixed(2);
-        }
+            req.session.coupon_object = null;
+			req.session.coupon_type = null;
+			req.session.cart_subtotal_initial = 0;
+			req.session.cart_subtotal_final = 0;
+			req.session.cart_discount_savings = 0;
+			req.session.cart_coupon_savings = 0;
+			req.session.cart_shipping_fee = 0;
+			req.session.cart_grandtotal = 0;
+        } else {
+			// console.log("=== Checking Session Variables ===")
+			// console.log(req.session)
+		}
 
         // Check and set the public coupon in the session
         if (!req.session.public_coupon) {

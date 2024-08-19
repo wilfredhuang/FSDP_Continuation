@@ -1,8 +1,15 @@
 // Detects a need to update the cart when quantity is changed
+// JQuery
+// function update(id, qty) {
+//     document.getElementById("checkoutButton").value = "Update";
+//     $("#" + id).attr("value", qty)
+// }
 
+// Pure Javascript
 function update(id, qty) {
     document.getElementById("checkoutButton").value = "Update";
-    $("#" + id).attr("value", qty)
+    console.log(qty)
+    document.getElementById(id).value = qty;
 }
 
 
@@ -303,33 +310,32 @@ document.querySelectorAll('.buy-now-btn2').forEach(button => {
 
 
 // Update Cart - Cart Page [Not in Use for now]
-document.getElementById('cartForm').addEventListener('submit', function(e) {
-    e.preventDefault(); // Prevent the default form submission
+// document.getElementById('cartForm').addEventListener('submit', function(e) {
+//     e.preventDefault(); // Prevent the default form submission
 
-    // Gather the form data
-    let formData = new FormData(this);
+//     // Gather the form data
+//     let formData = new FormData(this);
 
-    axios.post('/cart', formData)
-        .then(function(response) {
-            // Handle the response here (e.g., redirect to checkout page)
-            if (response.data.redirectToCheckout) {
-                window.location.href = '/checkout';
-            } else {
-                // Reload the cart page or show a success message
-                window.location.href = '/cart';
-            }
-        })
-        .catch(function(error) {
-            console.error('There was an error updating the cart:', error);
-            // Optionally display an error message to the user
-        });
-});
+//     axios.post('/cart', formData)
+//         .then(function(response) {
+//             // Handle the response here (e.g., redirect to checkout page)
+//             if (response.data.redirectToCheckout) {
+//                 window.location.href = '/checkout';
+//             } else {
+//                 // Reload the cart page or show a success message
+//                 window.location.href = '/cart';
+//             }
+//         })
+//         .catch(function(error) {
+//             console.error('There was an error updating the cart:', error);
+//             // Optionally display an error message to the user
+//         });
+// });
+// function submitCartForm() {
+//     document.getElementById('cartForm').submit();
+// }
 
-function submitCartForm() {
-    document.getElementById('cartForm').submit();
-}
-
-// Attach the submitCartForm function to the Checkout button click
-document.getElementById('checkoutButton').addEventListener('click', function() {
-    submitCartForm();
-});
+// // Attach the submitCartForm function to the Checkout button click
+// document.getElementById('checkoutButton').addEventListener('click', function() {
+//     submitCartForm();
+// });
