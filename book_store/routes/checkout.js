@@ -39,7 +39,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 
-router.get("/listproduct/:id", (req, res, next) => {
+router.get("/product-list/:id", (req, res, next) => {
 	// 'Add to Cart' button passes value of product id to server
 	// queries product id with database
 	// stores each cartitesm with id, name and quantity
@@ -118,7 +118,7 @@ router.get("/listproduct/:id", (req, res, next) => {
 			}
 		});
 
-	res.redirect("/product/listproduct");
+	res.redirect("/product/product-list");
 	console.log("Added to cart");
 });
 

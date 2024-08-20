@@ -54,13 +54,13 @@
 		{{>_navbar}}
 	</div>
 	{{#if (checkPromo public_coupon)}}
-	{{>_coupon_promo}}
+	{{>_coupon-promo}}
 	{{else}}
 	{{/if}}
 	<div class="container" id="flash-container">
 		{{>_msg}}
 		{{>_errors}}
-		{{>_flashmsg}}
+		{{>_flash_msg}}
 	</div>
 	<div class="page-wrap">
 		{{{body}}}

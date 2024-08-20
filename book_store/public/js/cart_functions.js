@@ -171,7 +171,7 @@ document.querySelectorAll('.buy-now-btn').forEach(button => {
 
         // Axios AJAX call
         axios
-          .get(`/product/listproduct/${productId}`, {
+          .get(`/product/product-list/${productId}`, {
             headers: {
               "X-Requested-With": "XMLHttpRequest",
             },
@@ -247,7 +247,7 @@ document.querySelectorAll('.buy-now-btn2').forEach(button => {
       }
 
       // Axios AJAX POST request
-      axios.post(`/product/individualProduct/${productId}`, {
+      axios.post(`/product/individual-product/${productId}`, {
           productId: productId,   // Sending the productId in the request body
           productName: productName // Include other data as needed
       }, {

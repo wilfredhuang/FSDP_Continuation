@@ -1,6 +1,6 @@
 <div class="breadcrumb">
     <div class="container">
-        <a class="breadcrumb-item" href="/product/listProductAdmin">Product Page Admin</a>
+        <a class="breadcrumb-item" href="/product/product-list-admin">Product Page Admin</a>
         <span class="breadcrumb-item active">Update Product</span>
     </div>
 </div>
@@ -8,7 +8,7 @@
 <div class="container ">
     <h1 class="display-4">Update Product</h1>
     <br>
-    <form method="POST" action="/product/updateProductAdmin/{{product.id}}?_method=PUT" id="updateProductAdmin">
+    <form method="POST" action="/product/product-update-admin/{{product.id}}?_method=PUT" id="updateProductAdmin">
         <input type="hidden" name="_method" value="PUT">
             <div class="form-group col-lg-12 col-sm-3">
             <label for="product_name" onclick="getBook()">Product Name:</label>

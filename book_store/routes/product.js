@@ -89,7 +89,7 @@ import helper from "../helpers/hbs.js";
 // switched req.session.userCart to global variable @app.js
 // const req.session.userCart = {}
 
-router.get("/listProduct", (req, res) => {
+router.get("/product-list", (req, res) => {
   const title = "Product Listing";
   const navStatusProduct = "active";
   productadmin
@@ -97,7 +97,7 @@ router.get("/listProduct", (req, res) => {
       order: [["product_name", "ASC"]],
     })
     .then((productadmin) => {
-      res.render("products/listProduct", {
+      res.render("products/product-list", {
         productadmin: productadmin,
         navStatusProduct,
         title,
@@ -105,7 +105,7 @@ router.get("/listProduct", (req, res) => {
     });
 });
 
-router.get("/individualProduct/:id", async (req, res) => {
+router.get("/individual-product/:id", async (req, res) => {
   const title = "Product Information";
   const disc = await Discount.findOne({
     where: { target_id: req.params.id },
@@ -118,7 +118,7 @@ router.get("/individualProduct/:id", async (req, res) => {
       },
     })
     .then((product) => {
-      res.render("products/individualProduct", {
+      res.render("products/individual-product", {
         product,
         title,
         disc,
@@ -159,12 +159,12 @@ router.post("/addProductAdmin", (req, res) => {
         "fas fa-sign-in-alt",
         true
       );
-      res.redirect("/product/listProductAdmin");
+      res.redirect("/product/product-list-admin");
     })
     .catch((err) => console.log(err));
 });
 
-router.get("/listProductAdmin", (req, res) => {
+router.get("/product-list-admin", (req, res) => {
   const title = "Product Admin List";
   productadmin
     .findAll({
@@ -172,7 +172,7 @@ router.get("/listProductAdmin", (req, res) => {
       raw: true,
     })
     .then((productadmin) => {
-      res.render("products/listProductAdmin", {
+      res.render("products/product-list-admin", {
         productadmin: productadmin,
         title,
       });
@@ -194,12 +194,12 @@ router.get("/delete/:id", (req, res) => {
           },
         })
         .then((productadmin) => {
-          res.redirect("/product/listProductAdmin");
+          res.redirect("/product/product-list-admin");
         });
     });
 });
 
-router.get("/updateProductAdmin/:id", (req, res) => {
+router.get("/product-update-admin/:id", (req, res) => {
   const title = "Update Product";
   productadmin
     .findOne({
@@ -208,14 +208,14 @@ router.get("/updateProductAdmin/:id", (req, res) => {
       },
     })
     .then((product) => {
-      res.render("products/updateProduct", {
+      res.render("products/product-update-admin", {
         product,
         title,
       });
     });
 });
 
-router.get("/detailsProductAdmin/:id", (req, res) => {
+router.get("/product-details-admin/:id", (req, res) => {
   const title = "Product Details";
   productadmin
     .findOne({
@@ -224,14 +224,14 @@ router.get("/detailsProductAdmin/:id", (req, res) => {
       },
     })
     .then((product) => {
-      res.render("products/detailsProduct", {
+      res.render("products/product-details-admin", {
         product,
         title,
       });
     });
 });
 
-router.put("/updateProductAdmin/:id", (req, res) => {
+router.put("/product-update-admin/:id", (req, res) => {
   let product_name = req.body.product_name;
   let author = req.body.author;
   let publisher = req.body.publisher;
@@ -270,14 +270,14 @@ router.put("/updateProductAdmin/:id", (req, res) => {
         "fas fa-sign-in-alt",
         true
       );
-      res.redirect("/product/listProductAdmin");
+      res.redirect("/product/product-list-admin");
     })
     .catch((err) => console.log(err));
 });
 
 // Here is the start of Cart and Payment Features - Wilfred
 
-router.get("/listproduct/:id", async (req, res) => {
+router.get("/product-list/:id", async (req, res) => {
   try {
     const productId = req.params.id;
     const discount = await carthelper.getProductDiscount(productId); // Get Discount Obj from DB
@@ -321,7 +321,7 @@ router.get("/listproduct/:id", async (req, res) => {
   }
 });
 
-router.post("/individualProduct/:id", async (req, res) => {
+router.post("/individual-product/:id", async (req, res) => {
   try {
     const productId = req.params.id;
     const discount = await carthelper.getProductDiscount(productId);
@@ -579,13 +579,13 @@ router.post("/checkout", checkCart, (req, res) => {
   req.session.city = req.body.city;
   req.session.countryShipment = req.body.country;
   req.session.postalCode = req.body.postalCode;
-  res.redirect("selectPayment");
+  res.redirect("select-payment");
 });
 
 // After checkout form filled, select payment page
-router.get("/selectPayment", checkCart, (req, res) => {
+router.get("/select-payment", checkCart, (req, res) => {
   const title = "Select Payment";
-  res.render("checkout/selectPayment", {
+  res.render("checkout/select-payment", {
     title,
   });
 });
@@ -977,35 +977,35 @@ router.post("/paynow", async (req, res) => {
 
 router.get("/stripetxn_end", (req, res) => {
   var title = "Thank you!";
-  res.render("checkout/thankYouStripe", {
+  res.render("checkout/thank-you-stripe", {
     title,
   });
 });
 
 router.get("/paynowtxn_end", (req, res) => {
   var title = "Thank you!";
-  res.render("checkout/thankYouPayNow", {
+  res.render("checkout/thank-you-paynow", {
     title,
   });
 });
 
 // Admin Side
 
-router.get("/discountmenu", ensureAdminAuthenticated, (req, res) => {
+router.get("/discount-menu", ensureAdminAuthenticated, (req, res) => {
   var title = "Discount & Coupon Menu";
-  res.render("checkout/discountmenu", {
+  res.render("checkout/discount-menu", {
     title,
   });
 });
 
-router.get("/viewPendingOrders", ensureAdminAuthenticated, async (req, res) => {
+router.get("/view-pending-orders", ensureAdminAuthenticated, async (req, res) => {
   const title = "View Pending Orders";
 
   Pending_Order.findAll({
     where: {},
     include: [{ model: Pending_OrderItem }],
   }).then((pending_order) => {
-    res.render("checkout/viewPendingOrders", {
+    res.render("checkout/view-pending-orders", {
       PendingOrders: pending_order,
       title,
       // Don't need this below, wont work when rendering
@@ -1163,7 +1163,7 @@ router.get("/viewPendingOrders", ensureAdminAuthenticated, async (req, res) => {
                       "fas fa-exclamation-circle",
                       true
                     );
-                    res.redirect("/product/viewPendingOrders");
+                    res.redirect("/product/view-pending-orders");
                     let trackingCode = order.dataValues.trackingCode;
                     api.Tracker.retrieve(trackingCode).then((t) => {
                       console.log(t.public_url);
@@ -1196,7 +1196,7 @@ router.get("/viewPendingOrders", ensureAdminAuthenticated, async (req, res) => {
               "fas faexclamation-circle",
               true
             );
-            res.redirect("/product/viewPendingOrders");
+            res.redirect("/product/view-pending-orders");
           }
           //console.log(addr.verifications.errors);
         })
@@ -1238,10 +1238,10 @@ router.get("/DeletePOrder/:id", ensureAdminAuthenticated, async (req, res) => {
     console.log(`Deleting Product ${i}`);
     Pi[i].destroy();
   }
-  res.redirect("/product/viewPendingOrders");
+  res.redirect("/product/view-pending-orders");
 });
 
-router.get("/createCoupon", ensureAdminAuthenticated, (req, res) => {
+router.get("/create-coupon", ensureAdminAuthenticated, (req, res) => {
   // if (!req.session.public_coupon) {
   //     req.session.public_coupon = "NULL";
   // }
@@ -1253,14 +1253,14 @@ router.get("/createCoupon", ensureAdminAuthenticated, (req, res) => {
 
   let errors;
 
-  res.render("checkout/createCoupon", {
+  res.render("checkout/create-coupon", {
     title,
     currentTime,
     errors,
   });
 });
 
-router.post("/createCoupon", ensureAdminAuthenticated, (req, res) => {
+router.post("/create-coupon", ensureAdminAuthenticated, (req, res) => {
   // Retrieve the inputs from the create coupon form
   let coupon_code = req.body.coupon_code;
   let coupon_type = req.body.coupon_type;
@@ -1300,7 +1300,7 @@ router.post("/createCoupon", ensureAdminAuthenticated, (req, res) => {
         "fas fa-exclamation-circle",
         true
       );
-      res.redirect("createCoupon");
+      res.redirect("create-coupon");
     }
 
     // Invalid/Expired time case
@@ -1313,7 +1313,7 @@ router.post("/createCoupon", ensureAdminAuthenticated, (req, res) => {
         "fas fa-exclamation-circle",
         true
       );
-      res.redirect("createCoupon");
+      res.redirect("create-coupon");
     }
 
     // No problem, create
@@ -1347,7 +1347,7 @@ router.post("/createCoupon", ensureAdminAuthenticated, (req, res) => {
             "fas fa-exclamation-circle",
             true
           );
-          res.redirect("/product/createCoupon");
+          res.redirect("/product/create-coupon");
         })
         .catch(() => {
           console.log("Something went wrong with creating the coupon");
@@ -1357,14 +1357,14 @@ router.post("/createCoupon", ensureAdminAuthenticated, (req, res) => {
 });
 
 // Create Discount Page
-router.get("/createDiscount", ensureAdminAuthenticated, async (req, res) => {
+router.get("/create-discount", ensureAdminAuthenticated, async (req, res) => {
   const title = "Create Discount";
   let currentDate = moment(req.body.currentDate, "DD/MM/YYYY");
   let currentTime = moment().format("HH:mm");
   let errors;
 
   let products = await ProductAdmin.findAll({});
-  res.render("checkout/createDiscount", {
+  res.render("checkout/create-discount", {
     title,
     currentTime,
     errors,
@@ -1372,7 +1372,7 @@ router.get("/createDiscount", ensureAdminAuthenticated, async (req, res) => {
   });
 });
 
-router.post("/createDiscount", ensureAdminAuthenticated, async (req, res) => {
+router.post("/create-discount", ensureAdminAuthenticated, async (req, res) => {
   // Retrieve the inputs from the create discount form
   let target_id = req.body.target_id;
   let product_discount = req.body.product_discount;
@@ -1403,7 +1403,7 @@ router.post("/createDiscount", ensureAdminAuthenticated, async (req, res) => {
       "fas fa-exclamation-circle",
       true
     );
-    // res.redirect('createDiscount')
+    // res.redirect('create-discount')
   }
 
   // Invalid/Expired time case
@@ -1416,7 +1416,7 @@ router.post("/createDiscount", ensureAdminAuthenticated, async (req, res) => {
       "fas fa-exclamation-circle",
       true
     );
-    // res.redirect('createDiscount')
+    // res.redirect('create-discount')
   }
 
   // No problem, create
@@ -1439,16 +1439,16 @@ router.post("/createDiscount", ensureAdminAuthenticated, async (req, res) => {
     );
   }
 
-  res.redirect("/product/createDiscount");
+  res.redirect("/product/create-discount");
 });
 
 // Admin - View Discounts and Coupons and Delete together
 
-router.get("/viewDiscount", ensureAdminAuthenticated, async (req, res) => {
+router.get("/view-discount", ensureAdminAuthenticated, async (req, res) => {
   let title = "View Discount";
   let discounts = await Discount.findAll({});
   let coupons = await Coupon.findAll({});
-  res.render("checkout/viewDiscount", {
+  res.render("checkout/view-discount", {
     title,
     discounts,
     coupons,
@@ -1460,7 +1460,7 @@ router.get(
   ensureAdminAuthenticated,
   async (req, res) => {
     let target_id = req.params.id;
-    let url = "/product/viewDiscount";
+    let url = "/product/view-discount";
     Discount.findOne({
       where: { target_id: target_id },
     })
@@ -1489,7 +1489,7 @@ router.get(
 
 router.get("/deleteCoupon/:id", ensureAdminAuthenticated, async (req, res) => {
   let id = req.params.id;
-  let url = "/product/viewDiscount";
+  let url = "/product/view-discount";
   Coupon.findOne({
     where: { id: id },
   })

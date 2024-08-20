@@ -16,7 +16,7 @@ export const checkCart = (req, res, next) => {
 				"fas fa-exclamation-circle",
 				true
 			);
-			res.redirect("/product/listProducts");
+			res.redirect("/product/product-list");
 		}
 	}
 	// If not authenticated, show alert message and redirect to ‘/’

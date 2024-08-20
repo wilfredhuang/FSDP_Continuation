@@ -39,7 +39,7 @@ import QRCode from "qrcode";
 import nodemailer from "nodemailer";
 
 //view More Details of Order
-router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
+router.get("/view-order-details/:id", ensureAuthenticated, (req, res) => {
 	const title = "Order Details";
 	console.log("helllo");
 	console.log(req.params.id);
@@ -63,7 +63,7 @@ router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
 				let progressColour = "bg-info";
 				let progressColourText = "text-info";
 				let deliveryStatusResult = "Pre-transit";
-				res.render("user/viewMoreOrder", {
+				res.render("user/view-order-details", {
 					order: order,
 					orderitems: order.orderitems,
 					title,
@@ -78,7 +78,7 @@ router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
 				let progressColour = "bg-info";
 				let progressColourText = "text-info";
 				let deliveryStatusResult = "In-transit";
-				res.render("user/viewMoreOrder", {
+				res.render("user/view-order-details", {
 					order: order,
 					orderitems: order.orderitems,
 					title,
@@ -93,7 +93,7 @@ router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
 				let progressColour = "bg-info";
 				let progressColourText = "text-info";
 				let deliveryStatusResult = "Out for delivery";
-				res.render("user/viewMoreOrder", {
+				res.render("user/view-order-details", {
 					order: order,
 					orderitems: order.orderitems,
 					title,
@@ -108,7 +108,7 @@ router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
 				let progressColour = "bg-success";
 				let progressColourText = "text-success";
 				let deliveryStatusResult = "Delivered";
-				res.render("user/viewMoreOrder", {
+				res.render("user/view-order-details", {
 					order: order,
 					orderitems: order.orderitems,
 					title,
@@ -123,7 +123,7 @@ router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
 				let progressColour = "bg-info";
 				let progressColourText = "text-info";
 				let deliveryStatusResult = "Return to sender";
-				res.render("user/viewMoreOrder", {
+				res.render("user/view-order-details", {
 					order: order,
 					orderitems: order.orderitems,
 					title,
@@ -138,7 +138,7 @@ router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
 				let progressColour = "bg-danger";
 				let progressColourText = "text-danger";
 				let deliveryStatusResult = "Failure";
-				res.render("user/viewMoreOrder", {
+				res.render("user/view-order-details", {
 					order: order,
 					orderitems: order.orderitems,
 					title,
@@ -153,7 +153,7 @@ router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
 				let progressColour = "bg-dark";
 				let progressColourText = "text-dark";
 				let deliveryStatusResult = "Unknown";
-				res.render("user/viewMoreOrder", {
+				res.render("user/view-order-details", {
 					order: order,
 					orderitems: order.orderitems,
 					title,
@@ -169,7 +169,7 @@ router.get("/viewMoreOrder/:id", ensureAuthenticated, (req, res) => {
 });
 
 router.get(
-	"/viewMoreOrderAdmin/:id",
+	"/view-order-details-admin/:id",
 	ensureAuthenticated,
 	ensureAdminAuthenticated,
 	(req, res) => {
@@ -194,7 +194,7 @@ router.get(
 					let progressColour = "bg-info";
 					let progressColourText = "text-info";
 					let deliveryStatusResult = "Pre-transit";
-					res.render("user/viewMoreOrderAdmin", {
+					res.render("user/view-order-details-admin", {
 						order: order,
 						orderitems: order.orderitems,
 						title,
@@ -209,7 +209,7 @@ router.get(
 					let progressColour = "bg-info";
 					let progressColourText = "text-info";
 					let deliveryStatusResult = "In-transit";
-					res.render("user/viewMoreOrderAdmin", {
+					res.render("user/view-order-details-admin", {
 						order: order,
 						orderitems: order.orderitems,
 						title,
@@ -224,7 +224,7 @@ router.get(
 					let progressColour = "bg-info";
 					let progressColourText = "text-info";
 					let deliveryStatusResult = "Out for delivery";
-					res.render("user/viewMoreOrderAdmin", {
+					res.render("user/view-order-details-admin", {
 						order: order,
 						orderitems: order.orderitems,
 						title,
@@ -239,7 +239,7 @@ router.get(
 					let progressColour = "bg-success";
 					let progressColourText = "text-success";
 					let deliveryStatusResult = "Delivered";
-					res.render("user/viewMoreOrderAdmin", {
+					res.render("user/view-order-details-admin", {
 						order: order,
 						orderitems: order.orderitems,
 						title,
@@ -254,7 +254,7 @@ router.get(
 					let progressColour = "bg-info";
 					let progressColourText = "text-info";
 					let deliveryStatusResult = "Return to sender";
-					res.render("user/viewMoreOrderAdmin", {
+					res.render("user/view-order-details-admin", {
 						order: order,
 						orderitems: order.orderitems,
 						title,
@@ -269,7 +269,7 @@ router.get(
 					let progressColour = "bg-danger";
 					let progressColourText = "text-danger";
 					let deliveryStatusResult = "Failure";
-					res.render("user/viewMoreOrderAdmin", {
+					res.render("user/view-order-details-admin", {
 						order: order,
 						orderitems: order.orderitems,
 						title,
@@ -284,7 +284,7 @@ router.get(
 					let progressColour = "bg-dark";
 					let progressColourText = "text-dark";
 					let deliveryStatusResult = "Unknown";
-					res.render("user/viewMoreOrderAdmin", {
+					res.render("user/view-order-details-admin", {
 						order: order,
 						orderitems: order.orderitems,
 						title,
@@ -412,9 +412,9 @@ router.get(
 // 	}
 // );
 
-router.get("/checkDelivery", (req, res) => {
+router.get("/check-delivery", (req, res) => {
 	const title = "Shipping Tracking";
-	res.render("delivery/checkDelivery", {
+	res.render("delivery/check-delivery", {
 		title,
 	});
 });
@@ -445,7 +445,7 @@ router.post("/checkingDelivery", async (req, res) => {
                 "fas fa-exclamation-circle",
                 true
             );
-            return res.redirect("/delivery/checkDelivery");
+            return res.redirect("/delivery/check-delivery");
         }
 
         // Assuming `api.Tracker.retrieve` is an asynchronous function
@@ -508,7 +508,7 @@ router.post("/checkingDelivery", async (req, res) => {
         }
 
         const showQRCODE = await QRCode.toDataURL(URL);
-        res.render("delivery/deliveryStatusPage", {
+        res.render("delivery/delivery-status-page", {
             title,
             deliveryStatusResult,
             statusDetail,
@@ -535,7 +535,7 @@ router.post("/checkingDelivery", async (req, res) => {
                 "fas fa-exclamation-circle",
                 true
             );
-            return res.redirect("checkDelivery");
+            return res.redirect("check-delivery");
         }
 
         // Handle other potential errors
@@ -576,7 +576,7 @@ router.post("/checkingDelivery", async (req, res) => {
 // 				"fas faexclamation-circle",
 // 				true
 // 			);
-// 			res.redirect("/delivery/checkDelivery");
+// 			res.redirect("/delivery/check-delivery");
 // 		} else {
 // 			api.Tracker.retrieve(trackingId)
 // 				.then((s) => {
@@ -765,7 +765,7 @@ router.post("/checkingDelivery", async (req, res) => {
 // 							"fas faexclamation-circle",
 // 							true
 // 						);
-// 						res.redirect("checkDelivery");
+// 						res.redirect("check-delivery");
 // 					}
 // 				});
 // 		}

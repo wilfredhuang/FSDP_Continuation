@@ -1,7 +1,7 @@
 <div class="breadcrumb">
     <div class="container">
         <a class="breadcrumb-item" href="/">Home</a>
-        <a class="breadcrumb-item" href="/user/userPage">User Page</a>
+        <a class="breadcrumb-item" href="/user/user-page">User Page</a>
         <span class="breadcrumb-item active">Order History</span>
     </div>
 </div>
@@ -10,13 +10,13 @@
         <div class="row">
             <div class="tab col-md-2 col-11">
                 <button class="tab navi">Navigation</button>
-                <a href="/user/userPage">
+                <a href="/user/user-page">
                     <button class="inactive-tab">User Page</button>
                 </a>
-                <a href="/user/userPage/changeinfo">
+                <a href="/user/user-page/change-info">
                     <button class="inactive-tab">Change Info</button>
                 </a>
-                <a href="/user/userPage/changeaddress">
+                <a href="/user/user-page/change-address">
                     <button class="inactive-tab">Set Address</button>
                 </a>
                 <a href="/user/orderHistory">
@@ -59,7 +59,7 @@
                             <p class="card-text">Order Date: {{formatDate dateStart 'DD MMM YYYY'}}</p>
                             <p class="card-text">Delivery Status: {{formatDeliveryStatus deliveryStatus}}</p>
                             <div class="text-right">
-                                <a href="/delivery/viewMoreOrder/{{id}}">View More <svg width="1em" height="1em"
+                                <a href="/delivery/view-order-details-admin/{{id}}">View More <svg width="1em" height="1em"
                                         viewBox="0 0 16 16" class="bi bi-chevron-right" fill="currentColor"
                                         xmlns="http://www.w3.org/2000/svg">
                                         <path fill-rule="evenodd"

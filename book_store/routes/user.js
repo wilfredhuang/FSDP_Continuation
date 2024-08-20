@@ -196,26 +196,26 @@ router.post('/jwt2', (req, res) => {
 	}
 
 	//Redirect to the successful page if the credentials are correct
-	res.redirect("/user/successfuljwt");
+	res.redirect("/user/successful-jwt");
 
 });
 
 
-router.get("/successfuljwt", (req, res) => {
-	res.render("user/successfuljwt");
+router.get("/successful-jwt", (req, res) => {
+	res.render("user/successful-jwt");
 });
 
 // JSON Web Token Testing Route End
 
 
 router.get("/resetpassword", (req, res) => {
-	res.render("user/changePassword");
+	res.render("user/change-password");
 });
 
 router.post("/resetpassword/", async (req, res) => {
 	if (req.body.password != req.body.password2) {
 		errors.push("paswords not the same");
-		res.redirect("/user/changepassword");
+		res.redirect("/user/change-password");
 	}
 	User.findOne({ where: { id: req.user.id } }).then((user) => {
 		bcrypt.genSalt(10, function (err, salt) {
@@ -236,7 +236,7 @@ router.post("/resetpassword/", async (req, res) => {
 	});
 });
 
-router.get("/changepassword/:token", async (req, res) => {
+router.get("/change-password/:token", async (req, res) => {
 	const token = jwt.verify(req.params.token, JWT_SECRETKEY);
 	User.findOne({ where: { id: token.user } }).then((user) => {
 		req.login(user, function (err) {
@@ -248,14 +248,14 @@ router.get("/changepassword/:token", async (req, res) => {
 	});
 });
 
-router.get("/forgetpassword", (req, res) => {
-	res.render("user/forgetPassword", {
+router.get("/forget-password", (req, res) => {
+	res.render("user/forget-Password", {
 		recaptcha_site_key: process.env.GOOGLE_RECAPTCHA_SITE_KEY,
 	});
 });
 
 
-router.post("/forgetpassword", async (req, res) => {
+router.post("/forget-password", async (req, res) => {
     const captcha = req.body["g-recaptcha-response"];
     if (!captcha) {
         return res.json({ success: false, msg: "Please select captcha" });
@@ -267,7 +267,7 @@ router.post("/forgetpassword", async (req, res) => {
         const { data: body } = await axios.post(verifyURL);
         if (!body.success) {
             alertMessage(res, "danger", "Please re-enter the recaptcha", "fas fa-exclamation-circle", true);
-            return res.redirect("/user/forgetpassword");
+            return res.redirect("/user/forget-password");
         }
 
         const user = await User.findOne({ where: { email: req.body.email } });
@@ -277,7 +277,7 @@ router.post("/forgetpassword", async (req, res) => {
 
         const theid = user.id;
         const passwordToken = jwt.sign({ user: theid }, JWT_SECRETKEY, { expiresIn: "1d" });
-        const url = `https://localhost:5000/user/changepassword/${passwordToken}`;
+        const url = `https://localhost:5000/user/change-password/${passwordToken}`;
 
         await transporter.sendMail({
             from: "BellaVista Bookstore Admin <bellavistabookstore@zohomail.com>",
@@ -291,7 +291,7 @@ router.post("/forgetpassword", async (req, res) => {
     } catch (err) {
         console.error("Error: " + err.message);
         alertMessage(res, "danger", "An error occurred. Please try again later.", "fas fa-exclamation-circle", true);
-        res.redirect("/user/forgetpassword");
+        res.redirect("/user/forget-password");
     }
 });
 
@@ -325,14 +325,14 @@ router.get(
 
 
 
-router.get("/userPage", ensureAuthenticated, (req, res) => {
+router.get("/user-page", ensureAuthenticated, (req, res) => {
 	const title = "User Information";
 	if (req.user.facebookId != null) {
-		res.render("user/facebookuserpage", {
+		res.render("user/facebook-user-page", {
 			title,
 		});
 	} else {
-		res.render("user/userpage", {
+		res.render("user/user-page", {
 			title,
 		});
 	}
@@ -352,7 +352,7 @@ router.get(
 				include: [{ model: orderItem }],
 			})
 			.then((order) => {
-				res.render("user/orderHistoryPageAdmin", {
+				res.render("user/order-history-admin", {
 					order: order,
 					orderitems: order.orderitems,
 					title,
@@ -372,7 +372,7 @@ router.get("/orderHistory", ensureAuthenticated, (req, res) => {
 		})
 		.then((order) => {
 			console.log(order);
-			res.render("user/orderHistoryPageUser", {
+			res.render("user/order-history-user", {
 				order: order,
 				orderitems: order.orderitems,
 				title,
@@ -415,7 +415,7 @@ router.post("/login", function (req, res, next) {
 
 router.get("/admin", ensureAdminAuthenticated, (req, res) => {
 	const title = "Admin Page";
-	res.render("user/adminmenu", {
+	res.render("user/admin-menu", {
 		title,
 	});
 });
@@ -564,11 +564,11 @@ router.get("/logout", function (req, res) {
 	});
 });
 
-router.get("/userPage", ensureAuthenticated, (req, res) => {
-	res.render("user/userPage");
+router.get("/user-page", ensureAuthenticated, (req, res) => {
+	res.render("user/user-page");
 });
 
-router.post("/userPage/changeinfo", ensureAuthenticated, (req, res) => {
+router.post("/user-page/change-info", ensureAuthenticated, (req, res) => {
 	let errors = [];
 	let { name, email, password2 } = req.body;
 	console.log(req.body);
@@ -598,31 +598,31 @@ router.post("/userPage/changeinfo", ensureAuthenticated, (req, res) => {
 				"fas fa-sign-in-alt",
 				true
 			);
-			res.redirect("/user/userpage/");
+			res.redirect("/user/user-page/");
 		}
 		if (err) {
 			console.log(err);
 			alertMessage(res, "error", "error", "fas fa-sign-in-alt", true);
-			res.redirect("/user/userpage");
+			res.redirect("/user/user-page");
 		}
 	});
 });
 
-router.get("/userPage/changeinfo", ensureAuthenticated, function (req, res) {
+router.get("/user-page/change-info", ensureAuthenticated, function (req, res) {
 	const title = "Change Information";
-	res.render("user/changeinfo", {
+	res.render("user/change-info", {
 		title,
 	});
 });
 
-router.get("/userPage/changeaddress", ensureAuthenticated, function (req, res) {
+router.get("/user-page/change-address", ensureAuthenticated, function (req, res) {
 	const title = "Change Address";
-	res.render("user/changeaddress", {
+	res.render("user/change-address", {
 		title,
 	});
 });
 
-router.post("/userPage/changeaddress", ensureAuthenticated, (req, res) => {
+router.post("/user-page/change-address", ensureAuthenticated, (req, res) => {
 	let errors = [];
 	let { PhoneNo, address, address1, city, country, postalCode } = req.body;
 	console.log(req.body);
@@ -652,7 +652,7 @@ router.post("/userPage/changeaddress", ensureAuthenticated, (req, res) => {
 			"fas fa-sign-in-alt",
 			true
 		);
-		res.redirect("/user/userpage");
+		res.redirect("/user/user-page");
 	});
 });
 

@@ -2,8 +2,8 @@
     <div class="container">
         <a class="breadcrumb-item" href="/">Home</a>
         <a class="breadcrumb-item" href="/user/admin">Admin Page</a>
-        <a class="breadcrumb-item active" href="/product/listProductAdmin">Product Page Admin</a>
-        <a class="breadcrumb-item" href="/product/createProduct">Add product</a>
+        <a class="breadcrumb-item active" href="/product/product-list-admin">Product Page Admin</a>
+        <a class="breadcrumb-item" href="/product/create-product">Add product</a>
     </div>
 </div>
 <section class="product-sec">
@@ -58,7 +58,7 @@
                     <td>{{rating}}</td>
                     <td>{{price}}</td>
                     <td>{{stock}}</td>
-                    <td><a href="/product/detailsProductAdmin/{{id}}">View More <i class="fa fa-chevron-right"
+                    <td><a href="/product/product-details-admin/{{id}}">View More <i class="fa fa-chevron-right"
                                 aria-hidden="true"></i></a></td>
                 </tr>
                 {{/each}}
