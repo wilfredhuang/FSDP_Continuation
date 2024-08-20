@@ -9,8 +9,8 @@ import productadmin from "../models/ProductAdmin.js";
 import order from "../models/Order.js";
 import order_item from "../models/OrderItem.js";
 import User from "../models/User.js";
-import Pending_Order from "../models/Pending_Orders.js";
-import Pending_OrderItem from "../models/Pending_OrderItem.js";
+import Pending_Order from "../models/PendingOrder.js";
+import PendingOrderItem from "../models/PendingOrderItem.js";
 
 import ProductAdmin from "../models/ProductAdmin.js";
 import Coupon from "../models/Coupon.js";
@@ -45,9 +45,9 @@ import Client from "twilio";
 const client = new Client(accountSid, authToken);
 
 // Authentications
-import ensureAuthenticated from "../helpers/auth.js";
-import ensureAdminAuthenticated from "../helpers/adminauth.js";
-import { checkCart } from "../helpers/cart.js";
+import ensureAuthenticated from "../middleware/userAuth.js";
+import ensureAdminAuthenticated from "../middleware/adminAuth.js";
+import { checkCart } from "../middleware/cartAuth.js";
 
 // Import Helper
 import carthelper from "../helpers/cartHelper.js";
@@ -923,7 +923,7 @@ router.post("/paynow", async (req, res) => {
     let weight = req.session.userCart[i].SubtotalWeight;
     let product_image = req.session.userCart[i].Image;
     let PorderId = new_pending_order.id;
-    const new_pi = await Pending_OrderItem.create({
+    const new_pi = await PendingOrderItem.create({
       product_name,
       author,
       publisher,
@@ -1003,7 +1003,7 @@ router.get("/view-pending-orders", ensureAdminAuthenticated, async (req, res) =>
 
   Pending_Order.findAll({
     where: {},
-    include: [{ model: Pending_OrderItem }],
+    include: [{ model: PendingOrderItem }],
   }).then((pending_order) => {
     res.render("checkout/view-pending-orders", {
       PendingOrders: pending_order,

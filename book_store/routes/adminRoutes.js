@@ -7,7 +7,7 @@ AdminJS.registerAdapter(AdminJSSequelize);
 import express from "express";
 const app = express();
 import User from "../models/User.js";
-import ensureAuthenticated from "../helpers/auth.js";
+import ensureAuthenticated from "../middleware/userAuth.js";
 
 const adminJS = new AdminJS({
 	rootPath: "/admin",

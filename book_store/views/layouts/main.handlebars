@@ -5,12 +5,12 @@
 
 	<!-- Old Project scripts -->
 	<meta name="theme-color" content="#03a6f3" name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="/css/bootstrap.min.css">
+	<link rel="stylesheet" href="/css/vendor/bootstrap.min.css">
 	<link href="https://fonts.googleapis.com/css?family=Montserrat:200,300,400,500,600,700,800,900" rel="stylesheet">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-	<link rel="stylesheet" type="text/css" href="/css/owl.carousel.min.css">
-	<link rel="stylesheet" type="text/css" href="/css/styles.css">
-	<link rel="stylesheet" type="text/css" href="/css/stripe.css">
+	<link rel="stylesheet" type="text/css" href="/css/vendor/owl.carousel.min.css">
+	<link rel="stylesheet" type="text/css" href="/css/custom/styles.css">
+	<link rel="stylesheet" type="text/css" href="/css/custom/stripe.css">
 
 	<!-- Required meta tags -->
 	<meta charset="utf-8">
@@ -60,7 +60,7 @@
 	<div class="container" id="flash-container">
 		{{>_msg}}
 		{{>_errors}}
-		{{>_flash_msg}}
+		{{>_flash-msg}}
 	</div>
 	<div class="page-wrap">
 		{{{body}}}
@@ -73,17 +73,15 @@
 			</svg></button>
 	</div>
 	{{>_footer}}
-	<script type="module" src="/js/main.js"></script>
-	<script src="/js/jquery.min.js"></script>
-	<script src="/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="/js/owl.carousel.min.js"></script>
+	<script src="/js/libraries/jquery.min.js"></script>
+	<script src="/js/libraries/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/js/libraries/owl.carousel.min.js"></script>
 	<script src="/js/custom.js"></script>
-	<script src="/js/searchOrderID.js"></script>
-	<script src="/js/product_searchbook.js"></script>
+	<script src="/js/search-order-id.js"></script>
+	<script src="/js/product-book-search.js"></script>
 	<script src="/js/cart_functions.js"></script>
-	<script src="/js/easypostAPI.js"></script>
-	<script src="/js/topButton.js"></script>
-	<script src="/js/main.js"></script>
+	<script src="/js/easypost_api.js"></script>
+	<script src="/js/scroll-button.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
 		integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
 		crossorigin="anonymous"></script>

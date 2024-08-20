@@ -7,8 +7,8 @@ import Order from "../models/Order.js";
 import orderItem from "../models/OrderItem.js";
 
 //Authentication
-import ensureAuthenticated from "../helpers/auth.js";
-import ensureAdminAuthenticated from "../helpers/adminauth.js";
+import ensureAuthenticated from "../middleware/userAuth.js";
+import ensureAdminAuthenticated from "../middleware/adminAuth.js";
 
 // Axios
 import axios from "axios";

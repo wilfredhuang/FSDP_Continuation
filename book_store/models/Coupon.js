@@ -1,8 +1,7 @@
 import Sequelize from "sequelize";
-import db from "../config/DBConfig.js";
+import db from "../config/db_config.js";
 
-// const Sequelize = require('sequelize');
-// const db = require('../config/DBConfig');
+
 const Coupon = db.define("coupon", {
 	// Code for the coupon code to trigger
 

@@ -1,8 +1,5 @@
 import Sequelize from "sequelize";
-import db from "../config/DBConfig.js";
-
-// const Sequelize = require('sequelize');
-// const db = require('../config/DBConfig');
+import db from "../config/db_config.js";
 
 const Product = db.define("product", {
 	product_name: {

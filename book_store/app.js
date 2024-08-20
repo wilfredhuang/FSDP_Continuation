@@ -67,12 +67,12 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 import passport from "passport";
 
 // Load routes
-import { router as mainRoute } from "./routes/main.js";
-import { router as userRoute } from "./routes/user.js";
-import { router as productRoute } from "./routes/product.js";
-import { router as deliveryRoute } from "./routes/cart.js";
-import { router as checkoutRoute } from "./routes/checkout.js";
-import { router as adminRoute } from "./routes/admin.js";
+import { router as mainRoute } from "./routes/mainRoutes.js";
+import { router as userRoute } from "./routes/userRoutes.js";
+import { router as productRoute } from "./routes/productRoutes.js";
+import { router as deliveryRoute } from "./routes/cartRoutes.js";
+import { router as checkoutRoute } from "./routes/checkoutRoutes.js";
+import { router as adminRoute } from "./routes/adminRoutes.js";
 
 // Library to use MySQL to store session objects
 import MySQLStore from "express-mysql-session";
@@ -82,7 +82,7 @@ import flash from "connect-flash";
 import FlashMessenger from "flash-messenger";
 
 // Bring in database connection
-import setUpDB from "./config/DBConnection.js";
+import setUpDB from "./config/db_connection.js";
 
 // Connects to MySQL database
 setUpDB(false); // To set up database with new tables set (true)
@@ -272,7 +272,7 @@ app.use(async (req, res, next) => {
 
 
 // Use Routes
-app.use("/", mainRoute); // uses main.js routing under ./routes
+app.use("/", mainRoute); // uses mainRoutes.js routing under ./routes
 app.use("/user", userRoute);
 app.use("/product", productRoute);
 app.use("/delivery", deliveryRoute);

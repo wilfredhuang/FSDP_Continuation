@@ -1,4 +1,4 @@
-import alertMessage from "./messenger.js";
+import alertMessage from "../helpers/messenger.js";
 
 
 // Checkout auth

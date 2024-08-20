@@ -1,8 +1,6 @@
 import Sequelize from "sequelize";
-import db from "../config/DBConfig.js";
+import db from "../config/db_config.js";
 
-// const Sequelize = require('sequelize');
-// const db = require('../config/DBConfig');
 const Discount = db.define("discount", {
 	discount_rate: {
 		type: Sequelize.DECIMAL(10, 2),

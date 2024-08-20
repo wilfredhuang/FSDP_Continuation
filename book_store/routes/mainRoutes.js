@@ -3,7 +3,7 @@ const router = express.Router();
 import alertMessage from "../helpers/messenger.js";
 import Coupon from "../models/Coupon.js";
 import moment from "moment";
-import userAuth from "../helpers/auth.js";
+import userAuth from "../middleware/userAuth.js";
 import productadmin from "../models/ProductAdmin.js";
 
 /* Old Root Router function where user cart session object is initialized here, moved to app.js middleware*

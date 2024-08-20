@@ -1,8 +1,6 @@
 import Sequelize from "sequelize";
-import db from "../config/DBConfig.js";
+import db from "../config/db_config.js";
 
-// const Sequelize = require('sequelize');
-// const db = require('../config/DBConfig');
 const Pending_Order = db.define("pending_order", {
 	fullName: { type: Sequelize.STRING },
 	phoneNumber: { type: Sequelize.STRING },

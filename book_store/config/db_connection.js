@@ -1,11 +1,11 @@
-import mySQLDB from "./DBConfig.js";
+import mySQLDB from "./db_config.js";
 import user from "../models/User.js";
 import order from "../models/Order.js";
 import ProductAdmin from "../models/ProductAdmin.js";
 import Discount from "../models/Discount.js";
 import orderItem from "../models/OrderItem.js";
-import pending_order from "../models/Pending_Orders.js";
-import pending_orderItem from "../models/Pending_OrderItem.js";
+import pending_order from "../models/PendingOrder.js";
+import pending_orderItem from "../models/PendingOrderItem.js";
 
 // If drop is true, all existing tables are dropped and recreated
 const setUpDB = (drop) => {

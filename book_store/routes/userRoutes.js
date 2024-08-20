@@ -10,8 +10,8 @@ import { v1 as uuidv1 } from 'uuid';
 const secretKey = process.env.GOOGLE_RECAPTCHA_SECRET_KEY;
 
 //Authentication Middleware Function
-import ensureAuthenticated from "../helpers/auth.js";
-import ensureAdminAuthenticated from "../helpers/adminauth.js";
+import ensureAuthenticated from "../middleware/userAuth.js";
+import ensureAdminAuthenticated from "../middleware/adminAuth.js";
 
 //Models
 import User from "../models/User.js";

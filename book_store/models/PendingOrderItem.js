@@ -1,9 +1,8 @@
 import Sequelize from "sequelize";
-import db from "../config/DBConfig.js";
+import db from "../config/db_config.js";
 
-// const Sequelize = require('sequelize');
-// const db = require('../config/DBConfig');
-const Pending_OrderItem = db.define("pending_orderitem", {
+
+const PendingOrderItem = db.define("pending_orderitem", {
 	product_name: {
 		type: Sequelize.STRING,
 	},
@@ -32,4 +31,4 @@ const Pending_OrderItem = db.define("pending_orderitem", {
 		type: Sequelize.STRING,
 	},
 });
-export default Pending_OrderItem;
+export default PendingOrderItem;

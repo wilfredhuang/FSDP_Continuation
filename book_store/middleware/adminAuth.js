@@ -1,5 +1,5 @@
 //const alertMessage = require("./messenger"); // Bring in alert messenger
-import alertMessage from "./messenger.js";
+import alertMessage from "../helpers/messenger.js";
 
 const ensureAdminAuthenticated = (req, res, next) => {
 	// console.log("User ID IS !! " + req.user.id)
