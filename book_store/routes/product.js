@@ -51,6 +51,7 @@ import { checkCart } from "../helpers/cart.js";
 
 // Import Helper
 import carthelper from "../helpers/cartHelper.js";
+import helper from "../helpers/hbs.js";
 
 /*
 	// Example A: quantity 3, price: 5.00, discountRate: 0.20, minQty:2
@@ -83,154 +84,6 @@ import carthelper from "../helpers/cartHelper.js";
 	discountedSubtotalPrice = discountedHalf + regularHalf // 5.00
 
 */
-
-// Fn used to calculate Discounted Price if item qty > 1
-const calculateDiscountedPrice = (req, quantity, price, discountRate, minQty) => {
-  // Calculate the number of full discount offers that can be applied
-  const discountGroups = Math.floor(quantity / minQty);
-
-  // Calculate the original subtotal price without any discount
-  const originalSubtotalPrice = quantity * price;
-
-  // Calculate the discounted amount for items in the discount groups
-  const discountedAmountForGroups =
-    discountGroups * minQty * price * (1 - discountRate);
-
-  // Calculate the total price of items that do not receive a discount
-  const priceOfNonDiscountedItems =
-    (quantity - discountGroups * minQty) * price;
-
-  // Calculate the final subtotal price after applying the discount
-  const discountedSubtotalPrice =
-    discountedAmountForGroups + priceOfNonDiscountedItems;
-
-  // Calculate the total discount amount
-  const totalDiscount = originalSubtotalPrice - discountedSubtotalPrice;
-
-  console.log(
-    `The final discountedSubtotalPrice is ${discountedSubtotalPrice}`
-  );
-  console.log(`The final discountedSubtotalPrice is ${totalDiscount}`);
-
-  // Update Session Variables too
-  req.session.cart_subtotal_initial = originalSubtotalPrice;
-  req.session.cart_subtotal_final = discountedSubtotalPrice;
-  req.session.cart_discount_savings = totalDiscount;
-  console.log(`Original Subtotal Price: ${req.session.cart_subtotal_initial} ===`)
-  console.log(`Discount Subtotal Price: ${req.session.cart_subtotal_final} ===`)
-  console.log(`Discount: ${req.session.cart_discount_savings} ===`)
-  return {
-    originalSubtotalPrice: originalSubtotalPrice.toFixed(2),
-    discountedSubtotalPrice: discountedSubtotalPrice.toFixed(2),
-    totalDiscount: totalDiscount.toFixed(2),
-  };
-};
-
-const updateCartItem = (req, cartItem, product, discount, increment_bool) => {
-  // Takes in a boolean variable to determine if increment quantity needed
-  // This is due to update feature in cart summary page where we want the exactly quantity taken from query
-  if (increment_bool == true) {
-    cartItem.Quantity += 1;
-  }
-
-  if (discount) {
-    // Calculate discounted price and total discount using the updated function
-    const { discountedSubtotalPrice, totalDiscount } = calculateDiscountedPrice(
-      req,
-      cartItem.Quantity,
-      cartItem.Price,
-      discount.discount_rate,
-      discount.min_qty
-    );
-
-    // Update the cart item with the new subtotal price
-    cartItem.SubtotalPrice = discountedSubtotalPrice;
-    console.log("TOTAL DISCOUNT IS " + totalDiscount);
-    console.log("AFTER SPECIAL DISCOUNT Subtotal is " + cartItem.SubtotalPrice);
-  } else {
-    // No discount, add the product price to the subtotal price
-    cartItem.SubtotalPrice = (
-      parseFloat(cartItem.SubtotalPrice) + parseFloat(product.price)
-    ).toFixed(2);
-  }
-
-  // Update subtotal weight
-  cartItem.SubtotalWeight = (
-    parseFloat(cartItem.SubtotalWeight) + parseFloat(product.weight)
-  ).toFixed(2);
-};
-
-const addNewCartItem = (req, cart, product, discount) => {
-  if (discount) {
-    // Initialize cart item
-    let subtotalPrice;
-    const currentQuantity = cart[product.id]
-      ? cart[product.id].Quantity + 1
-      : 1;
-
-    if (currentQuantity >= discount.min_qty) {
-      // Calculate discounted price if the quantity meets the minimum requirement
-      subtotalPrice = (product.price * (1 - discount.discount_rate)).toFixed(2);
-    } else {
-      // Use the original price if the quantity does not meet the minimum requirement
-      subtotalPrice = product.price;
-    }
-
-    cart[product.id] = {
-      ID: product.id,
-      Name: product.product_name,
-      Author: product.author,
-      Publisher: product.publisher,
-      Genre: product.genre,
-      // Price: subtotalPrice, // Updated price with discount if applicable
-      Price: product.price,
-      Stock: product.stock,
-      Weight: product.weight,
-      Image: product.product_image,
-      Quantity: currentQuantity,
-      SubtotalPrice: (currentQuantity * parseFloat(subtotalPrice)).toFixed(2),
-      SubtotalWeight: product.weight,
-    };
-  } else {
-    // No discount
-    cart[product.id] = {
-      ID: product.id,
-      Name: product.product_name,
-      Author: product.author,
-      Publisher: product.publisher,
-      Genre: product.genre,
-      Price: product.price,
-      Stock: product.stock,
-      Weight: product.weight,
-      Image: product.product_image,
-      Quantity: 1,
-      SubtotalPrice: product.price,
-      SubtotalWeight: product.weight,
-    };
-  }
-};
-
-const handleProductDiscount = async (productId) => {
-  const discount = await Discount.findOne({ where: { target_id: productId } });
-  if (discount) {
-    const expiryTime = moment(discount.expiry);
-    if (moment().isAfter(expiryTime)) {
-      await discount.destroy();
-      return null;
-    }
-  }
-  return discount;
-};
-
-const processCart = (req, cart, product, discount, increment_bool) => {
-  // Existing Item in Cart? Update Qty Else Add New Item
-  if (cart[product.id]) {
-    updateCartItem(req, cart[product.id], product, discount, increment_bool);
-  } else {
-    addNewCartItem(req, cart, product, discount);
-  }
-};
-
 
 // variables below for coupon feature, dont change - wilfred
 // switched req.session.userCart to global variable @app.js
@@ -425,49 +278,17 @@ router.put("/updateProductAdmin/:id", (req, res) => {
 // Here is the start of Cart and Payment Features - Wilfred
 
 router.get("/listproduct/:id", async (req, res) => {
-  const productId = req.params.id;
-  const discount = await handleProductDiscount(productId); // Get Discount Obj from DB
-  const product = await productadmin.findOne({ where: { id: productId } }); // Get Product Obj from DB
-  processCart(req, req.session.userCart, product, discount, 1); // Determine whether cart item already exist hence need to update merely qty or add new item
-
-  const cartQty = Object.values(req.session.userCart).reduce(
-    (acc, item) => acc + item.Quantity,
-    0
-  );
-  res.cookie("cartQty", cartQty, {
-    expires: new Date(Date.now() + 900000),
-    httpOnly: false,
-  });
-  const flashMessage_clientside = `${product.product_name} added to cart!`;
-  res.json({
-    success: true,
-    flashMessage: [flashMessage_clientside],
-  });
-  console.log(
-    `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`
-  );
-  console.log(
-    `Current Session Variables COntents: ${JSON.stringify(req.session)} `
-  );
-});
-
-router.post("/individualProduct/:id", async (req, res) => {
-  const productId = req.params.id;
-
-  console.log(`ID Taken is ${productId}`);
-  console.log("Start Req");
   try {
-    // Fetch the discount and product details
-    const discount = await handleProductDiscount(productId);
-    const product = await productadmin.findOne({ where: { id: productId } });
-
+    const productId = req.params.id;
+    const discount = await carthelper.getProductDiscount(productId); // Get Discount Obj from DB
+    const product = await productadmin.findOne({ where: { id: productId } }); // Get Product Obj from DB
     if (!product) {
       return res.json({ success: false, message: "Product not found" });
     }
-    // Process the cart
-    processCart(req, req.session.userCart, product, discount, 1);
-    // Set flash message
-    const flashMessage_clientside = `${product.product_name} added to cart!`;
+    carthelper.processCart(req, req.session.userCart, product, discount, 1); // Determine whether cart item already exist hence need to update merely qty or add new item
+
+
+    // Get quantity of cart items to display in the UI with ajax and use of cookie
     const cartQty = Object.values(req.session.userCart).reduce(
       (acc, item) => acc + item.Quantity,
       0
@@ -476,14 +297,66 @@ router.post("/individualProduct/:id", async (req, res) => {
       expires: new Date(Date.now() + 900000),
       httpOnly: false,
     });
+
+    // Set a flashmessage to display client side
+    const flashMessage_clientside = `${product.product_name} added to cart!`;
+
     // Respond with JSON for AJAX request
     res.json({
       success: true,
-      cartContents: req.session.userCart,
       flashMessage: [flashMessage_clientside],
     });
-    console.log("Added to cart");
-    console.log(req.session.userCart);
+
+    console.log(
+      `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`
+    );
+    console.log(
+      `Current Session Variables Contents: ${JSON.stringify(req.session)} `
+    );
+  } catch (err) {
+    console.error(err);
+    res.json({
+      success: false,
+    });
+  }
+});
+
+router.post("/individualProduct/:id", async (req, res) => {
+  try {
+    const productId = req.params.id;
+    const discount = await carthelper.getProductDiscount(productId);
+    const product = await productadmin.findOne({ where: { id: productId } });
+    if (!product) {
+      return res.json({ success: false, message: "Product not found" });
+    }
+    carthelper.processCart(req, req.session.userCart, product, discount, 1);
+
+    // Get quantity of cart items to display in the UI with ajax and use of cookie
+    // Set cookie, our frontend will retrieve this later
+    const cartQty = Object.values(req.session.userCart).reduce(
+      (acc, item) => acc + item.Quantity,
+      0
+    );
+    res.cookie("cartQty", cartQty, {
+      expires: new Date(Date.now() + 900000),
+      httpOnly: false,
+    });
+
+    // Set a flashmessage to display client side
+    const flashMessage_clientside = `${product.product_name} added to cart!`;
+
+    // Respond with JSON for AJAX request
+    res.json({
+      success: true,
+      flashMessage: [flashMessage_clientside],
+    });
+
+    console.log(
+      `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`
+    );
+    console.log(
+      `Current Session Variables Contents: ${JSON.stringify(req.session)} `
+    );
   } catch (error) {
     res.json({
       success: false,
@@ -491,8 +364,6 @@ router.post("/individualProduct/:id", async (req, res) => {
     });
     console.error(error);
   }
-
-  console.log("End Req");
 });
 
 // Update Cart
@@ -503,99 +374,84 @@ router.post("/cart", async (req, res) => {
       for (let productId in req.session.userCart) {
         let item = req.session.userCart[productId];
         let query = parseInt(req.body[`Q${productId}`]);
-
         console.log(
           `Querying: ${item.Name} Current Quantity: ${item.Quantity}, New Quantity: ${query}`
         );
 
+        // Modify qty of product according to changes
         if (query > 0) {
           item.Quantity = query;
         }
 
-        // Fetch the discount and product details
-        const discount = await handleProductDiscount(productId);
-        const product = await productadmin.findOne({ where: { id: productId } });
+        const discount = await carthelper.getProductDiscount(productId);
+        const product = await productadmin.findOne({
+          where: { id: productId },
+        });
 
         if (!product) {
           return res.json({ success: false, message: "Product not found" });
         }
 
-        // Process the cart
-        processCart(req, req.session.userCart, product, discount, false);
+        carthelper.processCart(
+          req,
+          req.session.userCart,
+          product,
+          discount,
+          false
+        );
 
-        // Remember to update coupon savings after update
+        // Remember to update coupon savings after quantity update
         if (req.session.coupon_object) {
-          await carthelper.calculate_cart_total_coupon_savings(req, req.session.coupon_object.code)
-          console.log(`Found coupon object, current coupon savings is ${req.session.cart_coupon_savings}`)
-        }
-
-        else {
+          await carthelper.calculate_cart_total_coupon_savings(
+            req,
+            req.session.coupon_object.code
+          );
+          console.log(
+            `Found coupon object, current coupon savings is ${req.session.cart_coupon_savings}`
+          );
+        } else {
           req.session.cart_coupon_savings = 0;
         }
       }
 
-      // Sanity Check for Cart Session Variables
-      console.log(`=== Check Session Variables after update cart ===`);
-      console.log(`${JSON.stringify(req.session)}`)
+      console.log(
+        `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`
+      );
+      console.log(
+        `Current Session Variables Contents: ${JSON.stringify(req.session)} `
+      );
       // Save session and wait for it to complete before proceeding
-      await new Promise((resolve, reject) => {
-        req.session.save((err) => {
-          if (err) {
-            console.error("Session save error:", err);
-            return reject(err);
-          }
-          resolve();
-        });
-      });
+      // Ensures data  displayed is as updated as possible
+      await helper.manualSessionSave(req);
+      res.redirect(`/product/cart?page=1`);
+    } else {
+      res.redirect("checkout");
     }
-
-    // Add cache-control header to prevent caching
-    res.set("Cache-Control", "no-store");
-
-    // Redirect with cache-busting query so the page loaded on redirect won't have the deleted item
-    const timestamp = Date.now();
-    console.log("Redirecting to cart page...");
-    //res.redirect(307, `/product/cart?page=1&cacheBust=${timestamp}`); not working for now, due too redirect not loading
-    res.redirect(`/product/cart?page=1`);
   } catch (err) {
     console.error("Error occurred:", err);
     res.status(500).send("Internal Server Error");
   }
 });
 
-
 // Delete Item in Cart
 router.get("/deleteCartItem/:id", async (req, res) => {
   try {
     const cartItem = req.session.userCart[req.params.id];
     console.log(`Deleting ${cartItem.Name}`);
-    console.log("Before Delete:", JSON.stringify(req.session.userCart));
-
     delete req.session.userCart[req.params.id];
-
-    console.log("After Delete:", JSON.stringify(req.session.userCart));
-
-    req.session.save((err) => {
-      if (err) {
-        console.error("Session save error:", err);
-        return res.status(500).send("Internal Server Error");
-      }
-
-      // Add cache-control header to prevent caching
-      res.set("Cache-Control", "no-store");
-
-      alertMessage(
-        res,
-        "success",
-        "An item has been removed from the cart",
-        "fas fa-sign-in-alt",
-        true
-      );
-
-      // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
-      const timestamp = Date.now();
-      res.redirect(307, `/product/cart?page=1&cacheBust=${timestamp}`);
-    });
+    await helper.manualSessionSaveNoCaching(req, res);
+    // await carthelper.refreshCartCalculations(req, req.session.userCart);
+    alertMessage(
+      res,
+      "success",
+      "An item has been removed from the cart",
+      "fas fa-sign-in-alt",
+      true
+    );
+    // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
+    const timestamp = Date.now();
+    res.redirect(307, `/product/cart?page=1&cacheBust=${timestamp}`);
+    // we may have deleted the item from userCart, but other session variables like cart_coupon_savings, cart_discount_savings and cart_subtotal_final, cart_subtotal_initial, cart_grandtotal are unchanged.
   } catch (err) {
     console.error("Error deleting item:", err);
     res.status(500).send("Internal Server Error");
@@ -606,62 +462,22 @@ router.get("/deleteCartItem/:id", async (req, res) => {
 // Make sure to use POST request to handle updated cart info or you need to double refresh
 
 router.get("/cart", async (req, res) => {
-  // Generate a unique cache-busting string (e.g., timestamp)
-const cacheBuster = new Date().getTime();
-
   let title = "Shopping Cart";
-  let total_weight = 0;
-  let total_weight_oz = 0;
-  let initialSubTotal = 0;
-  let discountedSubtotal = 0;
-  let discountSavings = 0;
-  let couponSavings = 0;
-  if (req.session.coupon_object) {
-    couponSavings = await carthelper.calculate_cart_total_coupon_savings(req, req.session.coupon_object.code)
-  }
-  let grandTotal = 0;
 
-  console.log(`Coupon Savings is ${couponSavings}`)
-  total_weight_oz = Math.ceil(total_weight * 0.035274);
+  await carthelper.refreshCartCalculations(req, req.session.userCart);
+  console.log(`CART PAGE REQ initialSubtotal = ${req.session.cart_subtotal_initial}`);
+  console.log(`CART PAGE REQ discountedSubtotal = ${ req.session.cart_subtotal_final}`);
+  console.log(`CART PAGE REQ discountSavingsTotal = ${req.session.cart_discount_savings}`);
+  console.log(`CART PAGE REQ couponSavingsTotal = ${req.session.cart_coupon_savings}`);
+  console.log(`CART PAGE REQ grandTotal = ${req.session.cart_grandtotal}`);
+  res.locals.cart_subtotal_initial = req.session.cart_subtotal_initial.toFixed(2);
+	res.locals.cart_subtotal_final = req.session.cart_subtotal_final.toFixed(2);
+	res.locals.cart_discount_savings = req.session.cart_discount_savings.toFixed(2);
+	res.locals.cart_coupon_savings = req.session.cart_coupon_savings
+	res.locals.cart_shipping_fee = req.session.cart_shipping_fee.toFixed(2);
+	res.locals.cart_grandtotal = req.session.cart_grandtotal.toFixed(2);
 
-  // Calculate initialSubTotal
-  // Calculate discountedSubtotal
-  for (let key in req.session.userCart) {
-    const item = req.session.userCart[key];
-    item.SubtotalWeight = item.Quantity * item.Weight;
-    total_weight += item.SubtotalWeight;
-    initialSubTotal += parseFloat(item.Price * item.Quantity);
-    discountedSubtotal += parseFloat(item.SubtotalPrice);
-  }
-  discountSavings = initialSubTotal - discountedSubtotal;
-  //couponSavings = req.session.cart_coupon_savings;
-  grandTotal = initialSubTotal - discountSavings - couponSavings;
-  //console.log(`grandTotal is ${grandTotal}`);
-
-  // Set Session Variables
-  req.session.cart_subtotal_initial = initialSubTotal;
-  req.session.cart_subtotal_final = discountedSubtotal;
-  req.session.cart_discount_savings = discountSavings;
-  req.session.cart_grandtotal = grandTotal;
-
-  // Adjust Variables to string with two d.p for display
-  initialSubTotal = initialSubTotal.toFixed(2);
-  discountedSubtotal = discountedSubtotal.toFixed(2);
-  discountSavings = discountSavings.toFixed(2);
-  couponSavings = couponSavings.toFixed(2);
-  grandTotal = grandTotal.toFixed(2);
-
-  console.log(`Final Session Variable Check before Rendering`)
-  console.log(`Session Variable: ${JSON.stringify(req.session)}`)
-  console.log(`Final Check ${couponSavings}`);
   res.render("checkout/cart", {
-    total_weight,
-    total_weight_oz,
-    initialSubTotal,
-    discountedSubtotal,
-    discountSavings,
-    couponSavings,
-    grandTotal,
     title,
     results: {
       pages: 1, // Set correctly based on your pagination logic
@@ -674,7 +490,6 @@ const cacheBuster = new Date().getTime();
 
 // Cart Coupon
 router.post("/applyCoupon", async (req, res) => {
-  console.log("=== START ===");
   try {
     // Retrieve all coupons from the database
     const coupons = await Coupon.findAll();
@@ -719,24 +534,14 @@ router.post("/applyCoupon", async (req, res) => {
     console.log(`Savings are: ${couponSavings.toFixed(2)}`);
     req.session.cart_coupon_savings = couponSavings;
 
-    req.session.save((err) => {
-      if (err) {
-        console.error("Session save error:", err);
-        return res.status(500).send("Internal Server Error");
-      }
+    await helper.manualSessionSaveNoCaching(req, res);
 
-      // Add cache-control header to prevent caching
-      res.set("Cache-Control", "no-store");
-
-      // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
-      const timestamp = Date.now();
-      res.redirect(`/product/cart?page=1&cacheBust=${timestamp}`);
-    });
+    // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
+    const timestamp = Date.now();
+    res.redirect(`/product/cart?page=1&cacheBust=${timestamp}`);
   } catch (err) {
     console.error(err);
   }
-
-  // res.redirect("/product/cart?page=1");
 });
 
 // Checkout Form

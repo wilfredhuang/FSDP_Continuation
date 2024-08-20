@@ -105,26 +105,20 @@ app.engine(
 	  helpers: {
 		convertUpper: helper.convertUpper,
 		adminCheck: helper.adminCheck,
-		emptyCart: carthelper.emptyCart,
+		checkEmptyCart: carthelper.checkEmptyCart,
 		formatDate: helper.formatDate,
-		check_for_discount_msg: helper.check_for_discount_msg,
 		formatDeliveryStatus: helper.formatDeliveryStatus,
 		when: when.when,
-		loop_n_times: helper.loop_n_times,
-		check_page: helper.check_page,
+		loopNTimes: helper.loopNTimes,
+		checkPage: helper.checkPage,
 
 		// Cart Helpers
-		count_cartQty: carthelper.count_cartQty,
-		capitaliseFirstLetter: carthelper.capitaliseFirstLetter,
-		isSg: carthelper.isSg,
+		countCartQty: carthelper.countCartQty,
+		checkShipmentCountrySingapore: carthelper.checkShipmentCountrySingapore,
 		checkPromo: carthelper.checkPromo,
 		convertDiscount: carthelper.convertDiscount,
 		displayCouponType: carthelper.displayCouponType,
-		displayAnyPrice: carthelper.displayAnyPrice,
-		check_product_discounted: carthelper.check_product_discounted,
-		calculate_cart_initial_subtotal: carthelper.calculate_cart_initial_subtotal,
-		calculate_cart_discounted_subtotal: carthelper.calculate_cart_discounted_subtotal,
-		calculate_cart_total_discount_savings: carthelper.calculate_cart_total_discount_savings,
+		checkProductPriceDiscounted: carthelper.checkProductPriceDiscounted,
 	  },
 	  handlebars: allowInsecurePrototypeAccess(Handlebars), // Ensure `allowInsecurePrototypeAccess` is used correctly
 	})
@@ -209,7 +203,6 @@ app.use(function (req, res, next) {
 	res.locals.billingAddress = req.session.billingAddress;
 	res.locals.countryShipment = req.session.countryShipment;
 	res.locals.UC = req.session.userCart;
-	// TODO
 	res.locals.public_coupon = req.session.public_coupon;
 	res.locals.cart_subtotal_initial = req.session.cart_subtotal_initial;
 	res.locals.cart_subtotal_final = req.session.cart_subtotal_final;
@@ -218,7 +211,7 @@ app.use(function (req, res, next) {
 	res.locals.cart_shipping_fee = req.session.cart_shipping_fee;
 	res.locals.cart_grandtotal = req.session.cart_grandtotal
 	next();
-	
+
 });
 
 
@@ -302,9 +295,6 @@ const port = 5000;
 https.createServer(options, app).listen(port);
 
 
-
-
-
 /* changed to https so this is not needed
 app.listen(port, () => {
 	console.log(`Server started on port ${port}`);
@@ -313,129 +303,3 @@ app.listen(port, () => {
 //remember to use https://localhost:5000/
 
 
-// //SMS Notification 
-// app.post("/deliveryUpdates", (req, res) => {
-// 	let firstMessage = "Hey! This is Bookstore. ";
-// 	objectWeb = req.body.object;
-// 	console.log(objectWeb);
-// 	let descriptionWeb = req.body.description;
-// 	console.log(descriptionWeb);
-// 	let shippingIDWeb = req.body.result.shipment_id;
-// 	let deliveryStatusResponse = req.body.result.status;
-// 	if (
-// 		deliveryStatusResponse == null ||
-// 		deliveryStatusResponse == undefined ||
-// 		deliveryStatusResponse == ""
-// 	) {
-// 		console.log(deliveryStatusResponse);
-// 		console.log("Delivery response is invalid");
-// 	} else {
-// 		let carrier = "Your carrier is " + req.body.result.carrier;
-// 		console.log(shippingIDWeb);
-// 		order
-// 			.findOne({
-// 				where: {
-// 					shippingId: shippingIDWeb,
-// 				},
-// 			})
-// 			.then((order) => {
-// 				//checks if event is tracker update
-// 				if (objectWeb == "Event" && descriptionWeb == "tracker.updated") {
-// 					if (deliveryStatusResponse == "delivered") {
-// 						order.update({
-// 							deliveryStatus: deliveryStatusResponse,
-// 						});
-// 						let lengthOfTrackingDetails =
-// 							req.body.result.tracking_details.length;
-// 						let state =
-// 							req.body.result.tracking_details[lengthOfTrackingDetails - 1]
-// 								.tracking_location.state;
-// 						let city =
-// 							req.body.result.tracking_details[lengthOfTrackingDetails - 1]
-// 								.tracking_location.city;
-// 						api.Shipment.retrieve(shippingIDWeb).then((s) => {
-// 							let toAddressWeb = s.to_address;
-// 							console.log(toAddressWeb);
-// 							console.log(s.to_address.phone);
-// 							let toNumberWeb = "+" + s.to_address.phone;
-// 							console.log(toNumberWeb);
-// 							let twilioMessage =
-// 								firstMessage +
-// 								carrier +
-// 								"." +
-// 								" Your package has arrived at " +
-// 								city +
-// 								", " +
-// 								state +
-// 								".";
-// 							console.log(twilioMessage);
-// 							var promise = client.messages.create({
-// 								from: process.env.TWILIO_ACCOUNT_PHONENO,
-// 								to: process.env.DEV_PHONENO, // a Twilio number you own
-// 								body: twilioMessage,
-// 							});
-// 							promise.then(
-// 								function (sms) {
-// 									console.log("Message success! SMS SID: " + sms.sid);
-// 								},
-// 								function (error) {
-// 									console.error("Message failed!  Reason: " + error.message);
-// 								}
-// 							);
-// 							console.log("received delivery");
-// 							res.status(200).send("Acknowledged Delivered");
-// 						});
-// 					} else {
-// 						order.update({
-// 							deliveryStatus: deliveryStatusResponse,
-// 						});
-// 						let lengthOfTrackingDetails =
-// 							req.body.result.tracking_details.length;
-// 						let state =
-// 							req.body.result.tracking_details[lengthOfTrackingDetails - 1]
-// 								.tracking_location.state;
-// 						let city =
-// 							req.body.result.tracking_details[lengthOfTrackingDetails - 1]
-// 								.tracking_location.city;
-// 						api.Shipment.retrieve(shippingIDWeb).then((s) => {
-// 							let toAddressWeb = s.to_address;
-// 							console.log(toAddressWeb);
-// 							let toNumberWeb = "+" + s.to_address.phone;
-// 							console.log(toNumberWeb);
-// 							let twilioMessage =
-// 								firstMessage +
-// 								carrier +
-// 								" Your delivery status is " +
-// 								deliveryStatusResponse +
-// 								" and package is currently at " +
-// 								city +
-// 								", " +
-// 								state +
-// 								".";
-// 							console.log(twilioMessage);
-// 							var promise = client.messages.create({
-// 								from: process.env.TWILIO_ACCOUNT_PHONENO,
-// 								to: process.env.DEV_PHONENO, // a Twilio number you own
-// 								body: twilioMessage,
-// 							});
-// 							promise.then(
-// 								function (sms) {
-// 									console.log("Message success! SMS SID: " + sms.sid);
-// 								},
-// 								function (error) {
-// 									console.error("Message failed!  Reason: " + error.message);
-// 								}
-// 							);
-// 							console.log("this is hello");
-// 							res.status(200).send("Acknowledged Update");
-// 						});
-// 					}
-// 				} else {
-// 					console.log(
-// 						"might put other stuff here but let's just put a sms notification only"
-// 					);
-// 					res.status(200).send("Acknowledged");
-// 				}
-// 			});
-// 	}
-// });

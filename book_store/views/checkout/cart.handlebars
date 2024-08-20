@@ -10,24 +10,24 @@
 </div>
 <section class="static about-sec">
     <div class="container">
-        {{#unless (emptyCart UC) }} <!-- Render if cart not empty -->
+        {{#unless (checkEmptyCart UC) }} <!-- Render if cart not empty -->
         <!-- unless is the inverse of if, block would only render if value is false -->
         <!-- First Section -->
         <h3> <i class="fa fa-shopping-cart pr-2 mt-0 mb-0 pt-0" aria-hidden="true"></i> Shopping Cart</h3>
                       <ul class="pagination">
-    {{#if (check_page results.previous.page)}}
+    {{#if (checkPage results.previous.page)}}
     <li class="page-item"><a class="page-link" href="https://localhost:5000/product/cart?page={{results.previous.page}}">Previous</a></li>
     {{/if}}
-    {{#unless (check_page results.previous.page)}}
+    {{#unless (checkPage results.previous.page)}}
     <li class="page-item"><a class="page-link" style="cursor:no-drop">Previous</a></li>
     {{/unless}}
-    {{#each (loop_n_times results.pages)}}
+    {{#each (loopNTimes results.pages)}}
     <li class="page-item"><a class="page-link pg-{{this}}" href="https://localhost:5000/product/cart?page={{this}}">Page {{this}} </a></li>
     {{/each}}
-    {{#if (check_page results.next.page)}}
+    {{#if (checkPage results.next.page)}}
     <li class="page-item"><a class="page-link" href="https://localhost:5000/product/cart?page={{results.next.page}}">Next</a></li>
     {{/if}}
-    {{#unless (check_page results.next.page)}}
+    {{#unless (checkPage results.next.page)}}
     <li class="page-item"><a class="page-link" style="cursor:no-drop">Next</a></li>
     {{/unless}}
   </ul>
@@ -73,8 +73,8 @@
                             </div>
                         </div>
                     </div>
-                    <h6 class="text-right">${{displayAnyPrice SubtotalPrice}} <del>
-                            {{check_product_discounted Quantity Price SubtotalPrice}}</del></h6>
+                    <h6 class="text-right">${{SubtotalPrice}} <del>
+                            {{checkProductPriceDiscounted Quantity Price SubtotalPrice}}</del></h6>
 
                 </div>
             </div>
@@ -102,7 +102,7 @@
                             Subtotal Price:
                         </div>
                         <div class="col lg-4">
-                            &nbsp;${{initialSubTotal}}
+                            &nbsp;${{cart_subtotal_initial}}
                         </div>
                     </div>
                     <div class="row">
@@ -113,15 +113,18 @@
                             -${{deducted}}
                         </div> --}}
                                             <div class="col lg-4 mt-2">
-                                                -${{discountSavings}}
+                                                -${{cart_discount_savings}}
                                             </div>
                     </div>
                     <div class="row">
                         <div class="col lg-8 mt-2">
                             Coupon:
                         </div>
-                        <div class="col lg-4 mt-2">
+                        {{!-- <div class="col lg-4 mt-2">
                             -${{couponSavings}}
+                        </div> --}}
+                                           <div class="col lg-4 mt-2">
+                            -${{cart_coupon_savings}}
                         </div>
                     </div>
                     <div class="row">
@@ -138,7 +141,7 @@
                             Grand Total:
                         </div>
                         <div class="col lg-4 font-weight-bold">
-                            &nbsp;${{grandTotal}}
+                            &nbsp;${{cart_grandtotal}}
                         </div>
                     </div>
                 </div>

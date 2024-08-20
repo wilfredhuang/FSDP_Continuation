@@ -2,7 +2,7 @@
         integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous">
 </script>
 
-{{#unless (emptyCart UC) }}
+{{#unless (checkEmptyCart UC) }}
 <!-- unless is the inverse of if, block would only render if value is false -->
 <div class="container">
     <!-- First Section -->

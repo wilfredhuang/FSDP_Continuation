@@ -43,27 +43,13 @@ export default {
 		return value.toUpperCase();
 	},
 
-	
-	remove_undersocre: function (string) {
-		return string.replace(/ /g, "_");
-	},
-
-	
-	check_for_discount_msg: function (msg) {
-		if (msg == null || undefined) {
-			msg = "";
-		}
-
-		return msg;
-	},
-
 	// Pagination Helpers
 
 	// Take in the number of pages available as input
 	// Push them to the array n times for the input size n
 	// We use the array to help us loop display the number of pages available
 	// as well as their respective values (pg 1, 2, 3 etc)
-	loop_n_times: function (pages) {
+	loopNTimes: function (pages) {
 		//console.log('num pages is' + pages)
 		var the_array = [];
 		if (pages > 0) {
@@ -77,7 +63,7 @@ export default {
 	},
 
 	// Checks whether the input exists and is greater than 0 allowing us to display 'previous' and 'next' options for the pages
-	check_page: function (page_value) {
+	checkPage: function (page_value) {
 		if (page_value > 0) {
 			return true;
 		} else {
@@ -106,4 +92,48 @@ export default {
 			return "Unknown";
 		}
 	},
+
+	manualSessionSave: async function(req) {
+		await new Promise((resolve, reject) => {
+			req.session.save((err) => {
+			  if (err) {
+				console.error("Session save error:", err);
+				return reject(err);
+			  }
+			  resolve();
+			});
+		  });
+	},
+
+	manualSessionSaveNoCaching: async function(req, res) {
+		  await new Promise((resolve, reject) => {
+			req.session.save((err) => {
+			  if (err) {
+				console.error("Session save error:", err);
+				return reject(err);
+			  }
+			  resolve();
+			});
+		  });
+	  
+		  // Add cache-control header to prevent caching
+		  res.set("Cache-Control", "no-store");
+	  },
+
+
+	  
+	saveSession: async function(req) {
+		return new Promise(function(resolve, reject) {
+			req.session.save(function(err) {
+				if (err) {
+					console.log("Session failed to save");
+					reject(err);
+				} else {
+					resolve("Saving session...");
+				}
+			});
+		});
+	}
+	
+	  
 };
