@@ -71,7 +71,6 @@ import { router as mainRoute } from "./routes/mainRoutes.js";
 import { router as userRoute } from "./routes/userRoutes.js";
 import { router as productRoute } from "./routes/productRoutes.js";
 import { router as deliveryRoute } from "./routes/cartRoutes.js";
-import { router as checkoutRoute } from "./routes/checkoutRoutes.js";
 import { router as adminRoute } from "./routes/adminRoutes.js";
 
 // Library to use MySQL to store session objects
@@ -276,7 +275,6 @@ app.use("/", mainRoute); // uses mainRoutes.js routing under ./routes
 app.use("/user", userRoute);
 app.use("/product", productRoute);
 app.use("/delivery", deliveryRoute);
-app.use("/checkout", checkoutRoute);
 app.use("/admin", adminRoute);
 
 //Renders 404 Page if user types in invalid URL

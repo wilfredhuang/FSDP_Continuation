@@ -2,6 +2,7 @@ import express from "express";
 const router = express.Router();
 import moment from "moment";
 import alertMessage from "../helpers/messenger.js";
+import chalk from "chalk";
 
 //Models
 import product from "../models/Product.js";
@@ -9,9 +10,8 @@ import productadmin from "../models/ProductAdmin.js";
 import order from "../models/Order.js";
 import order_item from "../models/OrderItem.js";
 import User from "../models/User.js";
-import Pending_Order from "../models/PendingOrder.js";
+import PendingOrder from "../models/PendingOrder.js";
 import PendingOrderItem from "../models/PendingOrderItem.js";
-
 import ProductAdmin from "../models/ProductAdmin.js";
 import Coupon from "../models/Coupon.js";
 import Discount from "../models/Discount.js";
@@ -23,7 +23,6 @@ const apiKey = "EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg";
 const api = new EasyPost(apiKey);
 
 // Stripe Payment - secret key
-
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -33,7 +32,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 // PayNow
-
 import paynow from "paynow-generator";
 import QRCode from "qrcode";
 
@@ -49,11 +47,12 @@ import ensureAuthenticated from "../middleware/userAuth.js";
 import ensureAdminAuthenticated from "../middleware/adminAuth.js";
 import { checkCart } from "../middleware/cartAuth.js";
 
-// Import Helper
+// Import Helpers
 import carthelper from "../helpers/cartHelper.js";
 import helper from "../helpers/hbs.js";
 
 /*
+  // How the Pricing works?
 	// Example A: quantity 3, price: 5.00, discountRate: 0.20, minQty:2
 
 	specialOffers = Math.floor(quantity / minQty); //  1
@@ -85,10 +84,7 @@ import helper from "../helpers/hbs.js";
 
 */
 
-// variables below for coupon feature, dont change - wilfred
-// switched req.session.userCart to global variable @app.js
-// const req.session.userCart = {}
-
+// Page that displays all the products
 router.get("/product-list", (req, res) => {
   const title = "Product Listing";
   const navStatusProduct = "active";
@@ -105,6 +101,7 @@ router.get("/product-list", (req, res) => {
     });
 });
 
+// Page that display a single product details
 router.get("/individual-product/:id", async (req, res) => {
   const title = "Product Information";
   const disc = await Discount.findOne({
@@ -126,7 +123,53 @@ router.get("/individual-product/:id", async (req, res) => {
     });
 });
 
-router.post("/addProductAdmin", (req, res) => {
+// Admin-only page that displays all the current products in the web store
+router.get("/product-list-admin", ensureAdminAuthenticated, (req, res) => {
+  const title = "Product Admin List";
+  productadmin
+    .findAll({
+      order: [["id", "ASC"]],
+      raw: true,
+    })
+    .then((productadmin) => {
+      res.render("products/product-list-admin", {
+        productadmin: productadmin,
+        title,
+      });
+    });
+});
+
+// Admin-only page that displays detail about a single product in the web store
+router.get(
+  "/product-details-admin/:id",
+  ensureAdminAuthenticated,
+  (req, res) => {
+    const title = "Product Details";
+    productadmin
+      .findOne({
+        where: {
+          id: req.params.id,
+        },
+      })
+      .then((product) => {
+        res.render("products/product-details", {
+          product,
+          title,
+        });
+      });
+  },
+);
+
+// Admin-only page that displays the form to create a product entry in the web store
+router.get("/create-product", (req, res) => {
+  const title = "Create Product";
+  res.render("products/create-product", {
+    title,
+  });
+});
+
+// Admin-only request that creates a new product entry in the web store
+router.post("/create-product-admin", ensureAdminAuthenticated, (req, res) => {
   let product_name = req.body.product_name;
   console.log(product_name);
   let author = req.body.author;
@@ -157,29 +200,85 @@ router.post("/addProductAdmin", (req, res) => {
         "success",
         ` ${product_name} was added into the shop.`,
         "fas fa-sign-in-alt",
-        true
+        true,
       );
       res.redirect("/product/product-list-admin");
     })
     .catch((err) => console.log(err));
 });
 
-router.get("/product-list-admin", (req, res) => {
-  const title = "Product Admin List";
-  productadmin
-    .findAll({
-      order: [["id", "ASC"]],
-      raw: true,
-    })
-    .then((productadmin) => {
-      res.render("products/product-list-admin", {
-        productadmin: productadmin,
-        title,
+// Admin-only page that displays the form to update a product entry details in the web store
+router.get(
+  "/product-update-admin/:id",
+  ensureAdminAuthenticated,
+  (req, res) => {
+    const title = "Update Product";
+    productadmin
+      .findOne({
+        where: {
+          id: req.params.id,
+        },
+      })
+      .then((product) => {
+        res.render("products/product-update-admin", {
+          product,
+          title,
+        });
       });
-    });
-});
+  },
+);
 
-router.get("/delete/:id", (req, res) => {
+// Admin-only request that updates product entry details in the web store
+router.put(
+  "/product-update-admin/:id",
+  ensureAdminAuthenticated,
+  (req, res) => {
+    let product_name = req.body.product_name;
+    let author = req.body.author;
+    let publisher = req.body.publisher;
+    let genre = req.body.genre;
+    let price = req.body.price;
+    let stock = req.body.stock;
+    let details = req.body.details;
+    let weight = req.body.weight;
+    let rating = req.body.rating;
+    let product_image = req.body.product_image;
+    productadmin
+      .update(
+        {
+          product_name,
+          author,
+          publisher,
+          genre,
+          price,
+          stock,
+          details,
+          weight,
+          product_image,
+          rating,
+        },
+        {
+          where: {
+            id: req.params.id,
+          },
+        },
+      )
+      .then(() => {
+        alertMessage(
+          res,
+          "success",
+          ` ${product_name} was updated.`,
+          "fas fa-sign-in-alt",
+          true,
+        );
+        res.redirect("/product/product-list-admin");
+      })
+      .catch((err) => console.log(err));
+  },
+);
+
+// Admin-only request that deletes a new product entry in the web store
+router.get("/delete/:id", ensureAdminAuthenticated, (req, res) => {
   productadmin
     .findOne({
       where: {
@@ -199,83 +298,7 @@ router.get("/delete/:id", (req, res) => {
     });
 });
 
-router.get("/product-update-admin/:id", (req, res) => {
-  const title = "Update Product";
-  productadmin
-    .findOne({
-      where: {
-        id: req.params.id,
-      },
-    })
-    .then((product) => {
-      res.render("products/product-update-admin", {
-        product,
-        title,
-      });
-    });
-});
-
-router.get("/product-details-admin/:id", (req, res) => {
-  const title = "Product Details";
-  productadmin
-    .findOne({
-      where: {
-        id: req.params.id,
-      },
-    })
-    .then((product) => {
-      res.render("products/product-details-admin", {
-        product,
-        title,
-      });
-    });
-});
-
-router.put("/product-update-admin/:id", (req, res) => {
-  let product_name = req.body.product_name;
-  let author = req.body.author;
-  let publisher = req.body.publisher;
-  let genre = req.body.genre;
-  let price = req.body.price;
-  let stock = req.body.stock;
-  let details = req.body.details;
-  let weight = req.body.weight;
-  let rating = req.body.rating;
-  let product_image = req.body.product_image;
-  productadmin
-    .update(
-      {
-        product_name,
-        author,
-        publisher,
-        genre,
-        price,
-        stock,
-        details,
-        weight,
-        product_image,
-        rating,
-      },
-      {
-        where: {
-          id: req.params.id,
-        },
-      }
-    )
-    .then(() => {
-      alertMessage(
-        res,
-        "success",
-        ` ${product_name} was updated.`,
-        "fas fa-sign-in-alt",
-        true
-      );
-      res.redirect("/product/product-list-admin");
-    })
-    .catch((err) => console.log(err));
-});
-
-// Here is the start of Cart and Payment Features - Wilfred
+// Here is the start of Cart and Payment Features
 
 router.get("/product-list/:id", async (req, res) => {
   try {
@@ -287,11 +310,10 @@ router.get("/product-list/:id", async (req, res) => {
     }
     carthelper.processCart(req, req.session.userCart, product, discount, 1); // Determine whether cart item already exist hence need to update merely qty or add new item
 
-
     // Get quantity of cart items to display in the UI with ajax and use of cookie
     const cartQty = Object.values(req.session.userCart).reduce(
       (acc, item) => acc + item.Quantity,
-      0
+      0,
     );
     res.cookie("cartQty", cartQty, {
       expires: new Date(Date.now() + 900000),
@@ -308,10 +330,14 @@ router.get("/product-list/:id", async (req, res) => {
     });
 
     console.log(
-      `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`
+      chalk.blue(
+        `[GET /product-list/:id] Current User Cart Contents After Adding item: ${JSON.stringify(req.session.userCart, null, 2)}`,
+      )
     );
     console.log(
-      `Current Session Variables Contents: ${JSON.stringify(req.session)} `
+      chalk.blue(
+        `[GET /product-list/:id] Current Session Variables Contents After Adding Item: ${JSON.stringify(req.session, null, 2)}`,
+      )
     );
   } catch (err) {
     console.error(err);
@@ -335,7 +361,7 @@ router.post("/individual-product/:id", async (req, res) => {
     // Set cookie, our frontend will retrieve this later
     const cartQty = Object.values(req.session.userCart).reduce(
       (acc, item) => acc + item.Quantity,
-      0
+      0,
     );
     res.cookie("cartQty", cartQty, {
       expires: new Date(Date.now() + 900000),
@@ -352,10 +378,10 @@ router.post("/individual-product/:id", async (req, res) => {
     });
 
     console.log(
-      `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`
+      `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`,
     );
     console.log(
-      `Current Session Variables Contents: ${JSON.stringify(req.session)} `
+      `Current Session Variables Contents: ${JSON.stringify(req.session)} `,
     );
   } catch (error) {
     res.json({
@@ -366,8 +392,7 @@ router.post("/individual-product/:id", async (req, res) => {
   }
 });
 
-// Update Cart
-// When a user want to change the product qty in cart page
+// Update Cart / Or go to Checkout Page
 router.post("/cart", async (req, res) => {
   try {
     if (req.body.checkoutButton === "Update") {
@@ -375,7 +400,7 @@ router.post("/cart", async (req, res) => {
         let item = req.session.userCart[productId];
         let query = parseInt(req.body[`Q${productId}`]);
         console.log(
-          `Querying: ${item.Name} Current Quantity: ${item.Quantity}, New Quantity: ${query}`
+          `Querying: ${item.Name} Current Quantity: ${item.Quantity}, New Quantity: ${query}`,
         );
 
         // Modify qty of product according to changes
@@ -397,17 +422,17 @@ router.post("/cart", async (req, res) => {
           req.session.userCart,
           product,
           discount,
-          false
+          false,
         );
 
         // Remember to update coupon savings after quantity update
         if (req.session.coupon_object) {
           await carthelper.calculate_cart_total_coupon_savings(
             req,
-            req.session.coupon_object.code
+            req.session.coupon_object.code,
           );
           console.log(
-            `Found coupon object, current coupon savings is ${req.session.cart_coupon_savings}`
+            `Found coupon object, current coupon savings is ${req.session.cart_coupon_savings}`,
           );
         } else {
           req.session.cart_coupon_savings = 0;
@@ -415,10 +440,10 @@ router.post("/cart", async (req, res) => {
       }
 
       console.log(
-        `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`
+        `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`,
       );
       console.log(
-        `Current Session Variables Contents: ${JSON.stringify(req.session)} `
+        `Current Session Variables Contents: ${JSON.stringify(req.session)} `,
       );
       // Save session and wait for it to complete before proceeding
       // Ensures data  displayed is as updated as possible
@@ -434,19 +459,18 @@ router.post("/cart", async (req, res) => {
 });
 
 // Delete Item in Cart
-router.get("/deleteCartItem/:id", async (req, res) => {
+router.get("/delete-cart-item/:id", async (req, res) => {
   try {
     const cartItem = req.session.userCart[req.params.id];
     console.log(`Deleting ${cartItem.Name}`);
     delete req.session.userCart[req.params.id];
     await helper.manualSessionSaveNoCaching(req, res);
-    // await carthelper.refreshCartCalculations(req, req.session.userCart);
     alertMessage(
       res,
       "success",
       "An item has been removed from the cart",
       "fas fa-sign-in-alt",
-      true
+      true,
     );
     // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
     const timestamp = Date.now();
@@ -465,18 +489,30 @@ router.get("/cart", async (req, res) => {
   let title = "Shopping Cart";
 
   await carthelper.refreshCartCalculations(req, req.session.userCart);
-  console.log(`CART PAGE REQ initialSubtotal = ${req.session.cart_subtotal_initial}`);
-  console.log(`CART PAGE REQ discountedSubtotal = ${ req.session.cart_subtotal_final}`);
-  console.log(`CART PAGE REQ discountSavingsTotal = ${req.session.cart_discount_savings}`);
-  console.log(`CART PAGE REQ couponSavingsTotal = ${req.session.cart_coupon_savings}`);
+  console.log(
+    `CART PAGE REQ initialSubtotal = ${req.session.cart_subtotal_initial}`,
+  );
+  console.log(
+    `CART PAGE REQ discountedSubtotal = ${req.session.cart_subtotal_final}`,
+  );
+  console.log(
+    `CART PAGE REQ discountSavingsTotal = ${req.session.cart_discount_savings}`,
+  );
+  console.log(
+    `CART PAGE REQ couponSavingsTotal = ${req.session.cart_coupon_savings}`,
+  );
   console.log(`CART PAGE REQ grandTotal = ${req.session.cart_grandtotal}`);
-  res.locals.cart_subtotal_initial = req.session.cart_subtotal_initial.toFixed(2);
-	res.locals.cart_subtotal_final = req.session.cart_subtotal_final.toFixed(2);
-	res.locals.cart_discount_savings = req.session.cart_discount_savings.toFixed(2);
-	res.locals.cart_coupon_savings = req.session.cart_coupon_savings
-	res.locals.cart_shipping_fee = req.session.cart_shipping_fee.toFixed(2);
-	res.locals.cart_grandtotal = req.session.cart_grandtotal.toFixed(2);
+  res.locals.cart_subtotal_initial =
+    req.session.cart_subtotal_initial.toFixed(2);
+  res.locals.cart_subtotal_final = req.session.cart_subtotal_final.toFixed(2);
+  res.locals.cart_discount_savings =
+    req.session.cart_discount_savings.toFixed(2);
+  res.locals.cart_coupon_savings = req.session.cart_coupon_savings.toFixed(2);
+  res.locals.cart_shipping_fee = req.session.cart_shipping_fee.toFixed(2);
+  res.locals.cart_grandtotal = req.session.cart_grandtotal.toFixed(2);
 
+  console.log("=== Show Session Variables ===");
+  console.log(chalk.red(JSON.stringify(req.session)));
   res.render("checkout/cart", {
     title,
     results: {
@@ -515,26 +551,25 @@ router.post("/applyCoupon", async (req, res) => {
         console.log(
           "Public Coupon is now " +
             req.session.public_coupon +
-            " should be NULL"
+            " should be NULL",
         );
       } else {
         console.log(
-          `Current Time: ${currentTime.format("DD/MM/YYYY, hh:mm:ss a")}`
+          `Current Time: ${currentTime.format("DD/MM/YYYY, hh:mm:ss a")}`,
         );
         console.log(
-          `Expiry Time: ${expiryTime.format("DD/MM/YYYY, hh:mm:ss a")}`
+          `Expiry Time: ${expiryTime.format("DD/MM/YYYY, hh:mm:ss a")}`,
         );
       }
     }
 
     const couponSavings = await carthelper.calculate_cart_total_coupon_savings(
       req,
-      req.body.coupon
+      req.body.coupon,
     );
-    console.log(`Savings are: ${couponSavings.toFixed(2)}`);
-    req.session.cart_coupon_savings = couponSavings;
 
-    await helper.manualSessionSaveNoCaching(req, res);
+    console.log(chalk.red(couponSavings));
+    //await helper.manualSessionSaveNoCaching(req, res);
 
     // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
     const timestamp = Date.now();
@@ -590,17 +625,40 @@ router.get("/select-payment", checkCart, (req, res) => {
   });
 });
 
-router.post("/goToStripe", checkCart, (req, res) => {
-  res.redirect("stripepayment");
-});
-
-router.post("/goToPayNow", checkCart, (req, res) => {
+router.post("/select-paynow-payment", checkCart, (req, res) => {
   res.redirect("paynow");
 });
 
-router.get("/stripepayment", checkCart, async (req, res) => {
-  // Function below will take in customer's stripeID (if it exists)
+router.post("/select-stripe-payment", checkCart, (req, res) => {
+  res.redirect("stripe-payment");
+});
 
+router.get("/paynow", checkCart, (req, res) => {
+  var title = "PayNow Payment";
+  // let payNowString = paynow('proxyType','proxyValue','edit',price,'merchantName','additionalComments')
+  let payNowString = paynow.paynowGenerator(
+    "mobile",
+    "87558054",
+    "no",
+    req.session.cart_grandtotal,
+    "Test Merchant Name",
+    "Testing paynow",
+  );
+  let qr = QRCode.toDataURL(payNowString)
+    .then((url) => {
+      res.render("checkout/paynow", {
+        payNowString,
+        qr,
+        url,
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+});
+
+router.get("/stripe-payment", checkCart, async (req, res) => {
+  // Function below will take in customer's stripeID (if it exists)
   console.log("USER STRIPE ID IS " + req.user.stripeID);
   console.log("USER ISADMIN IS " + req.user.isadmin);
   if (req.user.stripeID != null) {
@@ -657,7 +715,82 @@ router.get("/stripepayment", checkCart, async (req, res) => {
     });
 });
 
-router.post("/stripepayment", async (req, res) => {
+router.post("/paynow", async (req, res) => {
+  let the_date = moment().format("D MMM YYYY");
+  let dateStart = the_date.toString();
+  console.log("dateStart is " + dateStart);
+
+  // Create a unconfirmed order
+  const new_pending_order = await PendingOrder.create({
+    fullName: req.session.recipientName,
+    phoneNumber: req.session.recipientPhoneNo,
+    address: req.session.address,
+    address1: req.session.address1,
+    city: req.session.city,
+    country: req.session.countryShipment,
+    postalCode: req.session.postalCode,
+    deliverFee: 0,
+    subtotalPrice: parseFloat(req.session.cart_subtotal_final).toFixed(2),
+    totalPrice: parseFloat(req.session.cart_grandtotal).toFixed(2),
+    dateStart: dateStart,
+    userId: req.user.id,
+  }).catch((err) => {
+    console.log("Cannot create pending order");
+    console.log(err);
+  });
+
+  // Store unconfirmed order's order items
+  for (var i in req.session.userCart) {
+    let product_name = req.session.userCart[i].Name;
+    let author = req.session.userCart[i].Author;
+    let publisher = req.session.userCart[i].Publisher;
+    let genre = req.session.userCart[i].Genre;
+    let price = req.session.userCart[i].SubtotalPrice;
+    let stock = req.session.userCart[i].Quantity;
+    let details = "";
+    let weight = req.session.userCart[i].SubtotalWeight;
+    let product_image = req.session.userCart[i].Image;
+    let PorderId = new_pending_order.id;
+    const new_pi = await PendingOrderItem.create({
+      product_name,
+      author,
+      publisher,
+      genre,
+      price,
+      stock,
+      details,
+      weight,
+      product_image,
+      pendingOrderId: PorderId,
+    }).catch((err) => {
+      console.log("Cannot create pending order item");
+      console.log(err);
+    });
+  }
+
+  // This block of code below will send a message
+  client.messages
+    .create({
+      body: "You made an order with BookStore via payNow/payLah!, you will be notified again when your order is confirmed",
+      from: process.env.TWILIO_ACCOUNT_PHONENO,
+      to: process.env.DEV_PHONENO,
+    })
+    .then((message) => console.log(message.sid));
+
+  // Empty the cart
+  req.session.userCart = {};
+  console.log(chalk.red(req.session));
+  alertMessage(
+    res,
+    "success",
+    "Order placed, the administrator will shortly confirm your payment",
+    "fas fa-exclamation-circle",
+    true,
+  );
+  res.redirect("paynow-txn-end");
+});
+
+router.post("/stripe-payment", async (req, res) => {
   var total_weight_oz = (0).toFixed(2);
 
   // Create the parcel object
@@ -711,7 +844,7 @@ router.post("/stripepayment", async (req, res) => {
       !verification.verifications.delivery
     ) {
       throw new Error(
-        "Failed to verify address or verification details are missing."
+        "Failed to verify address or verification details are missing.",
       );
     }
 
@@ -733,7 +866,7 @@ router.post("/stripepayment", async (req, res) => {
 
       // Buy the shipment
       const transaction = await savedShipment.buy(
-        savedShipment.lowestRate(["USPS"], ["First"])
+        savedShipment.lowestRate(["USPS"], ["First"]),
       );
 
       if (!transaction || !transaction.id) {
@@ -751,7 +884,7 @@ router.post("/stripepayment", async (req, res) => {
       let country = req.session.countryShipment;
       let postalCode = req.session.postalCode;
       let deliverFee = 0;
-      let subtotalPrice = req.session.full_subtotal_price;
+      let subtotalPrice = req.session.cart_subtotal_final;
       let totalPrice = req.session.cart_grandtotal;
       let shippingId = transaction.id;
       let addressId = savedToAddress.id; // Use the address ID from the created address
@@ -843,7 +976,7 @@ router.post("/stripepayment", async (req, res) => {
           req.session.coupon_type = null;
           req.session.save();
 
-          res.redirect("/product/stripetxn_end");
+          res.redirect("/product/stripe-txn-end");
         });
     } else {
       console.log("Address verification failed");
@@ -852,7 +985,7 @@ router.post("/stripepayment", async (req, res) => {
         "danger",
         "Please enter a valid address",
         "fas fa-exclamation-circle",
-        true
+        true,
       );
       res.redirect("/delivery/checkout");
     }
@@ -862,127 +995,14 @@ router.post("/stripepayment", async (req, res) => {
   }
 });
 
-router.get("/paynow", checkCart, (req, res) => {
-  var title = "PayNow Payment";
-  // let payNowString = paynow('proxyType','proxyValue','edit',price,'merchantName','additionalComments')
-  let payNowString = paynow.paynowGenerator(
-    "mobile",
-    "87558054",
-    "no",
-    req.session.cart_grandtotal,
-    "Test Merchant Name",
-    "Testing paynow"
-  );
-  let qr = QRCode.toDataURL(payNowString)
-    .then((url) => {
-      //   console.log(url)
-      res.render("checkout/paynow", {
-        payNowString,
-        qr,
-        url,
-      });
-    })
-    .catch((err) => {
-      console.error(err);
-    });
-});
-
-router.post("/paynow", async (req, res) => {
-  let the_date = moment().format("D MMM YYYY");
-  let dateStart = the_date.toString();
-  console.log("dateStart is " + dateStart);
-
-  // Create a unconfirmed order
-  const new_pending_order = await Pending_Order.create({
-    fullName: req.session.recipientName,
-    phoneNumber: req.session.recipientPhoneNo,
-    address: req.session.address,
-    address1: req.session.address1,
-    city: req.session.city,
-    country: req.session.countryShipment,
-    postalCode: req.session.postalCode,
-    deliverFee: 0,
-    subtotalPrice: parseFloat(req.session.cart_subtotal_final).toFixed(2),
-    totalPrice: parseFloat(req.session.cart_grandtotal).toFixed(2),
-    dateStart: dateStart,
-    userId: req.user.id,
-  }).catch((err) => {
-    console.log("Cannot create pending order");
-    console.log(err);
-  });
-
-  // Store unconfirmed order's order items
-  for (var i in req.session.userCart) {
-    let product_name = req.session.userCart[i].Name;
-    let author = req.session.userCart[i].Author;
-    let publisher = req.session.userCart[i].Publisher;
-    let genre = req.session.userCart[i].Genre;
-    let price = req.session.userCart[i].SubtotalPrice;
-    let stock = req.session.userCart[i].Quantity;
-    let details = "";
-    let weight = req.session.userCart[i].SubtotalWeight;
-    let product_image = req.session.userCart[i].Image;
-    let PorderId = new_pending_order.id;
-    const new_pi = await PendingOrderItem.create({
-      product_name,
-      author,
-      publisher,
-      genre,
-      price,
-      stock,
-      details,
-      weight,
-      product_image,
-      pendingOrderId: PorderId,
-    }).catch((err) => {
-      console.log("Cannot create pending order item");
-      console.log(err);
-    });
-  }
-
-  // This block of code below will send a message
-  client.messages
-    .create({
-      body: "You made an order with BookStore via payNow/payLah!, you will be notified again when your order is confirmed",
-      from: process.env.TWILIO_ACCOUNT_PHONENO,
-      to: process.env.DEV_PHONENO,
-    })
-    .then((message) => console.log(message.sid));
-
-  // Empty the cart
-  req.session.userCart = {};
-  //   req.session.coupon_type = null;
-  //   req.session.discount = 0;
-  //   req.session.discount_limit = 0;
-  //   req.session.discounted_price = (0).toFixed(2);
-  //   req.session.shipping_discount = 0;
-  //   req.session.shipping_discount_limit = 0;
-  //   req.session.shipping_discounted_price = 0;
-  //   req.session.sub_discount = 0;
-  //   req.session.sub_discount_limit = 0;
-  //   req.session.sub_discounted_price = 0;
-  //   req.session.full_subtotal_price = 0;
-  //   req.session.full_total_price = 0;
-  //   req.session.deducted = 0;
-  //   req.session.coupon_type = null;
-  alertMessage(
-    res,
-    "success",
-    "Order placed, the administrator will shortly confirm your payment",
-    "fas fa-exclamation-circle",
-    true
-  );
-  res.redirect("paynowtxn_end");
-});
-
-router.get("/stripetxn_end", (req, res) => {
+router.get("/stripe-txn-end", (req, res) => {
   var title = "Thank you!";
   res.render("checkout/thank-you-stripe", {
     title,
   });
 });
 
-router.get("/paynowtxn_end", (req, res) => {
+router.get("/paynow-txn-end", (req, res) => {
   var title = "Thank you!";
   res.render("checkout/thank-you-paynow", {
     title,
@@ -990,7 +1010,6 @@ router.get("/paynowtxn_end", (req, res) => {
 });
 
 // Admin Side
-
 router.get("/discount-menu", ensureAdminAuthenticated, (req, res) => {
   var title = "Discount & Coupon Menu";
   res.render("checkout/discount-menu", {
@@ -998,29 +1017,29 @@ router.get("/discount-menu", ensureAdminAuthenticated, (req, res) => {
   });
 });
 
-router.get("/view-pending-orders", ensureAdminAuthenticated, async (req, res) => {
-  const title = "View Pending Orders";
+router.get(
+  "/view-pending-orders",
+  ensureAdminAuthenticated,
+  async (req, res) => {
+    const title = "View Pending Orders";
 
-  Pending_Order.findAll({
-    where: {},
-    include: [{ model: PendingOrderItem }],
-  }).then((pending_order) => {
-    res.render("checkout/view-pending-orders", {
-      PendingOrders: pending_order,
-      title,
-      // Don't need this below, wont work when rendering
-      // PendingOrderItems: pending_order.pending_orderitems
+    PendingOrder.findAll({
+      where: {},
+      include: [{ model: PendingOrderItem }],
+    }).then((pending_order) => {
+      res.render("checkout/view-pending-orders", {
+        PendingOrders: pending_order,
+        title,
+      });
     });
-  });
-
-  // console.log("PENDING ORDER ITEMS ARE " + PendingOrders.Pending_OrderItem)
-}),
+  },
+),
   router.get(
-    "/ConfirmPOrder/:id",
+    "/confirm-pending-order/:id",
     ensureAdminAuthenticated,
     async (req, res) => {
-      const PO = await Pending_Order.findOne({ where: { id: req.params.id } });
-      const Pi = await Pending_OrderItem.findAll({
+      const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
+      const Pi = await PendingOrderItem.findAll({
         where: { pendingOrderId: PO.id },
       });
 
@@ -1043,42 +1062,27 @@ router.get("/view-pending-orders", ensureAdminAuthenticated, async (req, res) =>
         phone: "415-123-4567",
         email: "example@example.com",
       });
-      //fromAddress.save().then(console.log);
 
       const toAddress = new api.Address({
         verify: ["delivery"],
-        /*name: fullName,
-            company: "-",
-            street1: address,
-            city: city,
-            state: "-",
-            phone: phoneNumber,
-            country: country,
-            zip: postalCode,*/
-        //example code cos too lazy to type down
         name: "George Costanza",
         company: "Vandelay Industries",
         street1: "1 E 161st St.",
         phone: PO.phoneNumber,
         city: "Bronx",
         state: "NY",
-        //zip: "10451", //Actual zipcode
         zip: "12412352551",
       });
       toAddress
         .save()
         .then((addr) => {
-          //console.log(addr);
-          //console.log(addr.verifications)
           let checkAddress = addr.verifications.delivery.success;
-          //console.log(addr.verifications.delivery.errors[0])
           if (checkAddress == true) {
             const shipment = new api.Shipment({
               to_address: toAddress,
               from_address: fromAddress,
               parcel: parcel,
             });
-            //shipment.save()//.then(console.log);
             shipment.save().then((s) => {
               s.buy(shipment.lowestRate(["USPS"], ["First"])).then((t) => {
                 console.log("=============");
@@ -1125,7 +1129,6 @@ router.get("/view-pending-orders", ensureAdminAuthenticated, async (req, res) =>
 
                   .then((order) => {
                     for (var i in Pi) {
-                      //   let id = req.session.userCart[i].ID;
                       let product_name = Pi[i].product_name;
                       let author = Pi[i].author;
                       let publisher = Pi[i].publisher;
@@ -1150,7 +1153,6 @@ router.get("/view-pending-orders", ensureAdminAuthenticated, async (req, res) =>
                       });
                     }
                     console.log(order);
-                    // Delete pending orders and pis since order confirmed already
                     PO.destroy();
                     for (i in Pi) {
                       console.log(`Deleting Product ${i}`);
@@ -1161,7 +1163,7 @@ router.get("/view-pending-orders", ensureAdminAuthenticated, async (req, res) =>
                       "success",
                       `Confirmed Order ${order.id} which belongs to user of id ${order.userId}`,
                       "fas fa-exclamation-circle",
-                      true
+                      true,
                     );
                     res.redirect("/product/view-pending-orders");
                     let trackingCode = order.dataValues.trackingCode;
@@ -1186,7 +1188,6 @@ router.get("/view-pending-orders", ensureAdminAuthenticated, async (req, res) =>
             });
 
             console.log("its true");
-            //res.redirect("/delivery/checkout2");
           } else {
             console.log("its false");
             alertMessage(
@@ -1194,52 +1195,53 @@ router.get("/view-pending-orders", ensureAdminAuthenticated, async (req, res) =>
               "danger",
               "Please enter a valid address",
               "fas faexclamation-circle",
-              true
+              true,
             );
             res.redirect("/product/view-pending-orders");
           }
-          //console.log(addr.verifications.errors);
         })
         .catch((e) => {
           console.log(e); //check errors
         });
+    },
+  );
+
+router.get(
+  "/delete-pending-order/:id",
+  ensureAdminAuthenticated,
+  async (req, res) => {
+    // Code commented out below does work... but doesn't remove pending order items associated with it when a PO is deleted
+    // Pending_Order.findOne({where: {id: req.params.id}, include:[{model:Pending_OrderItem}]})
+    // .then((po)=> {
+    //     po.destroy();
+    // })
+
+    const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
+    const Pi = await PendingOrderItem.findAll({
+      where: { pendingOrderId: PO.id },
+    });
+    client.messages
+      .create({
+        body: "From BookStore: We are sorry to inform you that your order has cancelled by the administrator due to lack of payment",
+        from: process.env.TWILIO_ACCOUNT_PHONENO,
+        to: PO.phoneNumber,
+      })
+      .then((message) => console.log(message.sid));
+    alertMessage(
+      res,
+      "success",
+      `Pending Order with ID ${PO.id} Deleted`,
+      "fas fa-exclamation-circle",
+      true,
+    );
+    PO.destroy();
+    for (i in Pi) {
+      console.log(`Deleting Product ${i}`);
+      Pi[i].destroy();
     }
-  );
-
-router.get("/DeletePOrder/:id", ensureAdminAuthenticated, async (req, res) => {
-  // Code commented out below does work... but doesn't remove pending order items associated with it when a PO is deleted
-  // Pending_Order.findOne({where: {id: req.params.id}, include:[{model:Pending_OrderItem}]})
-  // .then((po)=> {
-  //     po.destroy();
-  // })
-
-  const PO = await Pending_Order.findOne({ where: { id: req.params.id } });
-  const Pi = await Pending_OrderItem.findAll({
-    where: { pendingOrderId: PO.id },
-  });
-  // console.log("Pi IS")
-  // console.log(Pi[0].destroy())
-  client.messages
-    .create({
-      body: "From BookStore: We are sorry to inform you that your order has cancelled by the administrator due to lack of payment",
-      from: process.env.TWILIO_ACCOUNT_PHONENO,
-      to: PO.phoneNumber,
-    })
-    .then((message) => console.log(message.sid));
-  alertMessage(
-    res,
-    "success",
-    `Pending Order with ID ${PO.id} Deleted`,
-    "fas fa-exclamation-circle",
-    true
-  );
-  PO.destroy();
-  for (i in Pi) {
-    console.log(`Deleting Product ${i}`);
-    Pi[i].destroy();
-  }
-  res.redirect("/product/view-pending-orders");
-});
+    res.redirect("/product/view-pending-orders");
+  },
+);
 
 router.get("/create-coupon", ensureAdminAuthenticated, (req, res) => {
   // if (!req.session.public_coupon) {
@@ -1298,7 +1300,7 @@ router.post("/create-coupon", ensureAdminAuthenticated, (req, res) => {
         "danger",
         `Code ${c.code} already exists!`,
         "fas fa-exclamation-circle",
-        true
+        true,
       );
       res.redirect("create-coupon");
     }
@@ -1311,7 +1313,7 @@ router.post("/create-coupon", ensureAdminAuthenticated, (req, res) => {
         "danger",
         `Date or Time entered invalid!`,
         "fas fa-exclamation-circle",
-        true
+        true,
       );
       res.redirect("create-coupon");
     }
@@ -1345,7 +1347,7 @@ router.post("/create-coupon", ensureAdminAuthenticated, (req, res) => {
             "success",
             `Coupon Code ${coupon_object.code} Created, it expires on ${coupon_object.expiry}`,
             "fas fa-exclamation-circle",
-            true
+            true,
           );
           res.redirect("/product/create-coupon");
         })
@@ -1401,7 +1403,7 @@ router.post("/create-discount", ensureAdminAuthenticated, async (req, res) => {
       "danger",
       `Discount for ID: ${d.target_id} already exists!`,
       "fas fa-exclamation-circle",
-      true
+      true,
     );
     // res.redirect('create-discount')
   }
@@ -1414,7 +1416,7 @@ router.post("/create-discount", ensureAdminAuthenticated, async (req, res) => {
       "danger",
       `Date or Time entered invalid!`,
       "fas fa-exclamation-circle",
-      true
+      true,
     );
     // res.redirect('create-discount')
   }
@@ -1435,7 +1437,7 @@ router.post("/create-discount", ensureAdminAuthenticated, async (req, res) => {
       "success",
       `Discount for Product ID: ${new_d.target_id} Created, it expires on ${new_d.expiry}`,
       "fas fa-exclamation-circle",
-      true
+      true,
     );
   }
 
@@ -1472,7 +1474,7 @@ router.get(
             "success",
             "Discount for Product " + target_id + " is successfully deleted",
             "fas fa-sign-in-alt",
-            true
+            true,
           );
         } else {
           url = "/";
@@ -1484,7 +1486,7 @@ router.get(
       });
 
     res.redirect(url);
-  }
+  },
 );
 
 router.get("/deleteCoupon/:id", ensureAdminAuthenticated, async (req, res) => {
@@ -1501,7 +1503,7 @@ router.get("/deleteCoupon/:id", ensureAdminAuthenticated, async (req, res) => {
           "success",
           "Coupon " + id + " is successfully deleted",
           "fas fa-sign-in-alt",
-          true
+          true,
         );
       } else {
         url = "/";
@@ -1702,7 +1704,7 @@ router.get("/event", (req, res) => {
       "success",
       `You are at the event emitter page!`,
       "fas fa-sign-in-alt",
-      true
+      true,
     );
   });
 

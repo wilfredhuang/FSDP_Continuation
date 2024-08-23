@@ -3,6 +3,7 @@ import Coupon from "../models/Coupon.js";
 import productadmin from "../models/ProductAdmin.js";
 import Discount from "../models/Discount.js";
 import helper from "./hbs.js";
+import chalk from 'chalk';
 
 // Check if cart is empty
 const checkEmptyCart = (userCart) => {
@@ -41,7 +42,6 @@ const displayCouponType = (coupon_type) => {
 };
 
 const checkShipmentCountrySingapore = (country_var) => country_var === "SG";
-
 
 // In use
 const checkProductPriceDiscounted = (qty, price, new_sub) => {
@@ -108,9 +108,15 @@ const calculate_cart_total_coupon_savings = async (req, coupon_input) => {
         couponSavingsTotal = 0;
     }
 
-    couponSavingsTotal = parseFloat(couponSavingsTotal)
-    req.session.cart_coupon_savings = parseFloat(couponSavingsTotal);
-    return couponSavingsTotal
+    console.log(`couponSavingsTotal is ${couponSavingsTotal}`);
+    couponSavingsTotal = parseFloat(couponSavingsTotal);
+    req.session.cart_coupon_savings = parseFloat(couponSavingsTotal.toFixed(2));
+    console.log(`couponSavingsTotal2 is ${couponSavingsTotal}`);
+
+    // Need to do this otherwise the session wont save properly due to async operations and the main cart page session variables would still be 0
+    const saveSessionResult = await helper.saveSession(req);
+    console.log(`Session Promise Result: ${saveSessionResult}`);
+    return couponSavingsTotal;
   } catch (err) {
     console.error(err);
     return 0; // Return 0 in case of an error
@@ -123,7 +129,7 @@ const calculateDiscountedPrice = (
   quantity,
   price,
   discountRate,
-  minQty
+  minQty,
 ) => {
   const discountGroups = Math.floor(quantity / minQty);
   const originalSubtotalPrice = quantity * price;
@@ -157,7 +163,7 @@ const updateCartItem = (req, cartItem, product, discount, increment_bool) => {
       cartItem.Quantity,
       cartItem.Price,
       discount.discount_rate,
-      discount.min_qty
+      discount.min_qty,
     );
     cartItem.SubtotalPrice = discountedSubtotalPrice;
   } else {
@@ -221,7 +227,6 @@ const refreshCartCalculations = async (req, cart) => {
       console.log(`RCC | initialSubtotal ${initialSubtotal}`);
       console.log(`RCC | discountedSubtotal ${discountedSubtotal}`);
       console.log(`RCC | discountSavingsTotal ${discountSavingsTotal}`);
-
     } else {
       console.log(`RCC | No Discount Found `);
       const originalSubTotal = parseFloat(qty * price);
@@ -242,11 +247,11 @@ const refreshCartCalculations = async (req, cart) => {
       where: { code: req.session.coupon_object.code },
     });
     if (coupon) {
-      console.log(`RCC | Coupon Found`)
+      console.log(`RCC | Coupon Found`);
       req.session.coupon_object = coupon;
       req.session.coupon_type = coupon.type;
     } else {
-      console.log(`RCC | No Coupon Found`)
+      console.log(`RCC | No Coupon Found`);
       req.session.coupon_object = null;
       req.session.coupon_type = null;
       req.session.cart_coupon_savings = 0;
@@ -307,15 +312,16 @@ const refreshCartCalculations = async (req, cart) => {
   req.session.cart_grandtotal = grandTotal;
 
   console.log(`REQ initialSubtotal = ${req.session.cart_subtotal_initial}`);
-  console.log(`REQ discountedSubtotal = ${ req.session.cart_subtotal_final}`);
-  console.log(`REQ discountSavingsTotal = ${req.session.cart_discount_savings}`);
+  console.log(`REQ discountedSubtotal = ${req.session.cart_subtotal_final}`);
+  console.log(
+    `REQ discountSavingsTotal = ${req.session.cart_discount_savings}`,
+  );
   console.log(`REQ couponSavingsTotal = ${req.session.cart_coupon_savings}`);
   console.log(`REQ grandTotal = ${req.session.cart_grandtotal}`);
 
   // Need to do this otherwise the session wont save properly due to async operations and the main cart page session variables would still be 0
   const saveSessionResult = await helper.saveSession(req);
-  console.log(`Session Promise Result: ${saveSessionResult}`)
-
+  console.log(`Session Promise Result: ${saveSessionResult}`);
 };
 
 const addNewCartItem = (req, cart, product, discount) => {

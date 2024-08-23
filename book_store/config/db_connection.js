@@ -1,11 +1,11 @@
 import mySQLDB from "./db_config.js";
-import user from "../models/User.js";
-import order from "../models/Order.js";
-import ProductAdmin from "../models/ProductAdmin.js";
-import Discount from "../models/Discount.js";
-import orderItem from "../models/OrderItem.js";
-import pending_order from "../models/PendingOrder.js";
-import pending_orderItem from "../models/PendingOrderItem.js";
+import User from "../models/User.js";
+import Order from "../models/Order.js";
+import OrderItem from "../models/OrderItem.js";
+import PendingOrder from "../models/PendingOrder.js";
+import PendingOrderItem from "../models/PendingOrderItem.js";
+// import ProductAdmin from "../models/ProductAdmin.js";
+// import Discount from "../models/Discount.js";
 
 // If drop is true, all existing tables are dropped and recreated
 const setUpDB = (drop) => {
@@ -15,33 +15,21 @@ const setUpDB = (drop) => {
 			console.log("Bookshop database connected");
 		})
 		.then(() => {
-			/*               Defines the relationship where a user has many videos.               
-            In this case the primary key from user will be a foreign key               
-            in video.             */
+			/* Define the database model/table relationship associations */
 
-			//user.hasMany
-			//Priority work by Hasan 31/7/2020
-			//user.hasMany(cartItem);
-
-			user.hasMany(order);
-			order.belongsTo(user);
-			order.hasMany(orderItem);
-			orderItem.belongsTo(order);
-			user.hasMany(pending_order);
-			pending_order.belongsTo(user);
-			pending_order.hasMany(pending_orderItem);
-			pending_orderItem.belongsTo(pending_order);
-
-			//order.hasMany(cartItem);
-			//cartItem.belongsTo(order);
-			//user.hasMany(order)
-			// Discount.belongsTo(ProductAdmin,{
-			//     foreignKey: {
-			//         name:'uid',
-			//         allowNull:false
-			//     }
-			// });
-
+			// User has a one to many relationship with Order(s)
+			User.hasMany(Order);
+			Order.belongsTo(User);
+			// Order has a one to many relationship with OrderItem(s)
+			Order.hasMany(OrderItem);
+			OrderItem.belongsTo(Order);
+			// User has a one to many relationship with PendingOrder(s)
+			User.hasMany(PendingOrder);
+			PendingOrder.belongsTo(User);
+			// PendingOrder has a one to many relationship with PendingOrderItem(s)
+			PendingOrder.hasMany(PendingOrderItem);
+			PendingOrderItem.belongsTo(PendingOrder);
+			
 			mySQLDB
 				.sync({
 					// Creates table if none exists

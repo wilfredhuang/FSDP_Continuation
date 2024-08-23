@@ -1,7 +1,7 @@
 import Sequelize from "sequelize";
 import db from "../config/db_config.js";
 
-const Pending_Order = db.define("pending_order", {
+const PendingOrder = db.define("pending_order", {
 	fullName: { type: Sequelize.STRING },
 	phoneNumber: { type: Sequelize.STRING },
 	address: { type: Sequelize.STRING },
@@ -22,4 +22,4 @@ const Pending_Order = db.define("pending_order", {
 	// deliveryStatus:{type:Sequelize.STRING,},
 });
 
-export default Pending_Order;
+export default PendingOrder;
