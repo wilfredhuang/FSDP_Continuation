@@ -229,15 +229,16 @@ const refreshCartCalculations = async (req, cart) => {
       console.log(`RCC | discountSavingsTotal ${discountSavingsTotal}`);
     } else {
       console.log(`RCC | No Discount Found `);
-      const originalSubTotal = parseFloat(qty * price);
+      var qty = parseFloat(item.Quantity);
+      var price = parseFloat(item.Price);
+      const originalSubTotal = parseFloat(qty) * parseFloat(price);
       initialSubtotal += originalSubTotal;
-      console.log(`RCC | Item ${item.Name}`);
       console.log(`RCC | initialSubtotal ${initialSubtotal}`);
     }
 
-    console.log(`RCC | Final initialSubtotal ${initialSubtotal}`);
-    console.log(`RCC | Final discountedSubtotal ${discountedSubtotal} `);
-    console.log(`RCC | Final discountSavingsTotal ${discountSavingsTotal} `);
+    console.log(chalk.magenta(`RCC | Final initialSubtotal ${initialSubtotal}`));
+    console.log(chalk.magenta(`RCC | Final discountedSubtotal ${discountedSubtotal} `));
+    console.log(chalk.magenta(`RCC | Final discountSavingsTotal ${discountSavingsTotal} `));
   }
 
   // Retrieve coupon if there is already a valid coupon object

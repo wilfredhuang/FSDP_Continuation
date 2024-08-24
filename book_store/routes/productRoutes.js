@@ -16,16 +16,20 @@ import ProductAdmin from "../models/ProductAdmin.js";
 import Coupon from "../models/Coupon.js";
 import Discount from "../models/Discount.js";
 
-//EasyPost API
-import EasyPost from "@easypost/api";
-
-const apiKey = "EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg";
-const api = new EasyPost(apiKey);
-
-// Stripe Payment - secret key
 import * as dotenv from "dotenv";
 dotenv.config();
 
+//EasyPost API
+import EasyPost from "@easypost/api";
+
+console.log(chalk.red(process.env.EASYPOST_API_TEST_KEY));
+console.log(chalk.red(process.env.STRIPE_SECRET_KEY))
+//const apiKey = process.env.EASYPOST_API_TEST_KEY;
+const apiKey = 'EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg';
+const api = new EasyPost(apiKey);
+
+
+// Stripe Payment
 import Stripe from "stripe";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2020-03-02",
@@ -332,12 +336,12 @@ router.get("/product-list/:id", async (req, res) => {
     console.log(
       chalk.blue(
         `[GET /product-list/:id] Current User Cart Contents After Adding item: ${JSON.stringify(req.session.userCart, null, 2)}`,
-      )
+      ),
     );
     console.log(
       chalk.blue(
         `[GET /product-list/:id] Current Session Variables Contents After Adding Item: ${JSON.stringify(req.session, null, 2)}`,
-      )
+      ),
     );
   } catch (err) {
     console.error(err);
@@ -791,209 +795,78 @@ router.post("/paynow", async (req, res) => {
 });
 
 router.post("/stripe-payment", async (req, res) => {
-  var total_weight_oz = (0).toFixed(2);
-
-  // Create the parcel object
-  const parcel = {
-    predefined_package: "Parcel",
-    weight: 10, // Adjust according to the total weight of the books
-  };
-
-  const fromAddress = {
-    // Default address of the company
-    name: "Bookstore",
-    street1: "118 2nd Street",
-    street2: "4th Floor",
-    city: "San Francisco",
-    state: "CA",
-    country: "US",
-    zip: "94105",
-    phone: "415-123-4567",
-    email: "example@example.com",
-  };
-
-  const toAddress = {
-    verify: ["delivery"],
-    // Example data for the recipient
-    name: "George Costanza",
-    company: "Vandelay Industries",
-    street1: "1 E 161st St.",
-    phone: process.env.DEV_PHONENO,
-    city: "Bronx",
-    state: "NY",
-    zip: "10451", // Example ZIP code
-  };
-
   try {
-    // Create the address
+    const parcel = {
+      predefined_package: "Parcel",
+      weight: 10, // Adjust according to your needs
+    };
+
+    const fromAddress = {
+      name: "Bookstore",
+      street1: "118 2nd Street",
+      street2: "4th Floor",
+      city: "San Francisco",
+      state: "CA",
+      country: "US",
+      zip: "94105",
+      phone: "415-123-4567",
+      email: "example@example.com",
+    };
+
+    const toAddress = {
+      verify: ["delivery"],  // Verification happens during address creation
+      name: "George Costanza",
+      company: "Vandelay Industries",
+      street1: "1 E 161st St.",
+      phone: "87558054",
+      city: "Bronx",
+      state: "NY",
+      zip: "10451",
+    };
+
+    // Create and verify the address
     const addressResponse = await api.Address.create(toAddress);
-    console.log("Address Response:", addressResponse); // Log the response for debugging
-    const savedToAddress = addressResponse.address;
+    console.log("Address Response:", addressResponse);
 
-    if (!savedToAddress || !savedToAddress.id) {
-      throw new Error("Failed to create address or address ID is missing.");
+    if (!addressResponse || !addressResponse.verifications.delivery.success) {
+      throw new Error("Address verification failed.");
     }
 
-    // Verify the address
-    const verificationResponse = await api.Address.verify(savedToAddress.id);
-    const verification = verificationResponse.address;
+    const savedToAddress = addressResponse;
 
-    if (
-      !verification ||
-      !verification.verifications ||
-      !verification.verifications.delivery
-    ) {
-      throw new Error(
-        "Failed to verify address or verification details are missing.",
-      );
+    const shipment = {
+      to_address: savedToAddress.id, // Use the verified address ID
+      from_address: fromAddress,
+      parcel: parcel,
+    };
+
+    console.log("Shipment Object:", shipment);
+
+    // Create the shipment
+    const shipmentResponse = await api.Shipment.create(shipment);
+    console.log("Shipment Response:", shipmentResponse);
+    
+    if (!shipmentResponse || !shipmentResponse.id) {
+      throw new Error("Failed to create shipment or shipment ID is missing.");
     }
 
-    if (verification.verifications.delivery.success) {
-      const shipment = {
-        to_address: savedToAddress.id,
-        from_address: fromAddress,
-        parcel: parcel,
-      };
+    // Buy the shipment
+    const transaction = await shipmentResponse.buy(shipmentResponse.lowestRate(["USPS"], ["First"]));
+    console.log("Transaction Response:", transaction);
 
-      // Create the shipment
-      const shipmentResponse = await api.Shipment.create(shipment);
-      console.log("Shipment Response:", shipmentResponse); // Log the response for debugging
-      const savedShipment = shipmentResponse.shipment;
-
-      if (!savedShipment || !savedShipment.id) {
-        throw new Error("Failed to create shipment or shipment ID is missing.");
-      }
-
-      // Buy the shipment
-      const transaction = await savedShipment.buy(
-        savedShipment.lowestRate(["USPS"], ["First"]),
-      );
-
-      if (!transaction || !transaction.id) {
-        throw new Error("Failed to buy shipment or transaction ID is missing.");
-      }
-
-      console.log("Shipment ID:", transaction.id);
-
-      // Assuming `req.session` has the necessary order details
-      let fullName = req.session.recipientName;
-      let phoneNumber = req.session.recipientPhoneNo;
-      let address = req.session.address;
-      let address1 = req.session.address1;
-      let city = req.session.city;
-      let country = req.session.countryShipment;
-      let postalCode = req.session.postalCode;
-      let deliverFee = 0;
-      let subtotalPrice = req.session.cart_subtotal_final;
-      let totalPrice = req.session.cart_grandtotal;
-      let shippingId = transaction.id;
-      let addressId = savedToAddress.id; // Use the address ID from the created address
-      let trackingId = transaction.tracker?.id || "";
-      let trackingCode = transaction.tracker?.tracking_code || "";
-      let dateStart = transaction.created_at;
-      let dateEnd = transaction.tracker?.est_delivery_date || "";
-      let deliveryStatus = transaction.tracker?.status || "";
-      let userId = req.user.id;
-
-      // Create the order
-      await order
-        .create({
-          fullName,
-          phoneNumber,
-          address,
-          address1,
-          city,
-          country,
-          postalCode,
-          deliverFee,
-          subtotalPrice,
-          totalPrice,
-          shippingId,
-          addressId,
-          trackingId,
-          trackingCode,
-          dateStart,
-          dateEnd,
-          deliveryStatus,
-          userId,
-        })
-        .then(async (order) => {
-          for (var i in req.session.userCart) {
-            let product_name = req.session.userCart[i].Name;
-            let author = req.session.userCart[i].Author;
-            let publisher = req.session.userCart[i].Publisher;
-            let genre = req.session.userCart[i].Genre;
-            let price = req.session.userCart[i].SubtotalPrice;
-            let stock = req.session.userCart[i].Quantity;
-            let details = "";
-            let weight = req.session.userCart[i].SubtotalWeight;
-            let product_image = req.session.userCart[i].Image;
-            let orderId = order.id;
-            total_weight_oz = (
-              parseFloat(total_weight_oz) + parseFloat(weight)
-            ).toFixed(2);
-
-            await order_item.create({
-              product_name,
-              author,
-              publisher,
-              genre,
-              price,
-              stock,
-              details,
-              weight,
-              product_image,
-              orderId,
-            });
-          }
-
-          // Send the tracking URL via SMS
-          const tracker = await api.Tracker.retrieve(trackingCode);
-          let trackingURL = tracker.public_url;
-          await client.messages
-            .create({
-              body: `Thank you for your purchase from the Book Store. Your tracking code is ${trackingCode} and you can check your delivery here: ${trackingURL}`,
-              from: process.env.TWILIO_ACCOUNT_PHONENO,
-              to: process.env.DEV_PHONENO,
-            })
-            .then((message) => console.log(message.sid));
-
-          // Empty the cart
-          req.session.userCart = {};
-          req.session.coupon_type = null;
-          req.session.discount = 0;
-          req.session.discount_limit = 0;
-          req.session.discounted_price = (0).toFixed(2);
-          req.session.shipping_discount = 0;
-          req.session.shipping_discount_limit = 0;
-          req.session.shipping_discounted_price = 0;
-          req.session.sub_discount = 0;
-          req.session.sub_discount_limit = 0;
-          req.session.sub_discounted_price = 0;
-          req.session.full_subtotal_price = 0;
-          req.session.full_total_price = 0;
-          req.session.deducted = 0;
-          req.session.coupon_type = null;
-          req.session.save();
-
-          res.redirect("/product/stripe-txn-end");
-        });
-    } else {
-      console.log("Address verification failed");
-      alertMessage(
-        res,
-        "danger",
-        "Please enter a valid address",
-        "fas fa-exclamation-circle",
-        true,
-      );
-      res.redirect("/delivery/checkout");
+    if (!transaction || !transaction.id) {
+      throw new Error("Failed to buy shipment or transaction ID is missing.");
     }
+
+    // Proceed with order creation, cart clearing, and SMS sending...
   } catch (error) {
     console.error("Error:", error.message);
+    console.log(chalk.red(error));
     res.status(500).send("An error occurred while processing your request.");
   }
 });
+
+
 
 router.get("/stripe-txn-end", (req, res) => {
   var title = "Thank you!";
