@@ -1,116 +1,16 @@
 import express from "express";
 const router = express.Router();
-import alertMessage from "../helpers/messenger.js";
-import Coupon from "../models/Coupon.js";
-import moment from "moment";
-import userAuth from "../middleware/userAuth.js";
 import productadmin from "../models/ProductAdmin.js";
+import { logRed, logGreen, logBlue, logYellow, logMagenta, logCyan } from "../helpers/loggerHelper.js";
 
-/* Old Root Router function where user cart session object is initialized here, moved to app.js middleware*
-router.get("/", async (req, res, next) => {
-	const title = "Bookstore Home Page";
-	const navStatusHome = "active";
-
-	console.log(`Req Body: ${JSON.stringify(req.body)}`);
-	// check if logged in or not
-	if (req.user) {
-		console.log("LOGGED IN");
-		console.log(req.user.email);
-	} else {
-		console.log("NOT LOGGED IN");
-	}
-
-	// If no session cart created yet, create one
-	if (!req.session.userCart) {
-		// Initialise session variables on the server start-up
-		req.session.userCart = {};
-		req.session.coupon_type;
-		req.session.discount = 0;
-		req.session.discount_limit = 0;
-		req.session.discounted_price = (0).toFixed(2);
-		req.session.shipping_discount = 0;
-		req.session.shipping_discount_limit = 0;
-		req.session.shipping_discounted_price = 0;
-		req.session.sub_discount = 0;
-		req.session.sub_discount_limit = 0;
-		req.session.sub_discounted_price = 0;
-		req.session.full_total_price = 0;
-		req.session.deducted = (0).toFixed(2);
-		req.session.coupon_type = null;
-		// ssn = req.session.userCart;
-	}
-	// at website startup, when no ssn var set, find if a public coupon(if exists)
-	// and assign to ssn var to display promo banner
-	if (req.session.public_coupon == null) {
-		console.log("No coupon value found in session var, searching...");
-		var coupon_object = await Coupon.findOne({
-			where: { public: 1 },
-		});
-		console.log(`Coupon Obj is ${coupon_object}`);
-		req.session.public_coupon = coupon_object;
-		req.session.save();
-	}
-
-	// If ssn var is not null (default), check if the public coupon still exist in db,
-	// If not, reassign ssn var to null again
-	else {
-		try {
-			console.log("Existing coupon value found in session, validating...");
-			var coupon_object = await Coupon.findOne({
-				where: { public: 1 },
-			});
-
-			console.log("Public Coupon " + coupon_object.code + " found");
-
-			// Handle Coupon Expiry
-			console.log(`Today's datetime is ${moment()}`);
-			console.log(`Expiry date of Coupon is ${coupon_object.expiry}`);
-			if (moment().isAfter(coupon_object.expiry)) {
-				coupon_object.destroy();
-				console.log(
-					`Coupon ${coupon_object.code} which has expired, destroyed.`
-				);
-				console.log(
-					"Seems like public coupon has expired already, deleting it's session variable..."
-				);
-				req.session.public_coupon = null;
-				req.session.save();
-			}
-		} catch {
-			console.log("Something went wrong with retrieving the coupon");
-		}
-	}
-
-	console.log(req.session);
-
-	try {
-		var pa = await productadmin.findAll({
-			order: [["rating", "DESC"]],
-		});
-
-		res.render("index", {
-			// renders views/index.handlebars
-			title,
-			navStatusHome,
-			productadmin: pa,
-		});
-	} catch {
-		console.log("Something went wrong with rendering the index page");
-	}
-});
-
-*/
 router.get("/", async (req, res, next) => {
     const title = "Bookstore Home Page";
     const navStatusHome = "active";
-
-    console.log(`Req Body: ${JSON.stringify(req.body)}`);
     // Check if logged in or not
     if (req.user) {
-        console.log("LOGGED IN");
-        console.log(req.user.email);
+        logGreen(`[GET /] LOGGED IN as ${req.user.email}`);
     } else {
-        console.log("NOT LOGGED IN");
+        logYellow("[GET /] NOT LOGGED IN");
     }
 
     try {
@@ -132,14 +32,11 @@ router.get("/", async (req, res, next) => {
 router.get("/index", async (req, res) => {
 	const title = "Bookstore Home Page";
     const navStatusHome = "active";
-
-    console.log(`Req Body: ${JSON.stringify(req.body)}`);
     // Check if logged in or not
     if (req.user) {
-        console.log("LOGGED IN");
-        console.log(req.user.email);
+        logGreen(`[GET /] LOGGED IN as ${req.user.email}`);
     } else {
-        console.log("NOT LOGGED IN");
+        logYellow("[GET /] NOT LOGGED IN");
     }
 
     try {

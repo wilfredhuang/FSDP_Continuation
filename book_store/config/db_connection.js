@@ -6,13 +6,15 @@ import PendingOrder from "../models/PendingOrder.js";
 import PendingOrderItem from "../models/PendingOrderItem.js";
 // import ProductAdmin from "../models/ProductAdmin.js";
 // import Discount from "../models/Discount.js";
+// loggerHelper
+import { logRed, logGreen, logBlue, logYellow, logMagenta, logCyan } from "../helpers/loggerHelper.js";
 
 // If drop is true, all existing tables are dropped and recreated
 const setUpDB = (drop) => {
 	mySQLDB
 		.authenticate()
 		.then(() => {
-			console.log("Bookshop database connected");
+			logGreen("Bookshop database connected");
 		})
 		.then(() => {
 			/* Define the database model/table relationship associations */

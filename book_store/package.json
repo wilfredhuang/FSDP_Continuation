@@ -1,8 +1,8 @@
 {
-  "name": "BookStore",
+  "name": "Acacia Bookstore",
   "version": "1.0.0",
   "type": "module",
-  "description": "Video Jotter",
+  "description": "",
   "main": "app.js",
   "scripts": {
     "start": "node app.js"

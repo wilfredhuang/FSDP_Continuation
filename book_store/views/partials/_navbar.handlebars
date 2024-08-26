@@ -14,7 +14,8 @@
     <div class="main-menu">
         <div class="container">
             <nav class="navbar navbar-expand-lg navbar-light">
-                <a class="navbar-brand" href="/"> <span class="h2">Acacia</span><span class="h2 text-warning">Books</span> </a>
+                <a class="navbar-brand" href="/"> <span class="h2">Acacia</span><span
+                        class="h2 text-warning">Books</span> </a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse"
                     data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                     aria-label="Toggle navigation">
@@ -61,15 +62,20 @@
                         </li>
                         {{/if}}
                     </ul>
-                    <form id="cart-form" method="GET" action="/product/cart?page=1"></form>
-                        <div class="cart my-2 my-lg-0">
-                            <span>
-                                <i class="fa fa-shopping-cart" aria-hidden="true" onclick="document.getElementById('cart-form').submit();" style=
-                                "cursor:pointer;"></i></span>
-                            <span class="quntity">{{countCartQty UC}}</span>
-                        </div>
-                        </form>
-                    
+                    <form id="cart-form" method="GET" action="/product/cart">
+                        <input type="hidden" name="page" value="1">
+                    </form>
+                    <div class="cart my-2 my-lg-0">
+                        <span>
+                            <i class="fa fa-shopping-cart" aria-hidden="true"
+                                onclick="document.getElementById('cart-form').submit();" style="cursor:pointer;"></i>
+                        </span>
+                        <span class="quntity">{{countCartQty UC}}</span>
+                    </div>
+
+
+
+
                 </div>
         </div>
         </nav>

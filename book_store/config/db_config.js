@@ -1,9 +1,11 @@
 // Bring in Sequelize
 import Sequelize from "sequelize";
 import config from "./db.js";
+// loggerHelper
+import { logRed, logGreen, logBlue, logYellow, logMagenta, logCyan } from "../helpers/loggerHelper.js";
 
 // Instantiates Sequelize with database parameters
-console.log("Initialize Sequelize");
+logGreen("Initialize Sequelize");
 const sequelize = new Sequelize(config.database, config.username, config.password, {
 	host: config.host, // Name or IP address of MySQL server
 	dialect: "mysql", // Tells squelize that MySQL is used

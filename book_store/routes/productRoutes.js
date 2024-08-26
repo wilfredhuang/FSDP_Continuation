@@ -23,11 +23,10 @@ dotenv.config();
 import EasyPost from "@easypost/api";
 
 console.log(chalk.red(process.env.EASYPOST_API_TEST_KEY));
-console.log(chalk.red(process.env.STRIPE_SECRET_KEY))
+console.log(chalk.red(process.env.STRIPE_SECRET_KEY));
 //const apiKey = process.env.EASYPOST_API_TEST_KEY;
-const apiKey = 'EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg';
+const apiKey = "EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg";
 const api = new EasyPost(apiKey);
-
 
 // Stripe Payment
 import Stripe from "stripe";
@@ -54,6 +53,14 @@ import { checkCart } from "../middleware/cartAuth.js";
 // Import Helpers
 import carthelper from "../helpers/cartHelper.js";
 import helper from "../helpers/hbs.js";
+import {
+  logRed,
+  logGreen,
+  logBlue,
+  logYellow,
+  logMagenta,
+  logCyan,
+} from "../helpers/loggerHelper.js";
 
 /*
   // How the Pricing works?
@@ -89,78 +96,101 @@ import helper from "../helpers/hbs.js";
 */
 
 // Page that displays all the products
-router.get("/product-list", (req, res) => {
-  const title = "Product Listing";
-  const navStatusProduct = "active";
-  productadmin
-    .findAll({
+router.get("/product-list", async (req, res) => {
+  try {
+    const title = "Product Listing";
+    const navStatusProduct = "active";
+
+    // Fetch all products, ordered by product name (ascending)
+    const products = await productadmin.findAll({
       order: [["product_name", "ASC"]],
-    })
-    .then((productadmin) => {
-      res.render("products/product-list", {
-        productadmin: productadmin,
-        navStatusProduct,
-        title,
-      });
     });
+
+    // Render the product list page
+    res.render("products/product-list", {
+      productadmin: products,
+      navStatusProduct,
+      title,
+    });
+  } catch (error) {
+    console.error("Error fetching product list:", error);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 // Page that display a single product details
 router.get("/individual-product/:id", async (req, res) => {
-  const title = "Product Information";
-  const disc = await Discount.findOne({
-    where: { target_id: req.params.id },
-  });
+  try {
+    const title = "Product Information";
+    const { id } = req.params;
 
-  productadmin
-    .findOne({
-      where: {
-        id: req.params.id,
-      },
-    })
-    .then((product) => {
-      res.render("products/individual-product", {
-        product,
-        title,
-        disc,
-      });
+    // Fetch the discount
+    const disc = await Discount.findOne({ where: { target_id: id } });
+
+    // Fetch the product
+    const product = await productadmin.findOne({ where: { id } });
+
+    // Render the page with the product and discount information
+    res.render("products/individual-product", {
+      product,
+      title,
+      disc,
     });
+  } catch (error) {
+    console.error("Error fetching product or discount:", error);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 // Admin-only page that displays all the current products in the web store
-router.get("/product-list-admin", ensureAdminAuthenticated, (req, res) => {
-  const title = "Product Admin List";
-  productadmin
-    .findAll({
-      order: [["id", "ASC"]],
-      raw: true,
-    })
-    .then((productadmin) => {
+router.get(
+  "/product-list-admin",
+  ensureAdminAuthenticated,
+  async (req, res) => {
+    try {
+      const title = "Product Admin List";
+
+      // Fetch all products, ordered by ID (ascending), and return raw data
+      const product_details = await productadmin.findAll({
+        order: [["id", "ASC"]],
+        raw: true,
+      });
+
+      // Render the admin product list page
       res.render("products/product-list-admin", {
-        productadmin: productadmin,
+        productadmin: product_details,
         title,
       });
-    });
-});
+    } catch (error) {
+      console.error("Error fetching admin product list:", error);
+      res.status(500).send("Internal Server Error");
+    }
+  },
+);
 
 // Admin-only page that displays detail about a single product in the web store
 router.get(
   "/product-details-admin/:id",
   ensureAdminAuthenticated,
-  (req, res) => {
-    const title = "Product Details";
-    productadmin
-      .findOne({
-        where: {
-          id: req.params.id,
-        },
-      })
-      .then((product) => {
-        res.render("products/product-details", {
-          product,
-          title,
-        });
+  async (req, res) => {
+    try {
+      const title = "Product Details";
+      const { id } = req.params;
+
+      // Fetch the product by ID
+      const product = await productadmin.findOne({
+        where: { id },
       });
+
+      // Render the product details page
+      res.render("products/product-details", {
+        product,
+        title,
+      });
+    } catch (error) {
+      console.error("Error fetching product details:", error);
+      res.status(500).send("Internal Server Error");
+    }
   },
 );
 
@@ -333,15 +363,11 @@ router.get("/product-list/:id", async (req, res) => {
       flashMessage: [flashMessage_clientside],
     });
 
-    console.log(
-      chalk.blue(
-        `[GET /product-list/:id] Current User Cart Contents After Adding item: ${JSON.stringify(req.session.userCart, null, 2)}`,
-      ),
+    logMagenta(
+      `[GET /product-list/:id] Current User Cart Contents After Adding item: ${JSON.stringify(req.session.userCart, null, 2)}`,
     );
-    console.log(
-      chalk.blue(
-        `[GET /product-list/:id] Current Session Variables Contents After Adding Item: ${JSON.stringify(req.session, null, 2)}`,
-      ),
+    logMagenta(
+      `[GET /product-list/:id] Current Session Variables Contents After Adding Item: ${JSON.stringify(req.session, null, 2)}`,
     );
   } catch (err) {
     console.error(err);
@@ -381,11 +407,11 @@ router.post("/individual-product/:id", async (req, res) => {
       flashMessage: [flashMessage_clientside],
     });
 
-    console.log(
-      `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`,
+    logMagenta(
+      `[POST /individual-product/:id] Current User Cart Contents After Adding item: ${JSON.stringify(req.session.userCart, null, 2)}`,
     );
-    console.log(
-      `Current Session Variables Contents: ${JSON.stringify(req.session)} `,
+    logMagenta(
+      `[POST /individual-product/:id] Current Session Variables Contents After Adding Item: ${JSON.stringify(req.session, null, 2)}`,
     );
   } catch (error) {
     res.json({
@@ -403,8 +429,8 @@ router.post("/cart", async (req, res) => {
       for (let productId in req.session.userCart) {
         let item = req.session.userCart[productId];
         let query = parseInt(req.body[`Q${productId}`]);
-        console.log(
-          `Querying: ${item.Name} Current Quantity: ${item.Quantity}, New Quantity: ${query}`,
+        logMagenta(
+          `[POST /cart/] Querying: ${item.Name} Current Quantity: ${item.Quantity}, New Quantity: ${query}`,
         );
 
         // Modify qty of product according to changes
@@ -435,19 +461,16 @@ router.post("/cart", async (req, res) => {
             req,
             req.session.coupon_object.code,
           );
-          console.log(
-            `Found coupon object, current coupon savings is ${req.session.cart_coupon_savings}`,
-          );
         } else {
           req.session.cart_coupon_savings = 0;
         }
       }
 
-      console.log(
-        `Current User Cart Contents: ${JSON.stringify(req.session.userCart)}`,
+      logMagenta(
+        `[POST /cart/] Current User Cart Contents: ${JSON.stringify(req.session.userCart, null, 2)}`,
       );
-      console.log(
-        `Current Session Variables Contents: ${JSON.stringify(req.session)} `,
+      logMagenta(
+        `[POST /cart/] Current Session Variables Contents: ${JSON.stringify(req.session, null, 2)} `,
       );
       // Save session and wait for it to complete before proceeding
       // Ensures data  displayed is as updated as possible
@@ -491,21 +514,24 @@ router.get("/delete-cart-item/:id", async (req, res) => {
 
 router.get("/cart", async (req, res) => {
   let title = "Shopping Cart";
+  const page = req.query.page || 1; // Default to page 1 if not provided
 
   await carthelper.refreshCartCalculations(req, req.session.userCart);
-  console.log(
-    `CART PAGE REQ initialSubtotal = ${req.session.cart_subtotal_initial}`,
+  logMagenta(
+    `[GET /cart/] CART PAGE REQ initialSubtotal = ${req.session.cart_subtotal_initial}`,
   );
-  console.log(
-    `CART PAGE REQ discountedSubtotal = ${req.session.cart_subtotal_final}`,
+  logMagenta(
+    `[GET /cart/] CART PAGE REQ discountedSubtotal = ${req.session.cart_subtotal_final}`,
   );
-  console.log(
-    `CART PAGE REQ discountSavingsTotal = ${req.session.cart_discount_savings}`,
+  logMagenta(
+    `[GET /cart/] CART PAGE REQ discountSavingsTotal = ${req.session.cart_discount_savings}`,
   );
-  console.log(
-    `CART PAGE REQ couponSavingsTotal = ${req.session.cart_coupon_savings}`,
+  logMagenta(
+    `[GET /cart/] CART PAGE REQ couponSavingsTotal = ${req.session.cart_coupon_savings}`,
   );
-  console.log(`CART PAGE REQ grandTotal = ${req.session.cart_grandtotal}`);
+  logMagenta(
+    `[GET /cart/] CART PAGE REQ grandTotal = ${req.session.cart_grandtotal}`,
+  );
   res.locals.cart_subtotal_initial =
     req.session.cart_subtotal_initial.toFixed(2);
   res.locals.cart_subtotal_final = req.session.cart_subtotal_final.toFixed(2);
@@ -515,12 +541,12 @@ router.get("/cart", async (req, res) => {
   res.locals.cart_shipping_fee = req.session.cart_shipping_fee.toFixed(2);
   res.locals.cart_grandtotal = req.session.cart_grandtotal.toFixed(2);
 
-  console.log("=== Show Session Variables ===");
-  console.log(chalk.red(JSON.stringify(req.session)));
+  logMagenta("[GET /cart/] === Show Session Variables ===");
+  logMagenta(`[GET /cart/] ${JSON.stringify(req.session, null, 2)}`);
   res.render("checkout/cart", {
     title,
     results: {
-      pages: 1, // Set correctly based on your pagination logic
+      pages: Number(page), // Set correctly based on your pagination logic
       results: Object.keys(req.session.userCart).map((key) => ({
         [key]: req.session.userCart[key],
       })),
@@ -545,24 +571,24 @@ router.post("/applyCoupon", async (req, res) => {
           req.session.public_coupon &&
           coupon.code === req.session.public_coupon.code
         ) {
-          console.log("Setting session var to NULL");
+          logRed("[POST /applyCoupon/] Setting session var to NULL");
           req.session.public_coupon = null;
         }
 
-        console.log("Destroying Coupon Code " + coupon.code);
+        logRed("Destroying Coupon Code " + coupon.code);
         await coupon.destroy(); // Ensure the coupon is destroyed
         await req.session.save(); // Ensure the session is saved after coupon destruction
-        console.log(
-          "Public Coupon is now " +
+        logYellow(
+          "[POST /applyCoupon/] Public Coupon is now " +
             req.session.public_coupon +
             " should be NULL",
         );
       } else {
-        console.log(
-          `Current Time: ${currentTime.format("DD/MM/YYYY, hh:mm:ss a")}`,
+        logMagenta(
+          `[POST /applyCoupon/] Current Time: ${currentTime.format("DD/MM/YYYY, hh:mm:ss a")}`,
         );
-        console.log(
-          `Expiry Time: ${expiryTime.format("DD/MM/YYYY, hh:mm:ss a")}`,
+        logMagenta(
+          `[POST /applyCoupon/] Expiry Time: ${expiryTime.format("DD/MM/YYYY, hh:mm:ss a")}`,
         );
       }
     }
@@ -572,8 +598,7 @@ router.post("/applyCoupon", async (req, res) => {
       req.body.coupon,
     );
 
-    console.log(chalk.red(couponSavings));
-    //await helper.manualSessionSaveNoCaching(req, res);
+    logMagenta(`Coupon Savings: ${couponSavings}`);
 
     // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
     const timestamp = Date.now();
@@ -610,14 +635,34 @@ router.get("/checkout", checkCart, (req, res) => {
   }
 });
 
-router.post("/checkout", checkCart, (req, res) => {
-  req.session.recipientName = req.body.fullName;
-  req.session.recipientPhoneNo = req.body.phoneNumber;
-  req.session.address = req.body.address;
-  req.session.address1 = req.body.address1;
-  req.session.city = req.body.city;
-  req.session.countryShipment = req.body.country;
-  req.session.postalCode = req.body.postalCode;
+router.post("/checkout", checkCart, async (req, res) => {
+  // Check Inputs
+  logMagenta(req.body.fullName);
+  logMagenta(req.body.phoneNumber);
+  logMagenta(req.body.address);
+  logMagenta(req.body.address1);
+  logMagenta(req.body.city);
+  logMagenta(req.body.country);
+  logMagenta(req.body.postalCode);
+  // Add to session variables
+  req.session.shipment_recipient_name = req.body.fullName;
+  req.session.shipment_recipient_phonenum = req.body.phoneNumber;
+  req.session.shipment_lineone = req.body.address;
+  req.session.shipment_linetwo = req.body.address1;
+  req.session.shipment_city = req.body.city;
+  req.session.shipment_country = req.body.country;
+  req.session.shipment_postal_code = req.body.postalCode;
+  // Log Ssn variables
+  logMagenta("=== New Ssn Variables ===");
+  logMagenta(req.session.shipment_recipient_name);
+  logMagenta(req.session.shipment_recipient_phonenum);
+  logMagenta(req.session.shipment_lineone);
+  logMagenta(req.session.shipment_linetwo);
+  logMagenta(req.session.shipment_city);
+  logMagenta(req.session.shipment_country);
+  logMagenta(req.session.shipment_postal_code);
+  await helper.saveSession(req);
+
   res.redirect("select-payment");
 });
 
@@ -796,77 +841,182 @@ router.post("/paynow", async (req, res) => {
 
 router.post("/stripe-payment", async (req, res) => {
   try {
-    const parcel = {
-      predefined_package: "Parcel",
-      weight: 10, // Adjust according to your needs
-    };
+    // 1. Create and verify the address
+    const toAddress = await api.Address.createAndVerify({
+      name: "John Doe",
+      street1: "123 Main St",
+      city: "San Francisco",
+      state: "CA",
+      zip: "94105",
+      country: "US",
+      phone: "4155555555",
+    });
 
-    const fromAddress = {
-      name: "Bookstore",
+    const fromAddress = await api.Address.createAndVerify({
+      name: "EasyPost",
       street1: "118 2nd Street",
       street2: "4th Floor",
       city: "San Francisco",
       state: "CA",
-      country: "US",
       zip: "94105",
-      phone: "415-123-4567",
-      email: "example@example.com",
-    };
+      country: "US",
+      phone: "2125555555",
+    });
 
-    const toAddress = {
-      verify: ["delivery"],  // Verification happens during address creation
-      name: "George Costanza",
-      company: "Vandelay Industries",
-      street1: "1 E 161st St.",
-      phone: "87558054",
-      city: "Bronx",
-      state: "NY",
-      zip: "10451",
-    };
+    // 2. Create the parcel with valid dimensions
+    const parcel = await api.Parcel.create({
+      length: 10,
+      width: 8,
+      height: 4,
+      weight: 15.7, // weight in ounces
+    });
 
-    // Create and verify the address
-    const addressResponse = await api.Address.create(toAddress);
-    console.log("Address Response:", addressResponse);
-
-    if (!addressResponse || !addressResponse.verifications.delivery.success) {
-      throw new Error("Address verification failed.");
-    }
-
-    const savedToAddress = addressResponse;
-
-    const shipment = {
-      to_address: savedToAddress.id, // Use the verified address ID
+    // 3. Create the shipment
+    const shipment = await api.Shipment.create({
+      to_address: toAddress,
       from_address: fromAddress,
       parcel: parcel,
-    };
+      // carrier_accounts: ['ca_dhl_account_id'], // Optional: Specify your DHL carrier account ID if needed
+    });
 
-    console.log("Shipment Object:", shipment);
+    // 4. Log available rates to debug the issue
+    logCyan(JSON.stringify(shipment, null, 2));
+    console.log("Available rates:", shipment.rates);
 
-    // Create the shipment
-    const shipmentResponse = await api.Shipment.create(shipment);
-    console.log("Shipment Response:", shipmentResponse);
-    
-    if (!shipmentResponse || !shipmentResponse.id) {
-      throw new Error("Failed to create shipment or shipment ID is missing.");
+    // Check if any rates are returned
+    if (shipment.rates.length === 0) {
+      throw new Error("No rates found for this shipment.");
     }
 
-    // Buy the shipment
-    const transaction = await shipmentResponse.buy(shipmentResponse.lowestRate(["USPS"], ["First"]));
-    console.log("Transaction Response:", transaction);
+    // 5. Buy the shipment
+    const boughtShipment = await api.Shipment.buy(
+      shipment.id,
+      shipment.lowestRate(["USPS"]),
+    );
+    console.log("Bought Shipment:", boughtShipment);
 
-    if (!transaction || !transaction.id) {
-      throw new Error("Failed to buy shipment or transaction ID is missing.");
-    }
+    logMagenta("=== Test SSN variable ===");
+    logMagenta(req.session.shipment_recipient_name);
+    logMagenta(req.session.shipment_recipient_phonenum);
+    logMagenta(req.session.shipment_lineone);
+    logMagenta(req.session.shipment_linetwo);
+    logMagenta(req.session.shipment_city);
+    logMagenta(req.session.shipment_country);
+    logMagenta(req.session.shipment_postal_code);
 
-    // Proceed with order creation, cart clearing, and SMS sending...
+    // 6. Create Order
+    // Assuming `req.session` has the necessary order details
+    // Details gotten from checkout form earlier
+    let full_name = req.session.shipment_recipient_name;
+    let phone_number = req.session.shipment_recipient_phonenum;
+    let address = req.session.shipment_lineone;
+    let address1 = req.session.shipment_linetwo;
+    let city = req.session.shipment_city;
+    let country = req.session.shipment_country;
+    let postal_code = req.session.shipment_postal_code;
+    //
+    let delivery_fee = 0;
+    let subtotal_price = req.session.cart_subtotal_final;
+    let grand_total = req.session.cart_grandtotal;
+    //
+    let shipping_id = boughtShipment.id;
+    let address_id = toAddress.id; // Use the address ID from the created address
+    let tracking_id = boughtShipment.tracker?.id || "";
+    let tracking_code = boughtShipment.tracker?.tracking_code || "";
+    let date_start = boughtShipment.created_at;
+    let date_end = boughtShipment.tracker?.est_delivery_date || "";
+    let delivery_status = boughtShipment.tracker?.status || "";
+    let user_id = req.user.id;
+    // logRed(shipping_id);
+    // logRed(address_id);
+    // logRed(tracking_id);
+    // logRed(tracking_code);
+    // logRed(date_start);
+    // logRed(date_end);
+    // logRed(delivery_status);
+    // logRed(user_id);
+
+    // Create Order entry into DB
+    const newOrder = await order.create({
+      full_name,
+      phone_number,
+      address,
+      address1,
+      city,
+      country,
+      postal_code,
+      delivery_fee,
+      subtotal_price,
+      grand_total,
+      shipping_id,
+      address_id,
+      tracking_id,
+      tracking_code,
+      date_start,
+      date_end,
+      delivery_status,
+    });
+
+    // Create individual OrderItem entry into DB
+    for (var i in req.session.userCart) {
+      let product_name = req.session.userCart[i].Name;
+      let author = req.session.userCart[i].Author;
+      let publisher = req.session.userCart[i].Publisher;
+      let genre = req.session.userCart[i].Genre;
+      let price = req.session.userCart[i].SubtotalPrice;
+      let stock = req.session.userCart[i].Quantity;
+      let details = "placeholder details";
+      let weight = req.session.userCart[i].SubtotalWeight;
+      let product_image = req.session.userCart[i].Image;
+      let orderId = order.id;
+    //   let total_weight_oz = (
+    //     parseFloat(total_weight_oz) + parseFloat(weight)
+    // ).toFixed(2);
+
+    await order_item.create({
+      product_name,
+      author,
+      publisher,
+      genre,
+      price,
+      stock,
+      details,
+      weight,
+      product_image,
+      orderId,
+    });
+  }
+
+
+
+    // 7. Send the tracking URL via SMS
+    let trackingUrl = boughtShipment.tracker?.public_url;
+    logMagenta(`tracking url is ${trackingUrl}`)
+    // Twilio MSG
+    //             await client.messages.create({
+    //                 body: `Thank you for your purchase from the Book Store. Your tracking code is ${trackingCode} and you can check your delivery here: ${trackingURL}`,
+    //                 from: process.env.TWILIO_ACCOUNT_PHONENO,
+    //                 to: process.env.DEV_PHONENO,
+    //             }).then((message) => console.log(message.sid));
+
+    // 8. Empty the cart
+    req.session.userCart = {};
+    req.session.coupon_object = null;
+    req.session.coupon_type = null;
+    req.session.cart_subtotal_initial = 0;
+    req.session.cart_subtotal_final = 0;
+    req.session.cart_discount_savings = 0;
+    req.session.cart_coupon_savings = 0;
+    req.session.cart_shipping_fee = 0;
+    req.session.cart_grandtotal = 0;
+    await helper.saveSession(req);
+
+    res.redirect("/product/stripe-txn-end");
   } catch (error) {
-    console.error("Error:", error.message);
-    console.log(chalk.red(error));
+    console.error(`Error Code ${error.code} :`, error.message);
     res.status(500).send("An error occurred while processing your request.");
   }
 });
-
-
 
 router.get("/stripe-txn-end", (req, res) => {
   var title = "Thank you!";
