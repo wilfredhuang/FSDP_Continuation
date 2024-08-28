@@ -300,12 +300,3 @@ document.querySelectorAll('.buy-now-btn2').forEach(button => {
       });
   });
 });
-
-function submitCartForm() {
-    document.getElementById('cartForm').submit();
-}
-
-// Attach the submitCartForm function to the Checkout button click
-document.getElementById('checkoutButton').addEventListener('click', function() {
-    submitCartForm();
-});

@@ -957,6 +957,11 @@ router.post("/stripe-payment", async (req, res) => {
       delivery_status,
     });
 
+    console.log("=== order obj ===");
+    console.log(newOrder);
+    console.log(JSON.stringify(newOrder));
+
+    let order_id = order.id;
     // Create individual OrderItem entry into DB
     for (var i in req.session.userCart) {
       let product_name = req.session.userCart[i].Name;
@@ -968,10 +973,7 @@ router.post("/stripe-payment", async (req, res) => {
       let details = "placeholder details";
       let weight = req.session.userCart[i].SubtotalWeight;
       let product_image = req.session.userCart[i].Image;
-      let orderId = order.id;
-    //   let total_weight_oz = (
-    //     parseFloat(total_weight_oz) + parseFloat(weight)
-    // ).toFixed(2);
+
 
     await order_item.create({
       product_name,
@@ -983,7 +985,7 @@ router.post("/stripe-payment", async (req, res) => {
       details,
       weight,
       product_image,
-      orderId,
+      order_id,
     });
   }
 
