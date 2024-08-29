@@ -537,7 +537,7 @@ router.get("/cart", async (req, res) => {
   res.locals.cart_subtotal_final = req.session.cart_subtotal_final.toFixed(2);
   res.locals.cart_discount_savings =
     req.session.cart_discount_savings.toFixed(2);
-  res.locals.cart_coupon_savings = req.session.cart_coupon_savings.toFixed(2);
+  res.locals.cart_coupon_savings = req.session.cart_coupon_savings;
   res.locals.cart_shipping_fee = req.session.cart_shipping_fee.toFixed(2);
   res.locals.cart_grandtotal = req.session.cart_grandtotal.toFixed(2);
 
@@ -905,63 +905,57 @@ router.post("/stripe-payment", async (req, res) => {
     logMagenta(req.session.shipment_postal_code);
 
     // 6. Create Order
-    // Assuming `req.session` has the necessary order details
-    // Details gotten from checkout form earlier
-    let full_name = req.session.shipment_recipient_name;
-    let phone_number = req.session.shipment_recipient_phonenum;
+    // Make sure variables declared are same as sql column names
+    let fullName = req.session.shipment_recipient_name;
+    let phoneNumber = req.session.shipment_recipient_phonenum;
     let address = req.session.shipment_lineone;
     let address1 = req.session.shipment_linetwo;
     let city = req.session.shipment_city;
     let country = req.session.shipment_country;
-    let postal_code = req.session.shipment_postal_code;
+    let postalCode = req.session.shipment_postal_code;
     //
-    let delivery_fee = 0;
-    let subtotal_price = req.session.cart_subtotal_final;
-    let grand_total = req.session.cart_grandtotal;
+    let deliverFee = 0;
+    let subtotalPrice = req.session.cart_subtotal_final;
+    let totalPrice = req.session.cart_grandtotal;
     //
-    let shipping_id = boughtShipment.id;
-    let address_id = toAddress.id; // Use the address ID from the created address
-    let tracking_id = boughtShipment.tracker?.id || "";
-    let tracking_code = boughtShipment.tracker?.tracking_code || "";
-    let date_start = boughtShipment.created_at;
-    let date_end = boughtShipment.tracker?.est_delivery_date || "";
-    let delivery_status = boughtShipment.tracker?.status || "";
-    let user_id = req.user.id;
-    // logRed(shipping_id);
-    // logRed(address_id);
-    // logRed(tracking_id);
-    // logRed(tracking_code);
-    // logRed(date_start);
-    // logRed(date_end);
-    // logRed(delivery_status);
-    // logRed(user_id);
+    let shippingId = boughtShipment.id;
+    let addressId = toAddress.id; // Use the address ID from the created address
+    let trackingId = boughtShipment.tracker?.id || "";
+    let trackingCode = boughtShipment.tracker?.tracking_code || "";
+    let dateStart = boughtShipment.created_at;
+    console.log(`Date Start Data: ${dateStart}  Data Type ${typeof(dateStart)}`);
+    let dateEnd = boughtShipment.tracker?.est_delivery_date || null;
+    console.log(`Date Start Data: ${dateEnd}  Data Type ${typeof(dateEnd)}`);
+    let deliveryStatus = boughtShipment.tracker?.status || "";
+    let userId = req.user.id;
 
-    // Create Order entry into DB
     const newOrder = await order.create({
-      full_name,
-      phone_number,
+      fullName,
+      phoneNumber,
       address,
       address1,
       city,
       country,
-      postal_code,
-      delivery_fee,
-      subtotal_price,
-      grand_total,
-      shipping_id,
-      address_id,
-      tracking_id,
-      tracking_code,
-      date_start,
-      date_end,
-      delivery_status,
+      postalCode,
+      deliverFee,
+      subtotalPrice,
+      totalPrice,
+      shippingId,
+      addressId,
+      trackingId,
+      trackingCode,
+      dateStart,
+      dateEnd,
+      deliveryStatus,
+      userId
     });
+
 
     console.log("=== order obj ===");
     console.log(newOrder);
     console.log(JSON.stringify(newOrder));
 
-    let order_id = order.id;
+    let orderId = newOrder.id;
     // Create individual OrderItem entry into DB
     for (var i in req.session.userCart) {
       let product_name = req.session.userCart[i].Name;
@@ -985,7 +979,7 @@ router.post("/stripe-payment", async (req, res) => {
       details,
       weight,
       product_image,
-      order_id,
+      orderId,
     });
   }
 

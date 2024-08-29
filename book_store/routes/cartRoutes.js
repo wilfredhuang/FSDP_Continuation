@@ -3,7 +3,7 @@ const router = express.Router();
 import alertMessage from "../helpers/messenger.js";
 
 //Models
-import Order from "../models/Order.js";
+import order_ from "../models/Order.js";
 import orderItem from "../models/OrderItem.js";
 
 //Authentication
@@ -39,267 +39,118 @@ import QRCode from "qrcode";
 import nodemailer from "nodemailer";
 
 //view More Details of Order
-router.get("/view-order-details/:id", ensureAuthenticated, (req, res) => {
+router.get("/view-order-details/:id", ensureAuthenticated, async (req, res) => {
 	const title = "Order Details";
-	console.log("helllo");
-	console.log(req.params.id);
-	Order.findOne({
+	try {
+	  const order = await order_.findOne({
 		where: {
-			userId: req.user.id,
-			id: req.params.id,
+		  userId: req.user.id,
+		  id: req.params.id,
 		},
 		include: [{ model: orderItem }],
-	}).then((order) => {
-		console.log("===========");
-		const shippingId = order.shippingId;
-		console.log(shippingId);
-		api.Shipment.retrieve(shippingId).then((s) => {
-			console.log(s.tracker.created_at);
-			console.log(s.tracker.updated_at);
-			const deliveryStatus = s.tracker.status;
-			const trackingURL = s.tracker.public_url;
-			if (deliveryStatus == "pre_transit") {
-				let progressPercentage = 25;
-				let progressColour = "bg-info";
-				let progressColourText = "text-info";
-				let deliveryStatusResult = "Pre-transit";
-				res.render("user/view-order-details", {
-					order: order,
-					orderitems: order.orderitems,
-					title,
-					deliveryStatusResult,
-					trackingURL,
-					progressPercentage,
-					progressColour,
-					progressColourText,
-				});
-			} else if (deliveryStatus == "in_transit") {
-				let progressPercentage = 50;
-				let progressColour = "bg-info";
-				let progressColourText = "text-info";
-				let deliveryStatusResult = "In-transit";
-				res.render("user/view-order-details", {
-					order: order,
-					orderitems: order.orderitems,
-					title,
-					deliveryStatusResult,
-					trackingURL,
-					progressPercentage,
-					progressColour,
-					progressColourText,
-				});
-			} else if (deliveryStatus == "out_for_delivery") {
-				let progressPercentage = 75;
-				let progressColour = "bg-info";
-				let progressColourText = "text-info";
-				let deliveryStatusResult = "Out for delivery";
-				res.render("user/view-order-details", {
-					order: order,
-					orderitems: order.orderitems,
-					title,
-					deliveryStatusResult,
-					trackingURL,
-					progressPercentage,
-					progressColour,
-					progressColourText,
-				});
-			} else if (deliveryStatus == "delivered") {
-				let progressPercentage = 100;
-				let progressColour = "bg-success";
-				let progressColourText = "text-success";
-				let deliveryStatusResult = "Delivered";
-				res.render("user/view-order-details", {
-					order: order,
-					orderitems: order.orderitems,
-					title,
-					deliveryStatusResult,
-					trackingURL,
-					progressPercentage,
-					progressColour,
-					progressColourText,
-				});
-			} else if (deliveryStatus == "return_to_sender") {
-				let progressPercentage = 0;
-				let progressColour = "bg-info";
-				let progressColourText = "text-info";
-				let deliveryStatusResult = "Return to sender";
-				res.render("user/view-order-details", {
-					order: order,
-					orderitems: order.orderitems,
-					title,
-					deliveryStatusResult,
-					trackingURL,
-					progressPercentage,
-					progressColour,
-					progressColourText,
-				});
-			} else if (deliveryStatus == "failure") {
-				let progressPercentage = 100;
-				let progressColour = "bg-danger";
-				let progressColourText = "text-danger";
-				let deliveryStatusResult = "Failure";
-				res.render("user/view-order-details", {
-					order: order,
-					orderitems: order.orderitems,
-					title,
-					deliveryStatusResult,
-					trackingURL,
-					progressPercentage,
-					progressColour,
-					progressColourText,
-				});
-			} else {
-				let progressPercentage = 0;
-				let progressColour = "bg-dark";
-				let progressColourText = "text-dark";
-				let deliveryStatusResult = "Unknown";
-				res.render("user/view-order-details", {
-					order: order,
-					orderitems: order.orderitems,
-					title,
-					deliveryStatusResult,
-					trackingURL,
-					progressPercentage,
-					progressColour,
-					progressColourText,
-				});
-			}
-		});
-	});
-});
+	  });
+  
+	//   if (!order) {
+	// 	return res.status(404).render("error", { message: "Order not found" });
+	//   }
+  
+	  const { shippingId } = order;
+	  const shipment = await api.Shipment.retrieve(shippingId);
+	  const { status: deliveryStatus, public_url: trackingURL } = shipment.tracker;
+  
+	  const statusMapping = {
+		pre_transit: { progressPercentage: 25, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Pre-transit" },
+		in_transit: { progressPercentage: 50, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "In-transit" },
+		out_for_delivery: { progressPercentage: 75, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Out for delivery" },
+		delivered: { progressPercentage: 100, progressColour: "bg-success", progressColourText: "text-success", deliveryStatusResult: "Delivered" },
+		return_to_sender: { progressPercentage: 0, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Return to sender" },
+		failure: { progressPercentage: 100, progressColour: "bg-danger", progressColourText: "text-danger", deliveryStatusResult: "Failure" },
+		default: { progressPercentage: 0, progressColour: "bg-dark", progressColourText: "text-dark", deliveryStatusResult: "Unknown" },
+	  };
+  
+	  const {
+		progressPercentage = 0,
+		progressColour = "bg-dark",
+		progressColourText = "text-dark",
+		deliveryStatusResult = "Unknown",
+	  } = statusMapping[deliveryStatus] || statusMapping.default;
+  
+	  res.render("user/view-order-details", {
+		order,
+		orderitems: order.orderitems,
+		title,
+		deliveryStatusResult,
+		trackingURL,
+		progressPercentage,
+		progressColour,
+		progressColourText,
+	  });
+	} catch (error) {
+	  console.error(error);
+	  res.status(500).send(`Internal Server Error ${error}`);
+	  //res.status(500).render("error", { message: "Internal Server Error" });
+	}
+  });
+
 
 router.get(
 	"/view-order-details-admin/:id",
 	ensureAuthenticated,
 	ensureAdminAuthenticated,
-	(req, res) => {
-		const title = "Order Details - Admin";
-		Order.findOne({
-			where: {
-				userId: req.user.id,
-				id: req.params.id,
-			},
-			include: [{ model: orderItem }],
-		}).then((order) => {
-			console.log("===========");
-			const shippingId = order.shippingId;
-			console.log(shippingId);
-			api.Shipment.retrieve(shippingId).then((s) => {
-				console.log(s.tracker.created_at);
-				console.log(s.tracker.updated_at);
-				const deliveryStatus = s.tracker.status;
-				const trackingURL = s.tracker.public_url;
-				if (deliveryStatus == "pre_transit") {
-					let progressPercentage = 25;
-					let progressColour = "bg-info";
-					let progressColourText = "text-info";
-					let deliveryStatusResult = "Pre-transit";
-					res.render("user/view-order-details-admin", {
-						order: order,
-						orderitems: order.orderitems,
-						title,
-						deliveryStatusResult,
-						trackingURL,
-						progressPercentage,
-						progressColour,
-						progressColourText,
-					});
-				} else if (deliveryStatus == "in_transit") {
-					let progressPercentage = 50;
-					let progressColour = "bg-info";
-					let progressColourText = "text-info";
-					let deliveryStatusResult = "In-transit";
-					res.render("user/view-order-details-admin", {
-						order: order,
-						orderitems: order.orderitems,
-						title,
-						deliveryStatusResult,
-						trackingURL,
-						progressPercentage,
-						progressColour,
-						progressColourText,
-					});
-				} else if (deliveryStatus == "out_for_delivery") {
-					let progressPercentage = 75;
-					let progressColour = "bg-info";
-					let progressColourText = "text-info";
-					let deliveryStatusResult = "Out for delivery";
-					res.render("user/view-order-details-admin", {
-						order: order,
-						orderitems: order.orderitems,
-						title,
-						deliveryStatusResult,
-						trackingURL,
-						progressPercentage,
-						progressColour,
-						progressColourText,
-					});
-				} else if (deliveryStatus == "delivered") {
-					let progressPercentage = 100;
-					let progressColour = "bg-success";
-					let progressColourText = "text-success";
-					let deliveryStatusResult = "Delivered";
-					res.render("user/view-order-details-admin", {
-						order: order,
-						orderitems: order.orderitems,
-						title,
-						deliveryStatusResult,
-						trackingURL,
-						progressPercentage,
-						progressColour,
-						progressColourText,
-					});
-				} else if (deliveryStatus == "return_to_sender") {
-					let progressPercentage = 0;
-					let progressColour = "bg-info";
-					let progressColourText = "text-info";
-					let deliveryStatusResult = "Return to sender";
-					res.render("user/view-order-details-admin", {
-						order: order,
-						orderitems: order.orderitems,
-						title,
-						deliveryStatusResult,
-						trackingURL,
-						progressPercentage,
-						progressColour,
-						progressColourText,
-					});
-				} else if (deliveryStatus == "failure") {
-					let progressPercentage = 100;
-					let progressColour = "bg-danger";
-					let progressColourText = "text-danger";
-					let deliveryStatusResult = "Failure";
-					res.render("user/view-order-details-admin", {
-						order: order,
-						orderitems: order.orderitems,
-						title,
-						deliveryStatusResult,
-						trackingURL,
-						progressPercentage,
-						progressColour,
-						progressColourText,
-					});
-				} else {
-					let progressPercentage = 0;
-					let progressColour = "bg-dark";
-					let progressColourText = "text-dark";
-					let deliveryStatusResult = "Unknown";
-					res.render("user/view-order-details-admin", {
-						order: order,
-						orderitems: order.orderitems,
-						title,
-						deliveryStatusResult,
-						trackingURL,
-						progressPercentage,
-						progressColour,
-						progressColourText,
-					});
-				}
-			});
+	async (req, res) => {
+	  const title = "Order Details - Admin";
+	  try {
+		const order = await order_.findOne({
+		  where: {
+			//userId: req.user.id,
+			id: req.params.id,
+		  },
+		  include: [{ model: orderItem }],
 		});
+  
+		// if (!order) {
+		//   return res.status(404).render("error", { message: "Order not found" });
+		// }
+  
+		const { shippingId } = order;
+		const shipment = await api.Shipment.retrieve(shippingId);
+		const { status: deliveryStatus, public_url: trackingURL } = shipment.tracker;
+  
+		const statusMapping = {
+		  pre_transit: { progressPercentage: 25, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Pre-transit" },
+		  in_transit: { progressPercentage: 50, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "In-transit" },
+		  out_for_delivery: { progressPercentage: 75, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Out for delivery" },
+		  delivered: { progressPercentage: 100, progressColour: "bg-success", progressColourText: "text-success", deliveryStatusResult: "Delivered" },
+		  return_to_sender: { progressPercentage: 0, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Return to sender" },
+		  failure: { progressPercentage: 100, progressColour: "bg-danger", progressColourText: "text-danger", deliveryStatusResult: "Failure" },
+		  default: { progressPercentage: 0, progressColour: "bg-dark", progressColourText: "text-dark", deliveryStatusResult: "Unknown" },
+		};
+  
+		const {
+		  progressPercentage = 0,
+		  progressColour = "bg-dark",
+		  progressColourText = "text-dark",
+		  deliveryStatusResult = "Unknown",
+		} = statusMapping[deliveryStatus] || statusMapping.default;
+  
+		res.render("user/view-order-details-admin", {
+		  order,
+		  orderitems: order.orderitems,
+		  title,
+		  deliveryStatusResult,
+		  trackingURL,
+		  progressPercentage,
+		  progressColour,
+		  progressColourText,
+		});
+	  } catch (error) {
+		console.error(error);
+		res.status(500).send(`Internal Server Error ${error}`);
+	  }
 	}
-);
+  );
 
+  
 router.get(
 	"/displayLabelUrl/:id",
 	ensureAuthenticated,

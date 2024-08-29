@@ -195,8 +195,8 @@ const refreshCartCalculations = async (req, cart) => {
   // After the user deletes a cartitem obj from userCart session variable
   // Recalculate userCart initialSubTotal, discountedSubTotal
   // initialSubTotal = parseFloat((cart[item].Price) * (cart[item.Quantity])).toFixed(2)
-
   // Loop through the whole ssn cart, calculating the cart's initial subtotal, savings etc
+
   for (var i in cart) {
     var item = cart[i];
     console.log(`RCC | ${item.Name} `);
@@ -233,6 +233,7 @@ const refreshCartCalculations = async (req, cart) => {
       var price = parseFloat(item.Price);
       const originalSubTotal = parseFloat(qty) * parseFloat(price);
       initialSubtotal += originalSubTotal;
+      discountedSubtotal += originalSubTotal;
       console.log(`RCC | initialSubtotal ${initialSubtotal}`);
     }
 
