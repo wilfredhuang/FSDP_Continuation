@@ -1,0 +1,136 @@
+{{!-- <header>
+    <div class="main-menu">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-light">
+                <a class="navbar-brand" href="/"> <span class="h2">Acacia</span><span
+                        class="h2 text-warning">Books</span> </a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse"
+                    data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="navbar-item {{navStatusHome}}">
+                            <a href="/index" class="nav-link">Home</a>
+                        </li>
+                        <li class="navbar-item {{navStatusProduct}}">
+                            <a href="/product/product-list" class="nav-link">Shop</a>
+                        </li>
+                        <li class="navbar-item {{navStatusAbout}}">
+                            <a href="/about" class="nav-link">About</a>
+                        </li>
+                        <li class="navbar-item {{navStatusFAQ}}">
+                            <a href="/faq" class="nav-link">FAQ</a>
+                        </li>
+                        {{#if (adminCheck user)}}
+                        <li class="navbar-item dropdown">
+                            <a href="/user/admin" class="nav-link dropdown-toggle" data-toggle="dropdown">User Page</a>
+                            <div class="dropdown-menu">
+                                <a href="/user/user-page" class="dropdown-item">User Page</a>
+                                <a href="/user/admin" class="dropdown-item">Admin Menu</a>
+                            </div>
+                        </li>
+                        <li class="navbar-item">
+                            <a href="/user/logout" class="nav-link">Logout</a>
+                        </li>
+                        {{else if user}}
+                        <li class="navbar-item">
+                            <a href="/user/user-page" class="nav-link">User Page</a>
+                        </li>
+                        <li class="navbar-item">
+                            <a href="/user/logout" class="nav-link">Logout</a>
+                        </li>
+                        {{else}}
+                        <li class="navbar-item {{navStatusLogin}}">
+                            <a href="/user/login" class="nav-link">Login</a>
+                        </li>
+                        <li class="navbar-item {{navStatusRegister}}">
+                            <a href="/user/register" class="nav-link">Register</a>
+                        </li>
+                        {{/if}}
+                    </ul>
+                    <form id="cart-form" method="GET" action="/product/cart">
+                        <input type="hidden" name="page" value="1">
+                    </form>
+                    <div class="cart my-2 my-lg-0">
+                        <span>
+                            <i class="fa fa-shopping-cart" aria-hidden="true"
+                                onclick="document.getElementById('cart-form').submit();" style="cursor:pointer;"></i>
+                        </span>
+                        <span class="quntity">{{countCartQty UC}}</span>
+                    </div>
+
+
+
+
+                </div>
+        </div>
+        </nav>
+    </div>
+    </div>
+</header> --}}
+
+<div class="container">
+<nav class="navbar navbar-expand-lg navbar-light">
+    <a class="navbar-brand" href="/">
+        <span class="h2">Acacia</span>
+        <span class="h2 text-warning">Books</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item {{navStatusHome}}">
+                <a href="/index" class="nav-link">Home</a>
+            </li>
+            <li class="nav-item {{navStatusProduct}}">
+                <a href="/product/product-list" class="nav-link">Shop</a>
+            </li>
+            <li class="nav-item {{navStatusAbout}}">
+                <a href="/about" class="nav-link">About</a>
+            </li>
+            <li class="nav-item {{navStatusFAQ}}">
+                <a href="/faq" class="nav-link">FAQ</a>
+            </li>
+            {{#if (adminCheck user)}}
+            <li class="nav-item dropdown">
+                <a href="/user/admin" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">User Page</a>
+                <ul class="dropdown-menu">
+                    <li><a href="/user/user-page" class="dropdown-item">User Page</a></li>
+                    <li><a href="/user/admin" class="dropdown-item">Admin Menu</a></li>
+                </ul>
+            </li>
+            <li class="nav-item">
+                <a href="/user/logout" class="nav-link">Logout</a>
+            </li>
+            {{else if user}}
+            <li class="nav-item">
+                <a href="/user/user-page" class="nav-link">User Page</a>
+            </li>
+            <li class="nav-item">
+                <a href="/user/logout" class="nav-link">Logout</a>
+            </li>
+            {{else}}
+            <li class="nav-item {{navStatusLogin}}">
+                <a href="/user/login" class="nav-link">Login</a>
+            </li>
+            <li class="nav-item {{navStatusRegister}}">
+                <a href="/user/register" class="nav-link">Registerz</a>
+            </li>
+            {{/if}}
+        </ul>
+        <form id="cart-form" method="GET" action="/product/cart" class="d-inline">
+            <input type="hidden" name="page" value="1">
+        </form>
+        <div class="cart my-2 my-lg-0 ms-3 d-flex align-items-center">
+            <span>
+                <i class="fa fa-shopping-cart" aria-hidden="true" onclick="document.getElementById('cart-form').submit();" style="cursor:pointer;"></i>
+            </span>
+            <span class="quntity ms-2">{{countCartQty UC}}</span>
+        </div>
+    </div>
+</nav>
+</div>
+

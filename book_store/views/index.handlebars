@@ -1,249 +1,158 @@
-
 <section class="slider">
-    <div class="container">
+    <div class="container py-5">
         <div id="owl-demo" class="owl-carousel owl-theme">
             <div class="item">
-                <div class="slide">
-                    <img src="images/slide1.jpg" alt="slide1">
-                    <div class="content">
+                <div class="slide position-relative">
+                    <img src="images/slide1.jpg" alt="slide1" class="img-fluid">
+                    <div class="content position-absolute top-50 start-50 translate-middle text-center text-white">
                         <div class="title">
-                            <h3>welcome to AcaciaBooks</h3>
-                            <h5>Discover the best books online with us</h5>
-                            <a href="/product/product-list" class="btn">shop books</a>
+                            <h3 class="display-4">Welcome to AcaciaBooks</h3>
+                            <h5 class="display-6">Discover the best books online with us</h5>
+                            <a href="/product/product-list" class="btn btn-primary">Shop Books</a>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="item">
-                <div class="slide">
-                    <img src="images/slide2.jpg" alt="slide1">
-                    <div class="content">
-                        <div class="title">
-                            <h3>welcome to AcaciaBooks</h3>
-                            <h5>Discover the best books online with us</h5>
-                            <a href="/product/product-list" class="btn">shop books</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="item">
-                <div class="slide">
-                    <img src="images/slide3.jpg" alt="slide1">
-                    <div class="content">
-                        <div class="title">
-                            <h3>welcome to AcaciaBooks</h3>
-                            <h5>Discover the best books online with us</h5>
-                            <a href="/product/product-list" class="btn">shop books</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="item">
-                <div class="slide">
-                    <img src="images/slide4.jpg" alt="slide1">
-                    <div class="content">
-                        <div class="title">
-                            <h3>welcome to AcaciaBooks</h3>
-                            <h5>Discover the best books online with us</h5>
-                            <a href="/product/product-list" class="btn">shop books</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-<section class="about-sec">
-    <div class="about-img">
-        <figure style="background:url(./images/about-img.jpg)no-repeat;"></figure>
-    </div>
-    <div class="about-content">
-        <h2>About AcaciaBooks,</h2>
-        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-            industry's printer took a galley of type and Scrambled it to make a type and typesetting industry. Lorem
-            Ipsum has been the book. </p>
-        <p>It has survived not only fiveLorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem
-            Ipsum has been the industry's printer took a galley of type and</p>
-        <div class="btn-sec">
-            <a href="/product/product-list" class="btn yellow">shop books</a>
-            <a href="login" class="btn black">subscriptions</a>
+            <!-- Repeat for other slides -->
         </div>
     </div>
 </section>
 
-<section class="recent-book-sec">
+<section class="about-sec py-5">
+    <div class="about-img mb-4">
+        <figure class="w-100 h-100" style="background:url(./images/about-img.jpg) no-repeat center center; background-size: cover;"></figure>
+    </div>
+    <div class="about-content">
+        <h2 class="display-4">About AcaciaBooks</h2>
+        <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry...</p>
+        <div class="btn-sec mt-4">
+            <a href="/product/product-list" class="btn btn-warning">Shop Books</a>
+            <a href="login" class="btn btn-dark">Subscriptions</a>
+        </div>
+    </div>
+</section>
+
+<section class="recent-book-sec py-5">
     <div class="container">
-        <div class="title">
-            <h2>highly recommended books</h2>
+        <div class="title mb-4">
+            <h2 class="display-4">Highly Recommended Books</h2>
             <hr>
         </div>
-        <div class="recent-book-sec">
-            <ul id="myMenu">
-                <div class="row">
-                    {{#each productadmin}}
-                    {{#when @index 'lt' 4}}
-                        
-                            <div class="col-md-3">
-                                <div class="item">
-                                    <a href="/product/individual-product/{{id}}"><img src="{{product_image}}"
-                                            alt="{{product_name}}"></a>
-                                    <h3><a href="/product/individual-product/{{id}}">{{product_name}}</a></h3>
-                                    <form action="/product-list">
-                                        <h6><span class="price">${{price}}</span> / <a
-                                                href="/product/product-list/{{id}}">Buy Now</a></h6>
-                                    </form>
-                                </div>
-                            </div>
-                        
-                    {{/when}}
-                    {{/each}}
+        <div class="row">
+            {{#each productadmin}}
+            {{#when @index 'lt' 4}}
+            <div class="col-md-3 mb-4">
+                <div class="item">
+                    <a href="/product/individual-product/{{id}}"><img src="{{product_image}}" alt="{{product_name}}" class="img-fluid"></a>
+                    <h3><a href="/product/individual-product/{{id}}">{{product_name}}</a></h3>
+                    <h6><span class="price">${{price}}</span> / <a href="/product/product-list/{{id}}">Buy Now</a></h6>
                 </div>
-            </ul>
+            </div>
+            {{/when}}
+            {{/each}}
         </div>
     </div>
     <hr>
 </section>
-<section class="static about-sec">
+
+<section class="static about-sec py-5">
     <div class="container">
-        <div class="row"> 
-            <div class="col-md-6">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-4 text-center">
                 <a href="/delivery/check-delivery">
-                    <svg width="25em" height="25em" viewBox="0 0 16 16" class="bi bi-truck about-img"
-                        style="margin:auto; display:block;" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path fill-rule="evenodd"
-                            d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5v7h-1v-7a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5v1A1.5 1.5 0 0 1 0 10.5v-7zM4.5 11h6v1h-6v-1z" />
-                        <path fill-rule="evenodd"
-                            d="M11 5h2.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5h-1v-1h1a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4.5h-1V5zm-8 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 1a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
-                        <path fill-rule="evenodd"
-                            d="M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 1a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                    <svg width="25em" height="25em" viewBox="0 0 16 16" class="bi bi-truck" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5v7h-1v-7a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .5.5v1A1.5 1.5 0 0 1 0 10.5v-7zM4.5 11h6v1h-6v-1z" />
+                        <path fill-rule="evenodd" d="M11 5h2.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5h-1v-1h1a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12v4.5h-1V5zm-8 8a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 1a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+                        <path fill-rule="evenodd" d="M12 13a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 1a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
                     </svg>
                 </a>
             </div>
-            <div class="col-md-6 about-content">
-                <h2>Checking delivery?</h2>
-                <p>You can check your delivery here without going through the hassle of logging in again! Simply click
-                    the truck icon to start checking your orders.</p>
-                <p>
-                    All orders are tracked by <a href="https://www.easypost.com/">EasyPost</a> and we use <a
-                        href="https://www.usps.com/">USPS</a>
-                    as our carrier.</p>
-                {{!-- <div class="btn-sec">
-            <a href="/delivery/check-delivery" class="btn yellow">Check Delivery</a>
-        </div> --}}
+            <div class="col-md-6">
+                <h2 class="display-4">Checking Delivery?</h2>
+                <p>You can check your delivery here without going through the hassle of logging in again! Simply click the truck icon to start checking your orders.</p>
+                <p>All orders are tracked by <a href="https://www.easypost.com/">EasyPost</a> and we use <a href="https://www.usps.com/">USPS</a> as our carrier.</p>
             </div>
         </div>
     </div>
 </section>
-<section class="features-sec">
+
+<section class="features-sec py-5">
     <div class="container">
-        <ul>
-            <li>
-                <span class="icon"><i class="fa fa-shopping-cart" aria-hidden="true"></i></span>
-                <h3>SAFE SHOPPING</h3>
-                <h5>Safe Shopping Guarantee</h5>
-                <h6>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-                    industry's...</h6>
-            </li>
-            <li>
-                <span class="icon return"><i class="fa fa-reply-all" aria-hidden="true"></i></span>
-                <h3>30- DAY RETURN</h3>
-                <h5>Moneyback guarantee</h5>
-                <h6>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-                    industry's...</h6>
-            </li>
-            <li>
-                <span class="icon chat"><i class="fa fa-comments" aria-hidden="true"></i></span>
-                <h3>24/7 SUPPORT</h3>
-                <h5>online Consultations</h5>
-                <h6>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-                    industry's...</h6>
-            </li>
-        </ul>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="feature">
+                    <span class="icon"><i class="fa fa-shopping-cart" aria-hidden="true"></i></span>
+                    <h3>Safe Shopping</h3>
+                    <h5>Safe Shopping Guarantee</h5>
+                    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry...</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature">
+                    <span class="icon return"><i class="fa fa-reply-all" aria-hidden="true"></i></span>
+                    <h3>30-Day Return</h3>
+                    <h5>Moneyback Guarantee</h5>
+                    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry...</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature">
+                    <span class="icon chat"><i class="fa fa-comments" aria-hidden="true"></i></span>
+                    <h3>24/7 Support</h3>
+                    <h5>Online Consultations</h5>
+                    <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry...</p>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
-<section class="offers-sec" style="background:url(images/offers.jpg)no-repeat;">
+
+<section class="offers-sec py-5" style="background:url(images/offers.jpg) no-repeat center center; background-size: cover;">
     <div class="cover"></div>
     <div class="container">
         <div class="row">
-            <div class="col-md-6">
-                <div class="detail">
+            <div class="col-md-6 mb-4">
+                <div class="detail text-center text-white">
                     <h3>Top 50% OFF on Selected</h3>
-                    <h6>We are now offering some good discount
-                        on selected books go and shop them</h6>
-                    <a href="product-list" class="btn blue-btn">view all books</a>
+                    <h6>We are now offering some good discount on selected books. Go and shop them</h6>
+                    <a href="product-list" class="btn btn-primary">View All Books</a>
                     <span class="icon-point percentage">
-                        <img src="images/precentagae.png" alt="">
+                        <img src="images/precentagae.png" alt="" class="img-fluid">
                     </span>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="detail">
-                    <h3>Shop $ 500 Above and Get Extra!</h3>
-                    <h6>We are now offering some good discount
-                        on selected books go and shop them</h6>
-                    <a href="product-list" class="btn blue-btn">view all books</a>
-                    <span class="icon-point amount"><img src="images/amount.png" alt=""></span>
+            <div class="col-md-6 mb-4">
+                <div class="detail text-center text-white">
+                    <h3>Shop $500 Above and Get Extra!</h3>
+                    <h6>We are now offering some good discount on selected books. Go and shop them</h6>
+                    <a href="product-list" class="btn btn-primary">View All Books</a>
+                    <span class="icon-point amount">
+                        <img src="images/amount.png" alt="" class="img-fluid">
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 </section>
-<section class="testimonial-sec">
+
+<section class="testimonial-sec py-5">
     <div class="container">
         <div id="testimonal" class="owl-carousel owl-theme">
-                            <div class="item">
-                <h3>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-                    industry's printer took a galley of type and Scrambled it to make a type and typesetting industry.
-                    been the book</h3>
-                <div class="box-user">
+            <div class="item text-center">
+                <h3>Lorem Ipsum is simply dummy text of the printing and typesetting industry...</h3>
+                <div class="box-user mt-3">
                     <h4 class="author">Alex Ong</h4>
                     <span class="country">Singapore</span>
                 </div>
             </div>
-            <div class="item">
-                <h3>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-                    industry's printer took a galley of type and Scrambled it to make a type and typesetting industry.
-                    been the book</h3>
-                <div class="box-user">
-                    <h4 class="author">Nikola Kovač</h4>
-                    <span class="country">Bosnia</span>
-                </div>
-            </div>
-            <div class="item">
-                <h3>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-                    industry's printer took a galley of type and Scrambled it to make a type and typesetting industry.
-                    been the book</h3>
-                <div class="box-user">
-                    <h4 class="author">Kyle Reese</h4>
-                    <span class="country">USA</span>
-                </div>
-            </div>
-            <div class="item">
-                <h3>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-                    industry's printer took a galley of type and Scrambled it to make a type and typesetting industry.
-                    been the book</h3>
-                <div class="box-user">
-                    <h4 class="author">Elise Watson</h4>
-                    <span class="country">United Kingdom</span>
-                </div>
-            </div>
-            <div class="item">
-                <h3>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the
-                    industry's printer took a galley of type and Scrambled it to make a type and typesetting industry.
-                    been the book</h3>
-                <div class="box-user">
-                    <h4 class="author">Zhang Wuji</h4>
-                    <span class="country">China</span>
-                </div>
-            </div>
-
+            <!-- Repeat for other testimonials -->
         </div>
     </div>
-    <div class="left-quote">
-        <img src="images/left-quote.png" alt="quote">
+    <div class="left-quote position-absolute top-50 start-0 translate-middle-y">
+        <img src="images/left-quote.png" alt="quote" class="img-fluid">
     </div>
-    <div class="right-quote">
-        <img src="images/right-quote.png" alt="quote">
+    <div class="right-quote position-absolute top-50 end-0 translate-middle-y">
+        <img src="images/right-quote.png" alt="quote" class="img-fluid">
     </div>
 </section>
 
