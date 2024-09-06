@@ -22,11 +22,11 @@ dotenv.config();
 //EasyPost API
 import EasyPost from "@easypost/api";
 
-console.log(chalk.red(process.env.EASYPOST_API_TEST_KEY));
-console.log(chalk.red(process.env.STRIPE_SECRET_KEY));
-//const apiKey = process.env.EASYPOST_API_TEST_KEY;
-const apiKey = "EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg";
+// console.log(chalk.red(process.env.EASYPOST_API_TEST_KEY));
+// console.log(chalk.red(process.env.STRIPE_SECRET_KEY));
+const apiKey = process.env.EASYPOST_API_TEST_KEY;
 const api = new EasyPost(apiKey);
+
 
 // Stripe Payment
 import Stripe from "stripe";
@@ -537,7 +537,8 @@ router.get("/cart", async (req, res) => {
   res.locals.cart_subtotal_final = req.session.cart_subtotal_final.toFixed(2);
   res.locals.cart_discount_savings =
     req.session.cart_discount_savings.toFixed(2);
-  res.locals.cart_coupon_savings = req.session.cart_coupon_savings;
+  // this line might be volatile, to change if the decimal point function might still cause bug
+  res.locals.cart_coupon_savings = req.session.cart_coupon_savings.toFixed(2);
   res.locals.cart_shipping_fee = req.session.cart_shipping_fee.toFixed(2);
   res.locals.cart_grandtotal = req.session.cart_grandtotal.toFixed(2);
 
@@ -661,6 +662,7 @@ router.post("/checkout", checkCart, async (req, res) => {
   logMagenta(req.session.shipment_city);
   logMagenta(req.session.shipment_country);
   logMagenta(req.session.shipment_postal_code);
+  res.locals.countryShipment == "asdads";
   await helper.saveSession(req);
 
   res.redirect("select-payment");
@@ -669,8 +671,9 @@ router.post("/checkout", checkCart, async (req, res) => {
 // After checkout form filled, select payment page
 router.get("/select-payment", checkCart, (req, res) => {
   const title = "Select Payment";
+  //const shipment_country = req.session.shipment_country;
   res.render("checkout/select-payment", {
-    title,
+    title
   });
 });
 
@@ -696,6 +699,7 @@ router.get("/paynow", checkCart, (req, res) => {
   let qr = QRCode.toDataURL(payNowString)
     .then((url) => {
       res.render("checkout/paynow", {
+        title,
         payNowString,
         qr,
         url,
@@ -771,13 +775,13 @@ router.post("/paynow", async (req, res) => {
 
   // Create a unconfirmed order
   const new_pending_order = await PendingOrder.create({
-    fullName: req.session.recipientName,
-    phoneNumber: req.session.recipientPhoneNo,
-    address: req.session.address,
-    address1: req.session.address1,
-    city: req.session.city,
-    country: req.session.countryShipment,
-    postalCode: req.session.postalCode,
+    fullName: req.session.shipment_recipient_name,
+    phoneNumber: req.session.shipment_recipient_phonenum,
+    address: req.session.shipment_lineone,
+    address1: req.session.shipment_linetwo,
+    city: req.session.shipment_city,
+    country: req.session.shipment_country,
+    postalCode: req.session.shipment_postal_code,
     deliverFee: 0,
     subtotalPrice: parseFloat(req.session.cart_subtotal_final).toFixed(2),
     totalPrice: parseFloat(req.session.cart_grandtotal).toFixed(2),
@@ -796,7 +800,7 @@ router.post("/paynow", async (req, res) => {
     let genre = req.session.userCart[i].Genre;
     let price = req.session.userCart[i].SubtotalPrice;
     let stock = req.session.userCart[i].Quantity;
-    let details = "";
+    let details = "placeholder details";
     let weight = req.session.userCart[i].SubtotalWeight;
     let product_image = req.session.userCart[i].Image;
     let PorderId = new_pending_order.id;
@@ -1053,24 +1057,53 @@ router.get(
     });
   },
 ),
-  router.get(
-    "/confirm-pending-order/:id",
-    ensureAdminAuthenticated,
-    async (req, res) => {
+
+
+router.get(
+  "/confirm-pending-order/:id",
+  ensureAdminAuthenticated,
+  async (req, res) => {
+    try {
+      // Fetch the pending order
       const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
+      if (!PO) {
+        alertMessage(res, "danger", "Pending Order not found", "fas fa-exclamation-circle", true);
+        return res.redirect("/product/view-pending-orders");
+      }
+
+      // Fetch the pending order items
       const Pi = await PendingOrderItem.findAll({
         where: { pendingOrderId: PO.id },
       });
 
-      const parcel = new api.Parcel({
-        predefined_package: "Parcel",
-        weight: 10, //change number according to weight of total books
+      // Create and save the parcel
+      const parcel = await api.Parcel.create({
+        length: 10, // update according to the total dimensions
+        width: 8,
+        height: 4,
+        weight: 15.7, // weight in ounces
       });
 
-      parcel.save();
+      // Create and verify the to address
+      const toAddress = await api.Address.createAndVerify({
+        name: "George Costanza",
+        company: "Vandelay Industries",
+        street1: "1 E 161st St.",
+        phone: PO.phoneNumber,
+        city: "Bronx",
+        state: "NY",
+        zip: "12412352551",
+        verify: ["delivery"], // Address verification
+      });
 
-      const fromAddress = new api.Address({
-        //default address of company
+      // Check if the address verification was successful
+      if (!toAddress.verifications.delivery.success) {
+        alertMessage(res, "danger", "Invalid delivery address", "fas fa-exclamation-circle", true);
+        return res.redirect("/product/view-pending-orders");
+      }
+
+      // Create and save the from address
+      const fromAddress = await api.Address.create({
         name: "Bookstore",
         street1: "118 2nd Street",
         street2: "4th Floor",
@@ -1082,185 +1115,332 @@ router.get(
         email: "example@example.com",
       });
 
-      const toAddress = new api.Address({
-        verify: ["delivery"],
-        name: "George Costanza",
-        company: "Vandelay Industries",
-        street1: "1 E 161st St.",
-        phone: PO.phoneNumber,
-        city: "Bronx",
-        state: "NY",
-        zip: "12412352551",
+      // Create and save the shipment
+      const shipment = await api.Shipment.create({
+        to_address: toAddress,
+        from_address: fromAddress,
+        parcel: parcel,
       });
-      toAddress
-        .save()
-        .then((addr) => {
-          let checkAddress = addr.verifications.delivery.success;
-          if (checkAddress == true) {
-            const shipment = new api.Shipment({
-              to_address: toAddress,
-              from_address: fromAddress,
-              parcel: parcel,
-            });
-            shipment.save().then((s) => {
-              s.buy(shipment.lowestRate(["USPS"], ["First"])).then((t) => {
-                console.log("=============");
-                console.log(t.id);
-                let fullName = PO.id;
-                let phoneNumber = PO.phoneNumber;
-                let address = PO.address;
-                let address1 = PO.address1;
-                let city = PO.city;
-                let country = PO.country;
-                let postalCode = PO.postalCode;
-                let deliverFee = PO.deliverFee;
-                let subtotalPrice = PO.subtotalPrice;
-                let totalPrice = PO.totalPrice;
-                let shippingId = t.id;
-                let addressId = t.to_address.id;
-                let trackingId = t.tracker.id;
-                let trackingCode = t.tracker.tracking_code;
-                let dateStart = t.created_at;
-                let dateEnd = t.tracker.est_delivery_date;
-                let deliveryStatus = t.tracker.status;
-                let userId = PO.userId;
-                order
-                  .create({
-                    fullName,
-                    phoneNumber,
-                    address,
-                    address1,
-                    city,
-                    country,
-                    postalCode,
-                    deliverFee,
-                    subtotalPrice,
-                    totalPrice,
-                    shippingId,
-                    addressId,
-                    trackingId,
-                    trackingCode,
-                    dateStart,
-                    dateEnd,
-                    deliveryStatus,
-                    userId,
-                  })
 
-                  .then((order) => {
-                    for (var i in Pi) {
-                      let product_name = Pi[i].product_name;
-                      let author = Pi[i].author;
-                      let publisher = Pi[i].publisher;
-                      let genre = Pi[i].genre;
-                      let price = Pi[i].price;
-                      let stock = Pi[i].stock;
-                      let details = "";
-                      let weight = Pi[i].weight;
-                      let product_image = Pi[i].product_image;
-                      let orderId = order.id;
-                      order_item.create({
-                        product_name,
-                        author,
-                        publisher,
-                        genre,
-                        price,
-                        stock,
-                        details,
-                        weight,
-                        product_image,
-                        orderId,
-                      });
-                    }
-                    console.log(order);
-                    PO.destroy();
-                    for (i in Pi) {
-                      console.log(`Deleting Product ${i}`);
-                      Pi[i].destroy();
-                    }
-                    alertMessage(
-                      res,
-                      "success",
-                      `Confirmed Order ${order.id} which belongs to user of id ${order.userId}`,
-                      "fas fa-exclamation-circle",
-                      true,
-                    );
-                    res.redirect("/product/view-pending-orders");
-                    let trackingCode = order.dataValues.trackingCode;
-                    api.Tracker.retrieve(trackingCode).then((t) => {
-                      console.log(t.public_url);
-                      let trackingURL = t.public_url;
-                      client.messages
-                        .create({
-                          body:
-                            "Your order has been confirmed!" +
-                            "Thank you for your purchase from the Book Store. Your tracking code is " +
-                            trackingCode +
-                            " and check your delivery here!\n" +
-                            trackingURL,
-                          from: process.env.TWILIO_ACCOUNT_PHONENO,
-                          to: order.phoneNumber,
-                        })
-                        .then((message) => console.log(message.sid));
-                    });
-                  });
-              });
-            });
+      // Buy the shipment
+      const boughtShipment = await api.Shipment.buy(
+        shipment.id,
+        shipment.lowestRate(["USPS"])
+      );
 
-            console.log("its true");
-          } else {
-            console.log("its false");
-            alertMessage(
-              res,
-              "danger",
-              "Please enter a valid address",
-              "fas faexclamation-circle",
-              true,
-            );
-            res.redirect("/product/view-pending-orders");
-          }
-        })
-        .catch((e) => {
-          console.log(e); //check errors
+      // Create the order
+      const newOrder = await order.create({
+        fullName: PO.id,
+        phoneNumber: PO.phoneNumber,
+        address: PO.address,
+        address1: PO.address1,
+        city: PO.city,
+        country: PO.country,
+        postalCode: PO.postalCode,
+        deliverFee: PO.deliverFee,
+        subtotalPrice: PO.subtotalPrice,
+        totalPrice: PO.totalPrice,
+        shippingId: boughtShipment.id,
+        addressId: toAddress.id,
+        trackingId: boughtShipment.tracker?.id || "",
+        trackingCode: boughtShipment.tracker?.tracking_code || "",
+        dateStart: boughtShipment.created_at,
+        dateEnd: boughtShipment.tracker?.est_delivery_date || null,
+        deliveryStatus: boughtShipment.tracker?.status || "",
+        userId: PO.userId,
+      });
+
+      // Create individual OrderItem entries
+      for (const item of Pi) {
+        await order_item.create({
+          product_name: item.product_name,
+          author: item.author,
+          publisher: item.publisher,
+          genre: item.genre,
+          price: item.price,
+          stock: item.stock,
+          details: item.details || "No details provided",
+          weight: item.weight,
+          product_image: item.product_image,
+          orderId: newOrder.id,
         });
-    },
+      }
+
+      // Delete the pending order and items
+      await PO.destroy();
+      await Promise.all(Pi.map(item => item.destroy()));
+
+      // Notify the user via SMS
+      const trackingURL = boughtShipment.tracker?.public_url || "";
+      await client.messages.create({
+        body: `Your order has been confirmed! Thank you for your purchase from the Book Store. Your tracking code is ${boughtShipment.tracker?.tracking_code} and check your delivery here: ${trackingURL}`,
+        from: process.env.TWILIO_ACCOUNT_PHONENO,
+        to: `+65${PO.phoneNumber}`, // Adjust country code as needed
+      });
+
+      // Redirect to the orders page with success message
+      alertMessage(
+        res,
+        "success",
+        `Confirmed Order ${newOrder.id} for user ID ${newOrder.userId}`,
+        "fas fa-exclamation-circle",
+        true
+      );
+      res.redirect("/product/view-pending-orders");
+      
+    } catch (error) {
+      console.error("Error confirming pending order:", error);
+      res.status(500).send("An error occurred while processing your request.");
+    }
+  }
+);
+
+
+  // router.get(
+  //   "/confirm-pending-order/:id",
+  //   ensureAdminAuthenticated,
+  //   async (req, res) => {
+  //     const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
+  //     const Pi = await PendingOrderItem.findAll({
+  //       where: { pendingOrderId: PO.id },
+  //     });
+
+  //     const parcel = new api.Parcel({
+  //       predefined_package: "Parcel",
+  //       weight: 10, //change number according to weight of total books
+  //     });
+
+  //     parcel.save();
+
+  //     const fromAddress = new api.Address({
+  //       //default address of company
+  //       name: "Bookstore",
+  //       street1: "118 2nd Street",
+  //       street2: "4th Floor",
+  //       city: "San Francisco",
+  //       state: "CA",
+  //       country: "US",
+  //       zip: "94105",
+  //       phone: "415-123-4567",
+  //       email: "example@example.com",
+  //     });
+
+  //     const toAddress = new api.Address({
+  //       verify: ["delivery"],
+  //       name: "George Costanza",
+  //       company: "Vandelay Industries",
+  //       street1: "1 E 161st St.",
+  //       phone: PO.phoneNumber,
+  //       city: "Bronx",
+  //       state: "NY",
+  //       zip: "12412352551",
+  //     });
+  //     toAddress
+  //       .save()
+  //       .then((addr) => {
+  //         let checkAddress = addr.verifications.delivery.success;
+  //         if (checkAddress == true) {
+  //           const shipment = new api.Shipment({
+  //             to_address: toAddress,
+  //             from_address: fromAddress,
+  //             parcel: parcel,
+  //           });
+  //           shipment.save().then((s) => {
+  //             s.buy(shipment.lowestRate(["USPS"], ["First"])).then((t) => {
+  //               console.log("=============");
+  //               console.log(t.id);
+  //               let fullName = PO.id;
+  //               let phoneNumber = PO.phoneNumber;
+  //               let address = PO.address;
+  //               let address1 = PO.address1;
+  //               let city = PO.city;
+  //               let country = PO.country;
+  //               let postalCode = PO.postalCode;
+  //               let deliverFee = PO.deliverFee;
+  //               let subtotalPrice = PO.subtotalPrice;
+  //               let totalPrice = PO.totalPrice;
+  //               let shippingId = t.id;
+  //               let addressId = t.to_address.id;
+  //               let trackingId = t.tracker.id;
+  //               let trackingCode = t.tracker.tracking_code;
+  //               let dateStart = t.created_at;
+  //               let dateEnd = t.tracker.est_delivery_date;
+  //               let deliveryStatus = t.tracker.status;
+  //               let userId = PO.userId;
+  //               order
+  //                 .create({
+  //                   fullName,
+  //                   phoneNumber,
+  //                   address,
+  //                   address1,
+  //                   city,
+  //                   country,
+  //                   postalCode,
+  //                   deliverFee,
+  //                   subtotalPrice,
+  //                   totalPrice,
+  //                   shippingId,
+  //                   addressId,
+  //                   trackingId,
+  //                   trackingCode,
+  //                   dateStart,
+  //                   dateEnd,
+  //                   deliveryStatus,
+  //                   userId,
+  //                 })
+
+  //                 .then((order) => {
+  //                   for (var i in Pi) {
+  //                     let product_name = Pi[i].product_name;
+  //                     let author = Pi[i].author;
+  //                     let publisher = Pi[i].publisher;
+  //                     let genre = Pi[i].genre;
+  //                     let price = Pi[i].price;
+  //                     let stock = Pi[i].stock;
+  //                     let details = "";
+  //                     let weight = Pi[i].weight;
+  //                     let product_image = Pi[i].product_image;
+  //                     let orderId = order.id;
+  //                     order_item.create({
+  //                       product_name,
+  //                       author,
+  //                       publisher,
+  //                       genre,
+  //                       price,
+  //                       stock,
+  //                       details,
+  //                       weight,
+  //                       product_image,
+  //                       orderId,
+  //                     });
+  //                   }
+  //                   console.log(order);
+  //                   PO.destroy();
+  //                   for (i in Pi) {
+  //                     console.log(`Deleting Product ${i}`);
+  //                     Pi[i].destroy();
+  //                   }
+  //                   alertMessage(
+  //                     res,
+  //                     "success",
+  //                     `Confirmed Order ${order.id} which belongs to user of id ${order.userId}`,
+  //                     "fas fa-exclamation-circle",
+  //                     true,
+  //                   );
+  //                   res.redirect("/product/view-pending-orders");
+  //                   let trackingCode = order.dataValues.trackingCode;
+  //                   api.Tracker.retrieve(trackingCode).then((t) => {
+  //                     console.log(t.public_url);
+  //                     let trackingURL = t.public_url;
+  //                     client.messages
+  //                       .create({
+  //                         body:
+  //                           "Your order has been confirmed!" +
+  //                           "Thank you for your purchase from the Book Store. Your tracking code is " +
+  //                           trackingCode +
+  //                           " and check your delivery here!\n" +
+  //                           trackingURL,
+  //                         from: process.env.TWILIO_ACCOUNT_PHONENO,
+  //                         to: `+65${order.phoneNumber}`,
+  //                       })
+  //                       .then((message) => console.log(message.sid));
+  //                   });
+  //                 });
+  //             });
+  //           });
+
+  //           console.log("its true");
+  //         } else {
+  //           console.log("its false");
+  //           alertMessage(
+  //             res,
+  //             "danger",
+  //             "Please enter a valid address",
+  //             "fas faexclamation-circle",
+  //             true,
+  //           );
+  //           res.redirect("/product/view-pending-orders");
+  //         }
+  //       })
+  //       .catch((e) => {
+  //         console.log(e); //check errors
+  //       });
+  //   },
+  // );
+
+  router.get(
+    "/delete-pending-order/:id",
+    ensureAdminAuthenticated,
+    async (req, res) => {
+      try {
+        const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
+        if (!PO) {
+          alertMessage(res, "danger", "Pending Order not found", "fas fa-exclamation-circle", true);
+          return res.redirect("/product/view-pending-orders");
+        }
+  
+        const Pi = await PendingOrderItem.findAll({
+          where: { pendingOrderId: PO.id },
+        });
+  
+        // Sending a message using Twilio
+        await client.messages.create({
+          body: "From BookStore: We are sorry to inform you that your order has been cancelled by the administrator due to lack of payment.",
+          from: process.env.TWILIO_ACCOUNT_PHONENO,
+          to: `+65${PO.phoneNumber}`,
+        });
+  
+        alertMessage(res, "success", `Pending Order with ID ${PO.id} Deleted`, "fas fa-exclamation-circle", true);
+  
+        // Destroy the order
+        await PO.destroy();
+  
+        // Destroy each pending order item
+        for (let i = 0; i < Pi.length; i++) {
+          console.log(`Deleting Product ${i + 1}`);
+          await Pi[i].destroy();
+        }
+  
+        res.redirect("/product/view-pending-orders");
+      } catch (err) {
+        console.error(err);
+        alertMessage(res, "danger", "An error occurred while deleting the order", "fas fa-exclamation-circle", true);
+        res.redirect("/product/view-pending-orders");
+      }
+    }
   );
 
-router.get(
-  "/delete-pending-order/:id",
-  ensureAdminAuthenticated,
-  async (req, res) => {
-    // Code commented out below does work... but doesn't remove pending order items associated with it when a PO is deleted
-    // Pending_Order.findOne({where: {id: req.params.id}, include:[{model:Pending_OrderItem}]})
-    // .then((po)=> {
-    //     po.destroy();
-    // })
-
-    const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
-    const Pi = await PendingOrderItem.findAll({
-      where: { pendingOrderId: PO.id },
-    });
-    client.messages
-      .create({
-        body: "From BookStore: We are sorry to inform you that your order has cancelled by the administrator due to lack of payment",
-        from: process.env.TWILIO_ACCOUNT_PHONENO,
-        to: PO.phoneNumber,
-      })
-      .then((message) => console.log(message.sid));
-    alertMessage(
-      res,
-      "success",
-      `Pending Order with ID ${PO.id} Deleted`,
-      "fas fa-exclamation-circle",
-      true,
-    );
-    PO.destroy();
-    for (i in Pi) {
-      console.log(`Deleting Product ${i}`);
-      Pi[i].destroy();
-    }
-    res.redirect("/product/view-pending-orders");
-  },
-);
+  
+// router.get(
+//   "/delete-pending-order/:id",
+//   ensureAdminAuthenticated,
+//   async (req, res) => {
+//     const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
+//     const Pi = await PendingOrderItem.findAll({
+//       where: { pendingOrderId: PO.id },
+//     });
+//     client.messages
+//       .create({
+//         body: "From BookStore: We are sorry to inform you that your order has cancelled by the administrator due to lack of payment",
+//         from: process.env.TWILIO_ACCOUNT_PHONENO,
+//         to: PO.phoneNumber,
+//       })
+//       .then((message) => console.log(message.sid));
+//     alertMessage(
+//       res,
+//       "success",
+//       `Pending Order with ID ${PO.id} Deleted`,
+//       "fas fa-exclamation-circle",
+//       true,
+//     );
+//     PO.destroy();
+//     for (i in Pi) {
+//       console.log(`Deleting Product ${i}`);
+//       Pi[i].destroy();
+//     }
+//     res.redirect("/product/view-pending-orders");
+//   },
+// );
 
 router.get("/create-coupon", ensureAdminAuthenticated, (req, res) => {
   // if (!req.session.public_coupon) {

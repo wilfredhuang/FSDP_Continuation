@@ -41,7 +41,12 @@ const displayCouponType = (coupon_type) => {
   }
 };
 
-const checkShipmentCountrySingapore = (country_var) => country_var === "SG";
+const checkShipmentCountrySingapore = (country_var) => { 
+  console.log(`Country Var: ${country_var}`);
+  if (country_var == "SG") {
+    return true;
+  }
+};
 
 // In use
 const checkProductPriceDiscounted = (qty, price, new_sub) => {

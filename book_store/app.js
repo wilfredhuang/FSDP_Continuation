@@ -131,8 +131,8 @@ app.use(function (req, res, next) {
   res.locals.error_msg = req.flash("error_msg");
   res.locals.error = req.flash("error");
   res.locals.user = req.user || null;
-  res.locals.billingAddress = req.session.billingAddress;
-  res.locals.countryShipment = req.session.countryShipment;
+  res.locals.billingAddress = req.session.shipment_lineone;
+  res.locals.countryShipment = req.session.shipment_country;
   res.locals.UC = req.session.userCart;
   res.locals.public_coupon = req.session.public_coupon;
   res.locals.cart_subtotal_initial = req.session.cart_subtotal_initial;
