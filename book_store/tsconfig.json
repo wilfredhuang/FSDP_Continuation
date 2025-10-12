@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    /* -------------------- File Layout -------------------- */
+    "rootDir": "./",
+    "outDir": "./dist",
+
+    /* -------------------- Environment -------------------- */
+    "target": "ES2022",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "types": ["node"],
+
+    /* -------------------- Outputs -------------------- */
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    /* -------------------- Type Safety -------------------- */
+    "strict": true,
+    "noImplicitAny": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "typeRoots": ["./types", "./node_modules/@types"],
+
+
+    /* -------------------- Import / Export Behavior -------------------- */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+
+    /* -------------------- Migration -------------------- */
+    "allowJs": true,
+    "checkJs": false,
+    "isolatedModules": true
+  },
+  "include": ["**/*.ts", "types/**/*.d.ts"],
+  "exclude": ["node_modules", "dist", "public", "views"]
+}

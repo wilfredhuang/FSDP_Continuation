@@ -1,9 +1,11 @@
+// @ts-nocheck
 import express from "express";
 const router = express.Router();
 
 import alertMessage from "../helpers/messenger.js";
 import bcrypt from "bcryptjs"; // Provides Hashing
 import passport from "passport"; // Handle authentication for requests
+import axios from "axios"; // used in recaptcha + forgot password
 
 import { v1 as uuidv1 } from "uuid";
 
@@ -57,38 +59,16 @@ router.post(
   "/contactUs",
   [
     // Validation and sanitization
-    body("name")
-      .trim()
-      .isLength({ min: 1 })
-      .withMessage("Name is required")
-      .escape(),
-    body("email")
-      .trim()
-      .isEmail()
-      .withMessage("Invalid email address")
-      .normalizeEmail(),
-    body("subject")
-      .trim()
-      .isLength({ min: 1 })
-      .withMessage("Subject is required")
-      .escape(),
-    body("message")
-      .trim()
-      .isLength({ min: 1 })
-      .withMessage("Message is required")
-      .escape(),
+    body("name").trim().isLength({ min: 1 }).withMessage("Name is required").escape(),
+    body("email").trim().isEmail().withMessage("Invalid email address").normalizeEmail(),
+    body("subject").trim().isLength({ min: 1 }).withMessage("Subject is required").escape(),
+    body("message").trim().isLength({ min: 1 }).withMessage("Message is required").escape(),
   ],
   (req, res) => {
     // Handling errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      alertMessage(
-        res,
-        "danger",
-        "Contact form is incomplete. Please try again.",
-        "fas fa-exclamation-circle",
-        true,
-      );
+      alertMessage(res, "danger", "Contact form is incomplete. Please try again.", "fas fa-exclamation-circle", true);
       return res.redirect("back");
       //return res.status(400).json({ errors: errors.array() });
     }
@@ -111,22 +91,14 @@ router.post(
     transporter.sendMail(message, (err, info) => {
       if (err) {
         console.log("Error occurred. " + err.message);
-        return res
-          .status(500)
-          .send("An error occurred while sending the email.");
+        return res.status(500).send("An error occurred while sending the email.");
       }
 
       // Success feedback
-      alertMessage(
-        res,
-        "success",
-        "Thank You for contacting us!",
-        "fas fa-exclamation-circle",
-        true,
-      );
+      alertMessage(res, "success", "Thank You for contacting us!", "fas fa-exclamation-circle", true);
       res.redirect("/");
     });
-  },
+  }
 );
 
 // JSON Web Token Testing Route
@@ -162,13 +134,9 @@ router.post("/jwt", (req, res) => {
 
 router.get("/jwt2", (req, res) => {
   // Create the JsonWebToken after successful login
-  const token = jwt.sign(
-    { username: "username", isAdmin: 0, isConfirmed: 0 },
-    JWT_SECRETKEY,
-    {
-      expiresIn: "1d",
-    },
-  );
+  const token = jwt.sign({ username: "username", isAdmin: 0, isConfirmed: 0 }, JWT_SECRETKEY, {
+    expiresIn: "1d",
+  });
 
   // Assign JWT to a HTTPONLY Cookie
   res.cookie("jwt_cookie", token, {
@@ -242,13 +210,7 @@ router.post("/resetpassword/", async (req, res) => {
         user.update({ password: thepassword });
       });
     });
-    alertMessage(
-      res,
-      "success",
-      "password changed",
-      "fas fa-sign-in-alt",
-      true,
-    );
+    alertMessage(res, "success", "password changed", "fas fa-sign-in-alt", true);
     res.redirect("/user/logout");
   });
 });
@@ -282,13 +244,7 @@ router.post("/forget-password", async (req, res) => {
   try {
     const { data: body } = await axios.post(verifyURL);
     if (!body.success) {
-      alertMessage(
-        res,
-        "danger",
-        "Please re-enter the recaptcha",
-        "fas fa-exclamation-circle",
-        true,
-      );
+      alertMessage(res, "danger", "Please re-enter the recaptcha", "fas fa-exclamation-circle", true);
       return res.redirect("/user/forget-password");
     }
 
@@ -310,23 +266,11 @@ router.post("/forget-password", async (req, res) => {
       html: `Please click this link to change your password: <a href="${url}">${url}</a>`,
     });
 
-    alertMessage(
-      res,
-      "success",
-      "Please check your email",
-      "fas fa-sign-in-alt",
-      true,
-    );
+    alertMessage(res, "success", "Please check your email", "fas fa-sign-in-alt", true);
     res.redirect("/user/login");
   } catch (err) {
     console.error("Error: " + err.message);
-    alertMessage(
-      res,
-      "danger",
-      "An error occurred. Please try again later.",
-      "fas fa-exclamation-circle",
-      true,
-    );
+    alertMessage(res, "danger", "An error occurred. Please try again later.", "fas fa-exclamation-circle", true);
     res.redirect("/user/forget-password");
   }
 });
@@ -342,17 +286,14 @@ router.get("/confirmation/:token", async (req, res) => {
 });
 
 // Facebook Auth Login (Down)
-router.get(
-  "/auth/facebook",
-  passport.authenticate("facebook", { scope: ["email"] }),
-);
+router.get("/auth/facebook", passport.authenticate("facebook", { scope: ["email"] }));
 
 router.get(
   "/auth/facebook/callback",
   passport.authenticate("facebook", {
     successRedirect: "/",
     failureRedirect: "/login",
-  }),
+  })
 );
 
 //
@@ -370,28 +311,23 @@ router.get("/user-page", ensureAuthenticated, (req, res) => {
   }
 });
 
-router.get(
-  "/orderHistoryAdmin",
-  ensureAuthenticated,
-  ensureAdminAuthenticated,
-  (req, res) => {
-    const title = "Order History - Admin";
-    order
-      .findAll({
-        // where: {
-        //   userId: req.user.id, //finds all because user is admin
-        // },
-        include: [{ model: orderItem }],
-      })
-      .then((order) => {
-        res.render("user/order-history-admin", {
-          order: order,
-          orderitems: order.orderitems,
-          title,
-        });
+router.get("/orderHistoryAdmin", ensureAuthenticated, ensureAdminAuthenticated, (req, res) => {
+  const title = "Order History - Admin";
+  order
+    .findAll({
+      // where: {
+      //   userId: req.user.id, //finds all because user is admin
+      // },
+      include: [{ model: orderItem }],
+    })
+    .then((order) => {
+      res.render("user/order-history-admin", {
+        order: order,
+        orderitems: order.orderitems,
+        title,
       });
-  },
-);
+    });
+});
 
 router.get("/orderHistory", ensureAuthenticated, (req, res) => {
   const title = "Order History";
@@ -528,7 +464,7 @@ router.post("/register", async (req, res) => {
           "danger",
           "Failed to send confirmation email. Please try again later.",
           "fas fa-exclamation-circle",
-          true,
+          true
         );
         return res.render("user/register", {
           errors: [
@@ -548,7 +484,7 @@ router.post("/register", async (req, res) => {
         "success",
         `A confirmation email has been sent to ${email}. Please check your inbox.`,
         "fas fa-check-circle",
-        true,
+        true
       );
       res.redirect("/user/login");
     });
@@ -559,7 +495,7 @@ router.post("/register", async (req, res) => {
       "danger",
       "An error occurred during registration. Please try again later.",
       "fas fa-exclamation-circle",
-      true,
+      true
     );
     res.render("user/register", {
       errors: [
@@ -626,13 +562,7 @@ router.post("/user-page/change-info", ensureAuthenticated, (req, res) => {
           });
         }
       });
-      alertMessage(
-        res,
-        "success",
-        "information has been updated",
-        "fas fa-sign-in-alt",
-        true,
-      );
+      alertMessage(res, "success", "information has been updated", "fas fa-sign-in-alt", true);
       res.redirect("/user/user-page/");
     }
     if (err) {
@@ -650,16 +580,12 @@ router.get("/user-page/change-info", ensureAuthenticated, function (req, res) {
   });
 });
 
-router.get(
-  "/user-page/change-address",
-  ensureAuthenticated,
-  function (req, res) {
-    const title = "Change Address";
-    res.render("user/change-address", {
-      title,
-    });
-  },
-);
+router.get("/user-page/change-address", ensureAuthenticated, function (req, res) {
+  const title = "Change Address";
+  res.render("user/change-address", {
+    title,
+  });
+});
 
 router.post("/user-page/change-address", ensureAuthenticated, (req, res) => {
   let errors = [];
@@ -684,13 +610,7 @@ router.post("/user-page/change-address", ensureAuthenticated, (req, res) => {
     if (postalCode != "") {
       user.update({ postalCode: req.body.postalCode });
     }
-    alertMessage(
-      res,
-      "success",
-      "information has been updated",
-      "fas fa-sign-in-alt",
-      true,
-    );
+    alertMessage(res, "success", "information has been updated", "fas fa-sign-in-alt", true);
     res.redirect("/user/user-page");
   });
 });
