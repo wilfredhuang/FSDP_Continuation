@@ -79,6 +79,7 @@ import Handlebars from "handlebars";
 // 4. Import Authentication & Security Modules
 // ------------------------------------------------------------
 import passport from "passport";
+import "./config/passport.ts"; // (or .js)
 import flash from "connect-flash";
 import FlashMessenger from "flash-messenger";
 
@@ -92,7 +93,6 @@ import moment from "moment";
 // 6. Import Helpers and Config
 // ------------------------------------------------------------
 import sequelize  from "./config/db_connection.js";
-import localStrategy from "./config/passport.js";
 import helper from "./helpers/hbs.js";
 import carthelper from "./helpers/cartHelper.js";
 import when from "./helpers/for_loop.js";
@@ -122,7 +122,7 @@ const app = express();
 // ------------------------------------------------------------
 // 9. Setup Database Connection
 // ------------------------------------------------------------
-setUpDB(true); // Establishes a connection to the database
+setUpDB(false); // Establishes a connection to the database
 
 // ------------------------------------------------------------
 // 10. Setup Handlebars View Engine
@@ -206,7 +206,6 @@ app.use(session(sessionConfig));
 // ------------------------------------------------------------
 app.use(passport.initialize());
 app.use(passport.session());
-//localStrategy(passport);
 
 // ------------------------------------------------------------
 // 16. Flash Messaging Middleware

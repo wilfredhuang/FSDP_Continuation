@@ -1,7 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db_connection.js";
 
-
 // ----- Interface for columns -----
 export interface UserAttributes {
   id: string;
@@ -26,21 +25,23 @@ export type UserCreationAttributes = Optional<UserAttributes, "id">;
 
 // ----- Class Model -----
 class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  public id!: string;
-  public name!: string | null;
-  public email!: string | null;
-  public password!: string | null;
-  public confirmed!: boolean | null;
-  public isadmin!: boolean | null;
-  public facebookId!: string | null;
-  public facebookToken!: string | null;
-  public PhoneNo!: string | null;
-  public address!: string | null;
-  public address1!: string | null;
-  public city!: string | null;
-  public country!: string | null;
-  public postalCode!: string | null;
-  public stripeID!: string | null;
+  // ❌ REMOVE all public fields!
+  // ✅ TypeScript will infer from interface
+  declare id: string;
+  declare name: string | null;
+  declare email: string | null;
+  declare password: string | null;
+  declare confirmed: boolean | null;
+  declare isadmin: boolean | null;
+  declare facebookId: string | null;
+  declare facebookToken: string | null;
+  declare PhoneNo: string | null;
+  declare address: string | null;
+  declare address1: string | null;
+  declare city: string | null;
+  declare country: string | null;
+  declare postalCode: string | null;
+  declare stripeID: string | null;
 }
 
 // ----- Model Initialization -----
@@ -66,4 +67,3 @@ User.init(
 );
 
 export default User;
-

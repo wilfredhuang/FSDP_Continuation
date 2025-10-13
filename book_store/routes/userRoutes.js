@@ -539,38 +539,45 @@ router.get("/user-page", ensureAuthenticated, (req, res) => {
   res.render("user/user-page");
 });
 
-router.post("/user-page/change-info", ensureAuthenticated, (req, res) => {
-  let errors = [];
-  let { name, email, password2 } = req.body;
-  console.log(req.body);
+router.post("/user-page/change-info", ensureAuthenticated, async (req, res) => {
+  try {
+    const { name, email, password, password2 } = req.body;
+    console.log(req.body);
 
-  bcrypt.compare(req.body.password, req.user.password, function (err, done) {
-    if (done) {
-      User.findOne({ where: { id: req.user.id } }).then((user) => {
-        if (name != "") {
-          user.update({ name: req.body.name });
-        }
-        if (email != "") {
-          user.update({ email: req.body.email });
-        }
-        if (password2 != "") {
-          bcrypt.genSalt(10, function (err, salt) {
-            bcrypt.hash(req.user.password2, salt, function (err, hash) {
-              // Store hash in your password DB.
-              user.update({ password: hash });
-            });
-          });
-        }
-      });
-      alertMessage(res, "success", "information has been updated", "fas fa-sign-in-alt", true);
-      res.redirect("/user/user-page/");
+    // Fetch the full user from DB (with password hash)
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      console.log("❌ Wrong old password for user:", req.user.email);
+      alertMessage(res, "error", "User not found", "fas fa-sign-in-alt", true);
+      return res.redirect("/user/user-page");
     }
-    if (err) {
-      console.log(err);
-      alertMessage(res, "error", "error", "fas fa-sign-in-alt", true);
-      res.redirect("/user/user-page");
+
+    // Verify old password
+    const match = await bcrypt.compare(password, user.password || "");
+    if (!match) {
+      alertMessage(res, "error", "Incorrect current password", "fas fa-sign-in-alt", true);
+      return res.redirect("/user/user-page");
     }
-  });
+
+    // Update name/email/password if provided
+    const updates = {};
+    if (name && name.trim() !== "") updates.name = name.trim();
+    if (email && email.trim() !== "") updates.email = email.trim();
+    if (password2 && password2.trim() !== "") {
+      const salt = await bcrypt.genSalt(10);
+      updates.password = await bcrypt.hash(password2, salt);
+    }
+
+    // Commit updates
+    await user.update(updates);
+
+    alertMessage(res, "success", "Information has been updated", "fas fa-sign-in-alt", true);
+    res.redirect("/user/user-page");
+  } catch (err) {
+    console.error("Update error:", err);
+    alertMessage(res, "error", "Error updating information", "fas fa-sign-in-alt", true);
+    res.redirect("/user/user-page");
+  }
 });
 
 router.get("/user-page/change-info", ensureAuthenticated, function (req, res) {
