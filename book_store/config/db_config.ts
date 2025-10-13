@@ -1,5 +1,5 @@
 import { Sequelize } from "sequelize";
-import config from "./db";
+import config from "./db.js";
 import {
   logRed,
   logGreen,
@@ -7,7 +7,7 @@ import {
   logYellow,
   logMagenta,
   logCyan,
-} from "../helpers/loggerHelper";
+} from "../helpers/loggerHelper.js";
 
 logGreen("Initialize Sequelize connection");
 

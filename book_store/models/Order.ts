@@ -9,9 +9,9 @@ import {
   NonAttribute,
   Sequelize
 } from "sequelize";
-import sequelizeInstance from "../config/db_connection";
-import User from "./User";
-import OrderItem from "./OrderItem";
+import sequelizeInstance from "../config/db_connection.js";
+import User from "./User.js";
+import OrderItem from "./OrderItem.js";
 
 const sequelize = sequelizeInstance as unknown as Sequelize;
 export class Order extends Model<
@@ -34,7 +34,7 @@ export class Order extends Model<
 Order.init(
   {
     id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
-    userId: { type: DataTypes.INTEGER.UNSIGNED, allowNull: false },
+    userId: { type: DataTypes.STRING, allowNull: false },
     shippingId: { type: DataTypes.STRING, allowNull: true },
     totalPrice: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
     status: { type: DataTypes.STRING, allowNull: true },
@@ -50,7 +50,7 @@ Order.init(
 
 
 // ✅ Associations
-Order.belongsTo(User, { foreignKey: "userId", as: "user" });
-Order.hasMany(OrderItem, { foreignKey: "orderId", as: "orderitems" });
+// Order.belongsTo(User, { foreignKey: "userId", as: "user" });
+// Order.hasMany(OrderItem, { foreignKey: "orderId", as: "orderitems" });
 
 export default Order;

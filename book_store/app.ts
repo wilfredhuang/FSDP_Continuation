@@ -37,25 +37,28 @@ declare module "express-session" {
   }
 }
 
+
+
 // ------------------------------------------------------------
 // 1. Load Environment Variables
 // ------------------------------------------------------------
 import dotenv from "dotenv";
-dotenv.config();
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+dotenv.config({ path: path.resolve(__dirname, "./.env") });
 // ------------------------------------------------------------
 // 2. Import Core Modules
 // ------------------------------------------------------------
 import express, { Request, Response, NextFunction } from "express";
-import path from "path";
 import fs from "fs";
 import https from "https";
-//import path from "path";
-import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
+
+import setUpDB from "./config/setUpDB.js";
 
 // NOTE: We compile to CommonJS, so __dirname is available.
 // No need for fileURLToPath/import.meta.url here.
@@ -119,10 +122,7 @@ const app = express();
 // ------------------------------------------------------------
 // 9. Setup Database Connection
 // ------------------------------------------------------------
-//setUpDB(false); // Establishes a connection to the database
-sequelize.authenticate()
-  .then(() => console.log("✅ Database connected"))
-  .catch(err => console.error("❌ Database connection error:", err));
+setUpDB(false); // Establishes a connection to the database
 
 // ------------------------------------------------------------
 // 10. Setup Handlebars View Engine

@@ -3,7 +3,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
 import type { Request } from "express";
-import User from "../models/User"; // ✅ default import
+import User from "../models/User.js"; // ✅ default import
 
 passport.use(
   new LocalStrategy(

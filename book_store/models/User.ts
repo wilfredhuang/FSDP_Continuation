@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import db from "../config/db_config";
+import db from "../config/db_config.js";
 
 // ----- Interface for columns -----
 export interface UserAttributes {
