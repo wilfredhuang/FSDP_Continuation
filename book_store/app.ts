@@ -50,6 +50,12 @@ import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import fs from "fs";
 import https from "https";
+//import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 
 // NOTE: We compile to CommonJS, so __dirname is available.
 // No need for fileURLToPath/import.meta.url here.
@@ -82,7 +88,7 @@ import moment from "moment";
 // ------------------------------------------------------------
 // 6. Import Helpers and Config
 // ------------------------------------------------------------
-import setUpDB from "./config/db_connection.js";
+import sequelize  from "./config/db_connection.js";
 import localStrategy from "./config/passport.js";
 import helper from "./helpers/hbs.js";
 import carthelper from "./helpers/cartHelper.js";
@@ -113,7 +119,10 @@ const app = express();
 // ------------------------------------------------------------
 // 9. Setup Database Connection
 // ------------------------------------------------------------
-setUpDB(false); // Establishes a connection to the database
+//setUpDB(false); // Establishes a connection to the database
+sequelize.authenticate()
+  .then(() => console.log("✅ Database connected"))
+  .catch(err => console.error("❌ Database connection error:", err));
 
 // ------------------------------------------------------------
 // 10. Setup Handlebars View Engine
@@ -165,11 +174,11 @@ app.use(cookieParser());
 // 14. Session Management with MySQLStore
 // ------------------------------------------------------------
 const dbOptions: MySQLStoreOptions = {
-  host: process.env.MYSQLDB_HOST,
+  host: process.env.DB_HOST,
   port: 3306,
-  user: process.env.MYSQLDB_USERNAME,
-  password: process.env.MYSQLDB_PASSWORD,
-  database: process.env.MYSQLDB_DATABASE,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   clearExpired: true,
   checkExpirationInterval: 900000, // ms
   expiration: 900000,              // ms

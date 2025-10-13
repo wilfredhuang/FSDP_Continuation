@@ -9,10 +9,10 @@ export interface DBConfig {
 }
 
 const config: DBConfig = {
-  host: process.env.MYSQLDB_HOST,
-  database: process.env.MYSQLDB_DATABASE,
-  username: process.env.MYSQLDB_USERNAME,
-  password: process.env.MYSQLDB_PASSWORD,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
 };
 
 export default config;

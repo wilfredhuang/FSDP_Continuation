@@ -137,15 +137,45 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const shippingId = req.params.id;
+      if (!shippingId) return res.status(400).send("Missing shippingId");
+
+      // retrieve, then convert format (static method on the client)
       const s = await api.Shipment.retrieve(shippingId);
-      const sr = await s.convertLabelFormat("PDF");
-      res.redirect(sr.postage_label.label_pdf_url);
+
+      // EasyPost returns a full Shipment; convert format to PDF
+      // Signature is (shipmentId: string, format: 'PDF' | 'PNG' | 'ZPL' | ...)
+      const sr = await api.Shipment.convertLabelFormat(s.id, "PDF");
+
+      // Minimal typing guard for TypeScript
+      const labelUrl = (sr as { postage_label?: { label_pdf_url?: string } })
+        ?.postage_label?.label_pdf_url;
+
+      if (!labelUrl) return res.status(502).send("No label URL found from EasyPost");
+      res.redirect(labelUrl);
     } catch (err) {
       console.error(err);
       res.status(500).send("Error retrieving shipping label.");
     }
   }
 );
+
+// router.get(
+//   "/displayLabelUrl/:id",
+//   ensureAuthenticated,
+//   ensureAdminAuthenticated,
+//   async (req: Request, res: Response) => {
+//     try {
+//       const shippingId = req.params.id;
+//       const s = await api.Shipment.retrieve(shippingId);
+//       const sr = await api.Shipment.convertLabelFormat(s.id, "PDF");
+
+//       res.redirect(sr.postage_label.label_pdf_url);
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).send("Error retrieving shipping label.");
+//     }
+//   }
+// );
 
 // ------------------------------------------------------------
 // 7. Print Label PDF
@@ -157,11 +187,23 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const shippingId = req.params.id;
-      const shipment = await api.Shipment.retrieve(shippingId);
-      const shipmentResponse = await shipment.convertLabelFormat("PDF");
-      const postageLabelUrlPDF = shipmentResponse.postage_label.label_pdf_url;
+      if (!shippingId) return res.status(400).send("Missing shippingId");
 
-      const options = {
+      const shipment = await api.Shipment.retrieve(shippingId);
+
+      // ❌ was: await shipment.convertLabelFormat("PDF");
+      // ✅ use the static helper:
+      const shipmentResponse = await api.Shipment.convertLabelFormat(shipment.id, "PDF");
+
+      const postageLabelUrlPDF = (shipmentResponse as {
+        postage_label?: { label_pdf_url?: string };
+      })?.postage_label?.label_pdf_url;
+
+      if (!postageLabelUrlPDF) {
+        return res.status(502).send("EasyPost did not return a PDF label URL");
+      }
+
+      const response = await axios({
         method: "POST",
         url: "https://api.printnode.com/printjobs",
         headers: {
@@ -174,9 +216,8 @@ router.get(
           content: postageLabelUrlPDF,
           source: "Comes from EasyPost API",
         },
-      };
+      });
 
-      const response = await axios(options);
       alertMessage(res, "success", "PrintNode ID: " + response.data, "fas fa-exclamation-circle", true);
       res.redirect("/user/orderHistoryAdmin");
     } catch (err) {
@@ -185,6 +226,42 @@ router.get(
     }
   }
 );
+
+// router.get(
+//   "/printLabelPDF/:id",
+//   ensureAuthenticated,
+//   ensureAdminAuthenticated,
+//   async (req: Request, res: Response) => {
+//     try {
+//       const shippingId = req.params.id;
+//       const shipment = await api.Shipment.retrieve(shippingId);
+//       const shipmentResponse = await shipment.convertLabelFormat("PDF");
+//       const postageLabelUrlPDF = shipmentResponse.postage_label.label_pdf_url;
+
+//       const options = {
+//         method: "POST",
+//         url: "https://api.printnode.com/printjobs",
+//         headers: {
+//           Authorization: "Basic REdqckZpUFVnUndGckdxbFNFSmpHbnRpUmotREhqb3FPeFhlUlg3UlYtbw==",
+//         },
+//         data: {
+//           printerId: "69642287",
+//           title: "Order Label",
+//           contentType: "pdf_uri",
+//           content: postageLabelUrlPDF,
+//           source: "Comes from EasyPost API",
+//         },
+//       };
+
+//       const response = await axios(options);
+//       alertMessage(res, "success", "PrintNode ID: " + response.data, "fas fa-exclamation-circle", true);
+//       res.redirect("/user/orderHistoryAdmin");
+//     } catch (err) {
+//       console.error(err);
+//       res.status(500).send("Error while printing label.");
+//     }
+//   }
+// );
 
 // ------------------------------------------------------------
 // 8. Delivery status check

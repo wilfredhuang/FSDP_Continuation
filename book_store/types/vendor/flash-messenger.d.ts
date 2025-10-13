@@ -1,8 +1,8 @@
-// types/flash-messenger.d.ts
 declare module "flash-messenger" {
-  import { RequestHandler } from "express";
+  import { RequestHandler, Response } from "express";
 
   interface FlashMessenger {
+    (res: Response, type: string, message: string, icon?: string, toast?: boolean): void;
     middleware: RequestHandler;
   }
 

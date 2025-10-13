@@ -6,8 +6,8 @@
 
     /* -------------------- Environment -------------------- */
     "target": "ES2022",
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "lib": ["ES2022"],
     "types": ["node"],
 
@@ -36,6 +36,6 @@
     "checkJs": false,
     "isolatedModules": true
   },
-  "include": ["**/*.ts", "types/**/*.d.ts"],
+  "include": ["**/*.ts", "types/**/*.d.ts", "types/**/*.d.ts"],
   "exclude": ["node_modules", "dist", "public", "views"]
 }
