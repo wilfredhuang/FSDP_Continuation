@@ -41,45 +41,76 @@
                 <div class="col-lg-3 quantity"> <strong> Subtotal Price </strong></div>
             </div>
             {{!-- {{#each UC}} --}}
-            {{#each results.results}}
-{{#each this}}
-            <hr class="mt-0 mb-0">
-            <div class="card-body d-flex flex-row row mb-0 mt-0 mb-0 pt-3 pb-0">
-                <div class="col-lg-3">
-                    {{!-- <img class="img-responsive" src="{{Image}}" alt="prewiew" width="120" height="80"> --}}
-                    <a href="/product/individual-product/{{ID}}"><img class="img-responsive img-fluid img-thumbnail"
-                            src="{{Image}}" alt="prewiew" width="120" height="100"></a>
-                    {{!-- <span> Weight:{{Weight}}g </span> --}}
-                    {{!-- <div class="caption center-block">{{Name}}</div> --}}
-                    {{!-- <span >{{Name}}</span> --}}
-                </div>
-                <div class="col-lg-6">
-                    <h4> {{Name}} </h4>
-                    <hr>
-                    <p class="card-text"> By {{Author}}</p>
-                    <p class="card-text"> Genre: {{Genre}}</p>
-                </div>
-                <div class="col-lg-3 quantity">
-                    <div class="form-group row">
-                        <label for="{{ID}}" class="col-sm-2 col-form-label">Qty:</label>
-                        <div class="input-group col-sm-10">
-                            <input type="number" step="1" max="{{Stock}}" min="1" value="{{Quantity}}"
-                                class="qty form-control" size="4" id="{{ID}}" onchange="update({{ID}}, this.value)"
-                                name="Q{{ID}}">
-                            <div class="input-group-append"><button type="button" class="btn btn-outline-danger btn-xs"
-                                    onclick="window.location.href = '/product/delete-cart-item/{{ID}}';">
-                                    <i class="fa fa-trash" aria-hidden="true" style="color:inherit;"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <h6 class="text-right">${{SubtotalPrice}} <del>
-                            {{checkProductPriceDiscounted Quantity Price SubtotalPrice}}</del></h6>
+  {{#each results.results}}
+  {{#each this}}
+    <hr class="mt-0 mb-0">
+    <div class="card-body d-flex flex-row row mb-0 mt-0 pt-3 pb-0">
+      <!-- 🖼️ Product Image -->
+      <div class="col-lg-3">
+        <a href="/product/individual-product/{{id}}">
+          <img
+            class="img-responsive img-fluid img-thumbnail"
+            src="{{Image}}"
+            alt="{{Name}}"
+            width="120"
+            height="100"
+          >
+        </a>
+      </div>
 
-                </div>
+      <!-- 📖 Product Info -->
+      <div class="col-lg-6">
+        <h4>{{Name}}</h4>
+        <hr>
+        <p class="card-text">By {{Author}}</p>
+        <p class="card-text">Genre: {{Genre}}</p>
+      </div>
+
+      <!-- 💰 Quantity & Subtotal -->
+      <div class="col-lg-3 quantity">
+        <div class="form-group row align-items-center">
+          <label for="{{id}}" class="col-sm-3 col-form-label">Qty:</label>
+          <div class="input-group col-sm-9">
+            <input
+              type="number"
+              step="1"
+              max="{{Stock}}"
+              min="1"
+              value="{{Quantity}}"
+              class="qty form-control"
+              size="4"
+              id="{{id}}"
+              name="Q{{id}}"
+              onchange="update({{id}}, this.value)"
+            >
+
+            <!-- 🗑️ Delete button -->
+            <div class="input-group-append">
+              <button
+                type="button"
+                class="btn btn-outline-danger btn-xs"
+                onclick="window.location.href='/product/delete-cart-item/{{id}}';"
+                title="Remove item"
+              >
+                <i class="fa fa-trash" aria-hidden="true"></i>
+              </button>
             </div>
-            {{/each}}
-            {{/each}}
+          </div>
+        </div>
+
+        <!-- 💵 Price and Discount -->
+<h6 class="text-right">
+  ${{SubtotalPrice}}
+  {{#if (checkProductPriceDiscounted Quantity Price SubtotalPrice)}}
+    <del>{{checkProductPriceDiscounted Quantity Price SubtotalPrice}}</del>
+  {{/if}}
+</h6>
+
+      </div>
+    </div>
+  {{/each}}
+{{/each}}
+
             <!-- End of Second Section -->
             <!-- Third Session Fee Calculation -->
             <hr>

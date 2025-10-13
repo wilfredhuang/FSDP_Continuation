@@ -103,14 +103,17 @@ router.get("/product-list", async (req, res) => {
     const title = "Product Listing";
     const navStatusProduct = "active";
 
-    // Fetch all products, ordered by product name (ascending)
+    // Fetch all products, ordered by name
     const products = await productadmin.findAll({
       order: [["product_name", "ASC"]],
     });
 
-    // Render the product list page
+    // Convert Sequelize instances → plain JS objects
+    const plainProducts = products.map((p) => p.get({ plain: true }));
+
+    // Render using the same context variable
     res.render("products/product-list", {
-      productadmin: products,
+      productadmin: plainProducts,
       navStatusProduct,
       title,
     });
@@ -120,23 +123,27 @@ router.get("/product-list", async (req, res) => {
   }
 });
 
-// Page that display a single product details
+
+
+// Page that displays a single product's details
 router.get("/individual-product/:id", async (req, res) => {
   try {
     const title = "Product Information";
     const { id } = req.params;
 
-    // Fetch the discount
+    // Fetch discount and product
     const disc = await Discount.findOne({ where: { target_id: id } });
-
-    // Fetch the product
     const product = await productadmin.findOne({ where: { id } });
 
-    // Render the page with the product and discount information
+    if (!product) {
+      console.warn(`Product with ID ${id} not found`);
+      return res.status(404).render("404", { title: "Product Not Found" });
+    }
+
     res.render("products/individual-product", {
-      product,
       title,
-      disc,
+      product: product.get({ plain: true }),
+      disc: disc ? disc.get({ plain: true }) : null,
     });
   } catch (error) {
     console.error("Error fetching product or discount:", error);
@@ -339,12 +346,24 @@ router.get("/delete/:id", ensureAdminAuthenticated, (req, res) => {
 router.get("/product-list/:id", async (req, res) => {
   try {
     const productId = req.params.id;
-    const discount = await carthelper.getProductDiscount(productId); // Get Discount Obj from DB
-    const product = await productadmin.findOne({ where: { id: productId } }); // Get Product Obj from DB
-    if (!product) {
-      return res.json({ success: false, message: "Product not found" });
-    }
-    carthelper.processCart(req, req.session.userCart, product, discount, 1); // Determine whether cart item already exist hence need to update merely qty or add new item
+    // const discount = await carthelper.getProductDiscount(productId); // Get Discount Obj from DB
+    // const product = await productadmin.findOne({ where: { id: productId } }); // Get Product Obj from DB
+    // if (!product) {
+    //   return res.json({ success: false, message: "Product not found" });
+    // }
+    // carthelper.processCart(req, req.session.userCart, product, discount, 1); // Determine whether cart item already exist hence need to update merely qty or add new item
+
+    const discount = await carthelper.getProductDiscount(Number(productId));
+const product = await productadmin.findOne({ where: { id: Number(productId) }, raw: true });
+
+if (!product) {
+  return res.json({ success: false, message: "Product not found" });
+}
+
+// 🧠 Ensure we pass a plain object with valid id
+const productPlain = product.id ? product : { ...product, id: Number(productId) };
+
+carthelper.processCart(req, req.session.userCart, productPlain, discount, true);
 
     // Get quantity of cart items to display in the UI with ajax and use of cookie
     const cartQty = Object.values(req.session.userCart).reduce(
@@ -382,12 +401,24 @@ router.get("/product-list/:id", async (req, res) => {
 router.post("/individual-product/:id", async (req, res) => {
   try {
     const productId = req.params.id;
-    const discount = await carthelper.getProductDiscount(productId);
-    const product = await productadmin.findOne({ where: { id: productId } });
-    if (!product) {
-      return res.json({ success: false, message: "Product not found" });
-    }
-    carthelper.processCart(req, req.session.userCart, product, discount, 1);
+    // const discount = await carthelper.getProductDiscount(productId);
+    // const product = await productadmin.findOne({ where: { id: productId } });
+    // if (!product) {
+    //   return res.json({ success: false, message: "Product not found" });
+    // }
+    // carthelper.processCart(req, req.session.userCart, product, discount, 1);
+
+    const discount = await carthelper.getProductDiscount(Number(productId));
+const product = await productadmin.findOne({ where: { id: Number(productId) }, raw: true });
+
+if (!product) {
+  return res.json({ success: false, message: "Product not found" });
+}
+
+// 🧠 Always pass plain object with numeric id
+const productPlain = product.id ? product : { ...product, id: Number(productId) };
+
+carthelper.processCart(req, req.session.userCart, productPlain, discount, true);
 
     // Get quantity of cart items to display in the UI with ajax and use of cookie
     // Set cookie, our frontend will retrieve this later
@@ -428,88 +459,130 @@ router.post("/individual-product/:id", async (req, res) => {
 router.post("/cart", async (req, res) => {
   try {
     if (req.body.checkoutButton === "Update") {
-      for (let productId in req.session.userCart) {
-        let item = req.session.userCart[productId];
-        let query = parseInt(req.body[`Q${productId}`]);
-        logMagenta(
-          `[POST /cart/] Querying: ${item.Name} Current Quantity: ${item.Quantity}, New Quantity: ${query}`,
-        );
+      const cart = req.session.userCart || {};
 
-        // Modify qty of product according to changes
-        if (query > 0) {
-          item.Quantity = query;
-        }
-
-        const discount = await carthelper.getProductDiscount(productId);
-        const product = await productadmin.findOne({
-          where: { id: productId },
-        });
-
-        if (!product) {
-          return res.json({ success: false, message: "Product not found" });
-        }
-
-        carthelper.processCart(
-          req,
-          req.session.userCart,
-          product,
-          discount,
-          false,
-        );
-
-        // Remember to update coupon savings after quantity update
-        if (req.session.coupon_object) {
-          await carthelper.calculate_cart_total_coupon_savings(
-            req,
-            req.session.coupon_object.code,
-          );
-        } else {
-          req.session.cart_coupon_savings = 0;
-        }
+      // sanitize ghosts just in case
+      for (const key in cart) {
+        if (!cart[key]?.id) delete cart[key];
       }
 
-      logMagenta(
-        `[POST /cart/] Current User Cart Contents: ${JSON.stringify(req.session.userCart, null, 2)}`,
-      );
-      logMagenta(
-        `[POST /cart/] Current Session Variables Contents: ${JSON.stringify(req.session, null, 2)} `,
-      );
-      // Save session and wait for it to complete before proceeding
-      // Ensures data  displayed is as updated as possible
+      for (const key in cart) {
+        const item = cart[key];
+        const productId = Number(item.id);
+
+        // read updated qty from form: name="Q{{id}}"
+        const query = Number(req.body[`Q${productId}`]);
+        if (!Number.isFinite(query) || query <= 0) continue;
+
+        // 1) update qty
+        item.Quantity = query;
+
+        // 2) ALWAYS recompute line subtotal now (no-discount case)
+        item.SubtotalPrice = (
+          Number(item.Price) * Number(item.Quantity)
+        ).toFixed(2);
+
+        // 3) if a product/discount exists, let helper refine (e.g., bulk discount)
+        const product = await productadmin.findOne({ where: { id: productId } });
+        if (!product) continue;
+
+        const discount = await carthelper.getProductDiscount(productId);
+        // increment=false because we’re setting an explicit qty
+        carthelper.processCart(req, cart, product, discount, false);
+      }
+
+      // recalc coupon after quantities changed
+      if (req.session.coupon_object) {
+        await carthelper.calculate_cart_total_coupon_savings(
+          req,
+          req.session.coupon_object.code
+        );
+      } else {
+        req.session.cart_coupon_savings = 0;
+      }
+
       await helper.manualSessionSave(req);
-      res.redirect(`/product/cart?page=1`);
+      return res.redirect(`/product/cart?page=1`);
     } else {
-      res.redirect("checkout");
+      return res.redirect("checkout");
     }
   } catch (err) {
     console.error("Error occurred:", err);
-    res.status(500).send("Internal Server Error");
+    return res.status(500).send("Internal Server Error");
   }
 });
+
+
 
 // Delete Item in Cart
 router.get("/delete-cart-item/:id", async (req, res) => {
   try {
-    const cartItem = req.session.userCart[req.params.id];
+    const id = Number(req.params.id);
+
+    // 🧱 Validate ID and cart
+    if (Number.isNaN(id) || !req.session.userCart) {
+      console.warn("[DELETE /delete-cart-item] Invalid ID or empty cart:", req.params.id);
+      return res.redirect("/product/cart?page=1");
+    }
+
+    const cartItem = req.session.userCart[id];
+
+    if (!cartItem) {
+      console.warn("[DELETE /delete-cart-item] No such cart item found for id:", id);
+      alertMessage(res, "error", "Item not found in cart", "fas fa-sign-in-alt", true);
+      return res.redirect("/product/cart?page=1");
+    }
+
     console.log(`Deleting ${cartItem.Name}`);
-    delete req.session.userCart[req.params.id];
+
+    // ✅ Delete the item
+    delete req.session.userCart[id];
+
+    // ✅ Recalculate all totals after deletion
+    await carthelper.refreshCartCalculations(req, req.session.userCart);
+
+    // ✅ Save the session without caching
     await helper.manualSessionSaveNoCaching(req, res);
+
     alertMessage(
       res,
       "success",
       "An item has been removed from the cart",
       "fas fa-sign-in-alt",
-      true,
+      true
     );
-    // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
+
+    // ✅ Redirect with cache busting query
     const timestamp = Date.now();
     res.redirect(307, `/product/cart?page=1&cacheBust=${timestamp}`);
-    // we may have deleted the item from userCart, but other session variables like cart_coupon_savings, cart_discount_savings and cart_subtotal_final, cart_subtotal_initial, cart_grandtotal are unchanged.
   } catch (err) {
     console.error("Error deleting item:", err);
     res.status(500).send("Internal Server Error");
   }
 });
+
+// router.get("/delete-cart-item/:id", async (req, res) => {
+//   try {
+//     const cartItem = req.session.userCart[req.params.id];
+//     console.log(`Deleting ${cartItem.Name}`);
+//     delete req.session.userCart[req.params.id];
+//     await helper.manualSessionSaveNoCaching(req, res);
+//     alertMessage(
+//       res,
+//       "success",
+//       "An item has been removed from the cart",
+//       "fas fa-sign-in-alt",
+//       true,
+//     );
+//     // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
+//     const timestamp = Date.now();
+//     res.redirect(307, `/product/cart?page=1&cacheBust=${timestamp}`);
+//     // we may have deleted the item from userCart, but other session variables like cart_coupon_savings, cart_discount_savings and cart_subtotal_final, cart_subtotal_initial, cart_grandtotal are unchanged.
+//   } catch (err) {
+//     console.error("Error deleting item:", err);
+//     res.status(500).send("Internal Server Error");
+//   }
+// });
 
 // Retrieve Cart
 // Make sure to use POST request to handle updated cart info or you need to double refresh
@@ -517,6 +590,17 @@ router.get("/delete-cart-item/:id", async (req, res) => {
 router.get("/cart", async (req, res) => {
   let title = "Shopping Cart";
   const page = req.query.page || 1; // Default to page 1 if not provided
+
+   // Clean up ghost / invalid cart items before recalculation
+  if (req.session.userCart) {
+    for (const key in req.session.userCart) {
+      if (!req.session.userCart[key]?.id) {
+        console.warn(`[GET /cart] Removing invalid cart entry:`, req.session.userCart[key]);
+        delete req.session.userCart[key];
+      }
+    }
+  }
+
 
   await carthelper.refreshCartCalculations(req, req.session.userCart);
   logMagenta(
@@ -1873,45 +1957,6 @@ router.get("/getjson", (req, res) => {
   // res.render('checkout/json')
 });
 
-router.get("/event", (req, res) => {
-  var title = "Event Emitter Test";
-  // We import the EMT class from EMT.js, create a new object with it
-  // the object inherits the EventEmitter methods like 'on' and 'emit'
-  // 'on' is an alias for 'addEventListener'
-  // Note that the 'on' method has to placed before the method tahht calls the event.
-  new_emt_obj = new EMT();
-  // DONT PUT RES AND REQ IN THE PARAMETERS, WILL MAKE THEM UNDEFINED
-  new_emt_obj.on("notify_user", () => {
-    console.log("Notify User");
-    req.session.userCart = {
-      3: {
-        ID: 3,
-        Name: "Eloquent JavaScript",
-        Author: "Marijn Haverbeke",
-        Publisher: "No Starch Press",
-        Genre: "COMPUTERS",
-        Price: "20.00",
-        Stock: "30",
-        Weight: "1008",
-        Image:
-          "http://books.google.com/books/content?id=9U5I_tskq9MC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api",
-        Quantity: 1,
-        SubtotalPrice: "69.00",
-        SubtotalWeight: "1008",
-      },
-    };
-    alertMessage(
-      res,
-      "success",
-      `You are at the event emitter page!`,
-      "fas fa-sign-in-alt",
-      true,
-    );
-  });
 
-  new_emt_obj.notify_user();
-
-  res.render("checkout/event");
-});
 
 export { router };
