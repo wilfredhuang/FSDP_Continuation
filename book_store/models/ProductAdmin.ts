@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import db from "../config/db_config";
+import sequelize from "../config/db_connection.js";
 
 export interface ProductAdminAttributes {
   id?: number;
@@ -48,7 +48,7 @@ ProductAdmin.init(
     rating: { type: DataTypes.STRING },
     product_image: { type: DataTypes.STRING },
   },
-  { sequelize: db, modelName: "productadmin", tableName: "productadmins", timestamps: false }
+  { sequelize, modelName: "productadmin", tableName: "productadmins", timestamps: false }
 );
 
 export default ProductAdmin;

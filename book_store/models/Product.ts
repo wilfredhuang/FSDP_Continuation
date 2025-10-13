@@ -1,6 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import db from "../config/db_config";
-
+import sequelize from "../config/db_connection.js";
 export interface ProductAttributes {
   id?: number;
   product_name: string | null;
@@ -36,7 +35,7 @@ Product.init(
     stock: { type: DataTypes.STRING },
     details: { type: DataTypes.STRING(2000) },
   },
-  { sequelize: db, modelName: "product", tableName: "products", timestamps: false }
+  { sequelize, modelName: "product", tableName: "products", timestamps: false }
 );
 
 export default Product;

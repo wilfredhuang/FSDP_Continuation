@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import db from "../config/db_config";
+import sequelize from "../config/db_connection.js";
 
 export interface PendingOrderAttributes {
   id?: number;
@@ -49,7 +49,7 @@ PendingOrder.init(
     totalPrice: { type: DataTypes.DECIMAL(10, 2) },
     dateStart: { type: DataTypes.STRING },
   },
-  { sequelize: db, modelName: "pending_order", tableName: "pending_orders", timestamps: false }
+  { sequelize, modelName: "pending_order", tableName: "pending_orders", timestamps: false }
 );
 
 export default PendingOrder;

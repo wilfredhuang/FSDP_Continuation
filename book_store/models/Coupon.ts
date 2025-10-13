@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import db from "../config/db_config";
+import sequelize from "../config/db_connection.js";
 
 export interface CouponAttributes {
   id?: number;
@@ -36,7 +36,7 @@ Coupon.init(
     message: { type: DataTypes.STRING },
     expiry: { type: DataTypes.DATE },
   },
-  { sequelize: db, modelName: "coupon", tableName: "coupons", timestamps: false }
+  { sequelize, modelName: "coupon", tableName: "coupons", timestamps: false }
 );
 
 export default Coupon;

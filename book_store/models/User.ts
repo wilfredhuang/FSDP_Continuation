@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import db from "../config/db_config.js";
+import sequelize from "../config/db_connection.js";
+
 
 // ----- Interface for columns -----
 export interface UserAttributes {
@@ -61,7 +62,7 @@ User.init(
     postalCode: { type: DataTypes.STRING },
     stripeID: { type: DataTypes.STRING },
   },
-  { sequelize: db, modelName: "user", tableName: "users", timestamps: false }
+  { sequelize, modelName: "user", tableName: "users", timestamps: false }
 );
 
 export default User;

@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import db from "../config/db_config";
+import sequelize from "../config/db_connection.js";
 
 export interface PendingOrderItemAttributes {
   id?: number;
@@ -44,7 +44,7 @@ PendingOrderItem.init(
     weight: { type: DataTypes.STRING },
     product_image: { type: DataTypes.STRING },
   },
-  { sequelize: db, modelName: "pending_orderitem", tableName: "pending_orderitems", timestamps: false }
+  { sequelize, modelName: "pending_orderitem", tableName: "pending_orderitems", timestamps: false }
 );
 
 export default PendingOrderItem;

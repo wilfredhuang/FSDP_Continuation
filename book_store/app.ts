@@ -122,7 +122,7 @@ const app = express();
 // ------------------------------------------------------------
 // 9. Setup Database Connection
 // ------------------------------------------------------------
-setUpDB(false); // Establishes a connection to the database
+setUpDB(true); // Establishes a connection to the database
 
 // ------------------------------------------------------------
 // 10. Setup Handlebars View Engine

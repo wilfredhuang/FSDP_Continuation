@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import db from "../config/db_config";
+import sequelize from "../config/db_connection.js";
 
 export interface DiscountAttributes {
   id?: number;
@@ -33,7 +33,7 @@ Discount.init(
     message: { type: DataTypes.STRING },
     target_id: { type: DataTypes.INTEGER },
   },
-  { sequelize: db, modelName: "discount", tableName: "discounts", timestamps: false }
+  { sequelize, modelName: "discount", tableName: "discounts", timestamps: false }
 );
 
 export default Discount;

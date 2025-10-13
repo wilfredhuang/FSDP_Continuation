@@ -1,5 +1,5 @@
 import { DataTypes, Model, Optional } from "sequelize";
-import db from "../config/db_config";
+import sequelize from "../config/db_connection.js";
 
 export interface OrderItemAttributes {
   id?: number;
@@ -42,7 +42,7 @@ OrderItem.init(
     weight: { type: DataTypes.STRING },
     product_image: { type: DataTypes.STRING },
   },
-  { sequelize: db, modelName: "orderitem", tableName: "orderitems", timestamps: false }
+  { sequelize, modelName: "orderitem", tableName: "orderitems", timestamps: false }
 );
 
 export default OrderItem;
