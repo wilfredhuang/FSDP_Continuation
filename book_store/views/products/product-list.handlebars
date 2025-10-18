@@ -58,56 +58,131 @@
     opacity: 1;
 }
 
+.card {
+  transition: all 0.2s ease;
+}
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.card-title {
+  font-size: 0.95rem;
+  line-height: 1.2rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+
 /* */
 
 </style>
-<div class="breadcrumb">
-    <div class="container">
-        <a class="breadcrumb-item" href="/">Home</a>
-        <span class="breadcrumb-item active">Products</span>
-    </div>
-</div>
-<section class="static about-sec">
-    <div class="container">
-
-        <div class="row">
-            <div class="col-lg-8">
-                <input type="text" id="mySearch" onkeyup="search()" placeholder="Search for books"
-                    title="Type in a category">
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Sort By</button>
-                <div class="dropdown-content">
-                    <a href="#" onclick="sortListDir()">Alphabetical Order</a>
-                </div>
-            </div>
+<section class="py-4">
+  <div class="container">
+    <!-- Search + Sort Controls -->
+    <div class="row align-items-center mb-4">
+      <div class="col-md-8 mb-2 mb-md-0">
+        <input type="text"
+               id="mySearch"
+               class="form-control"
+               placeholder="Search for books"
+               onkeyup="search()">
+      </div>
+      <div class="col-md-4 text-md-end">
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+            Sort By
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#" onclick="sortListDir()">Alphabetical Order</a></li>
+          </ul>
         </div>
-        <h2>Books in our store</h2>
-        <div class="recent-book-sec">
-            <div class="spinner-border d-none" role="status">
-  <span class="sr-only">Loading...</span>
-</div>
-            <ul id="myMenu">
-                <div class="row">
-                    {{#each productadmin}}
-                    <li name="{{product_name}}" class="col-md-3">
-                        <div>
-                            <div class="item">
-                                <a href="/product/individual-product/{{id}}"><img src="{{product_image}}"
-                                        alt="{{product_name}}" class="resizable"></a>
-                                <h3><a href="/product/individual-product/{{id}}">{{product_name}}</a></h3>
-                                <form action="/product-list">
-                                    <h6><span id="price" class="price">${{price}}</span> / <a
-                                            href="/product/product-list/{{id}}" class="buy-now-btn" data-product-id="{{id}}" data-product-name="{{product_name}}">Buy Now</a></h6>
-                                </form>
-                            </div>
-                        </div>
-                    </li>
-
-                    {{/each}}
-
-                </div>
-            </ul>
-        </div>
+      </div>
     </div>
+
+    <!-- Product Grid -->
+    <h3 class="mb-3 fw-bold text-center">Books in Our Store</h3>
+    <div class="row g-4">
+      {{#each productadmin}}
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="card h-100 shadow-sm border-0">
+          <!-- Keep full aspect ratio (no cropping) -->
+          <a href="/product/individual-product/{{id}}" class="d-block text-center p-3 pb-0">
+            <img src="{{product_image}}" class="img-fluid rounded" alt="{{product_name}}">
+          </a>
+
+          <div class="card-body d-flex flex-column">
+            <!-- Allow multi-line titles -->
+            <h6 class="card-title fw-semibold mb-2" style="min-height:3rem;">{{product_name}}</h6>
+            <p class="text-muted small mb-1">By {{author}}</p>
+            <p class="text-dark fw-bold mb-2">${{price}}</p>
+
+            <!-- Add to Cart button -->
+<button 
+  class="btn btn-primary w-100 btn-add-cart" 
+  data-product-id="{{id}}">
+  <span class="spinner-border spinner-border-sm d-none" id="spin{{id}}"></span>
+  <i class="fa fa-cart-plus"></i> Add to Cart
+</button>
+
+
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </div>
+  </div>
 </section>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".btn-add-cart").forEach((button) => {
+    button.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const productId = button.getAttribute("data-product-id");
+      const spinner = button.querySelector(".spinner-border");
+      if (spinner) spinner.classList.remove("d-none");
+
+      try {
+        const response = await fetch(`/product/product-list/${productId}`, {
+          method: "GET",
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        });
+        const data = await response.json();
+
+        if (spinner) spinner.classList.add("d-none");
+
+        if (data.success) {
+          // Update cart badge
+          const badge = document.querySelector("#cartCount");
+          if (badge) {
+            let current = parseInt(badge.textContent || "0", 10);
+            badge.textContent = current + 1;
+          }
+
+          // Show Bootstrap toast
+          const toastContainer = document.getElementById("toast-container");
+          const toast = document.createElement("div");
+          toast.className = "toast align-items-center text-bg-success border-0 show";
+          toast.role = "alert";
+          toast.innerHTML = `
+            <div class="d-flex">
+              <div class="toast-body">${data.flashMessage}</div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>`;
+          toastContainer.appendChild(toast);
+          setTimeout(() => toast.remove(), 3000);
+        } else {
+          console.error("Add to cart failed:", data.message);
+        }
+      } catch (err) {
+        if (spinner) spinner.classList.add("d-none");
+        console.error("Error adding to cart:", err);
+      }
+    });
+  });
+});
+</script>
