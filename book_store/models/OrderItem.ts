@@ -12,11 +12,14 @@ export interface OrderItemAttributes {
   details: string | null;
   weight: string | null;
   product_image: string | null;
+  orderId: number | null;  // ✅ foreign key to order
 }
 
 export type OrderItemCreationAttributes = Optional<OrderItemAttributes, "id">;
 
-class OrderItem extends Model<OrderItemAttributes, OrderItemCreationAttributes> implements OrderItemAttributes {
+class OrderItem
+  extends Model<OrderItemAttributes, OrderItemCreationAttributes>
+  implements OrderItemAttributes {
   public id?: number;
   public product_name!: string | null;
   public author!: string | null;
@@ -27,6 +30,7 @@ class OrderItem extends Model<OrderItemAttributes, OrderItemCreationAttributes> 
   public details!: string | null;
   public weight!: string | null;
   public product_image!: string | null;
+  public orderId!: number | null;
 }
 
 OrderItem.init(
@@ -41,8 +45,15 @@ OrderItem.init(
     details: { type: DataTypes.STRING(2000) },
     weight: { type: DataTypes.STRING },
     product_image: { type: DataTypes.STRING },
+    orderId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: "orders", key: "id" },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    },
   },
-  { sequelize, modelName: "orderitem", tableName: "orderitems", timestamps: false }
+  { sequelize, modelName: "order_item", tableName: "order_items", timestamps: false }
 );
 
 export default OrderItem;

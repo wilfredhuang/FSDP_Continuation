@@ -23,8 +23,6 @@
     "noUncheckedIndexedAccess": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "typeRoots": ["./types", "./node_modules/@types"],
-
 
     /* -------------------- Import / Export Behavior -------------------- */
     "esModuleInterop": true,
@@ -36,6 +34,16 @@
     "checkJs": false,
     "isolatedModules": true
   },
-  "include": ["**/*.ts", "types/**/*.d.ts", "types/**/*.d.ts"],
-  "exclude": ["node_modules", "dist", "public", "views"]
+
+  /* -------------------- Includes / Excludes -------------------- */
+  "include": [
+  "**/*.ts",
+  "**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "public",
+    "views"
+  ]
 }

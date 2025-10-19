@@ -25,6 +25,10 @@ const router = express.Router();
 // ENV
 const RECAPTCHA_SECRET = process.env.GOOGLE_RECAPTCHA_SECRET_KEY;
 const JWT_SECRETKEY = process.env.JWT_SECRETKEY;
+if (!JWT_SECRETKEY) {
+  throw new Error("❌ JWT_SECRETKEY is not defined in your environment variables");
+}
+
 
 // Nodemailer
 const transporter = nodemailer.createTransport({

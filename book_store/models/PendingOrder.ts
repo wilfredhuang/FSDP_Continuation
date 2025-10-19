@@ -14,12 +14,17 @@ export interface PendingOrderAttributes {
   subtotalPrice: number | null;
   totalPrice: number | null;
   dateStart: string | null;
+
+  /** 👇 Add this */
+  userId: number | null;
 }
 
 export type PendingOrderCreationAttributes = Optional<PendingOrderAttributes, "id">;
 
-class PendingOrder extends Model<PendingOrderAttributes, PendingOrderCreationAttributes>
-  implements PendingOrderAttributes {
+class PendingOrder
+  extends Model<PendingOrderAttributes, PendingOrderCreationAttributes>
+  implements PendingOrderAttributes
+{
   public id?: number;
   public fullName!: string | null;
   public phoneNumber!: string | null;
@@ -32,6 +37,9 @@ class PendingOrder extends Model<PendingOrderAttributes, PendingOrderCreationAtt
   public subtotalPrice!: number | null;
   public totalPrice!: number | null;
   public dateStart!: string | null;
+
+  /** 👇 Add this */
+  public userId!: number | null;
 }
 
 PendingOrder.init(
@@ -48,8 +56,20 @@ PendingOrder.init(
     subtotalPrice: { type: DataTypes.DECIMAL(10, 2) },
     totalPrice: { type: DataTypes.DECIMAL(10, 2) },
     dateStart: { type: DataTypes.STRING },
+
+    /** 👇 Add this */
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: "users", key: "id" }, // assumes you have a "users" table
+    },
   },
-  { sequelize, modelName: "pending_order", tableName: "pending_orders", timestamps: false }
+  {
+    sequelize,
+    modelName: "pending_order",
+    tableName: "pending_orders",
+    timestamps: false,
+  }
 );
 
 export default PendingOrder;

@@ -12,13 +12,17 @@ export interface PendingOrderItemAttributes {
   details: string | null;
   weight: string | null;
   product_image: string | null;
+
+  /** 👇 Add foreign key reference */
+  pendingOrderId: number | null;
 }
 
 export type PendingOrderItemCreationAttributes = Optional<PendingOrderItemAttributes, "id">;
 
 class PendingOrderItem
   extends Model<PendingOrderItemAttributes, PendingOrderItemCreationAttributes>
-  implements PendingOrderItemAttributes {
+  implements PendingOrderItemAttributes
+{
   public id?: number;
   public product_name!: string | null;
   public author!: string | null;
@@ -29,6 +33,9 @@ class PendingOrderItem
   public details!: string | null;
   public weight!: string | null;
   public product_image!: string | null;
+
+  /** 👇 Added */
+  public pendingOrderId!: number | null;
 }
 
 PendingOrderItem.init(
@@ -43,9 +50,22 @@ PendingOrderItem.init(
     details: { type: DataTypes.STRING(2000) },
     weight: { type: DataTypes.STRING },
     product_image: { type: DataTypes.STRING },
+
+    /** 👇 Added foreign key column */
+    pendingOrderId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: "pending_orders", key: "id" },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    },
   },
-  { sequelize, modelName: "pending_orderitem", tableName: "pending_orderitems", timestamps: false }
+  {
+    sequelize,
+    modelName: "pending_orderitem",
+    tableName: "pending_orderitems",
+    timestamps: false,
+  }
 );
 
 export default PendingOrderItem;
-

@@ -1,12 +1,11 @@
-// @ts-nocheck
-
 import express from "express";
+import { Request, Response } from "express";
 const router = express.Router();
 import moment from "moment";
 import alertMessage from "../helpers/messenger.js";
 import chalk from "chalk";
 
-//Models
+// Models
 import product from "../models/Product.js";
 import productadmin from "../models/ProductAdmin.js";
 import order from "../models/Order.js";
@@ -21,38 +20,38 @@ import Discount from "../models/Discount.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-//EasyPost API
+// EasyPost API
 import EasyPost from "@easypost/api";
 
-// console.log(chalk.red(process.env.EASYPOST_API_TEST_KEY));
-// console.log(chalk.red(process.env.STRIPE_SECRET_KEY));
-const apiKey = process.env.EASYPOST_API_TEST_KEY;
+// ✅ Non-null assertion to tell TS that env vars are set
+const apiKey = process.env.EASYPOST_API_TEST_KEY!;
 const api = new EasyPost(apiKey);
-
 
 // Stripe Payment
 import Stripe from "stripe";
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2020-03-02",
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2024-06-20",
 });
 
 // PayNow
-import paynow from "paynow-generator";
+import paynow from "paynow-generator"; // Custom module (no type defs)
+
 import QRCode from "qrcode";
 
-// twilo API - Send SMS
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_ACCOUNT_AUTHTOKEN;
+// Twilio API - Send SMS
+const accountSid = process.env.TWILIO_ACCOUNT_SID!;
+const authToken = process.env.TWILIO_ACCOUNT_AUTHTOKEN!;
 
-import Client from "twilio";
-const client = new Client(accountSid, authToken);
+// ✅ Correct Twilio import (Client → Twilio)
+import twilio from "twilio";
+const client = twilio(accountSid, authToken);
 
 // Authentications
 import ensureAuthenticated from "../middleware/userAuth.js";
 import ensureAdminAuthenticated from "../middleware/adminAuth.js";
 import { checkCart } from "../middleware/cartAuth.js";
 
-// Import Helpers
+// Helpers
 import carthelper from "../helpers/cartHelper.js";
 import helper from "../helpers/hbs.js";
 import {
@@ -64,54 +63,19 @@ import {
   logCyan,
 } from "../helpers/loggerHelper.js";
 
-/*
-  // How the Pricing works?
-	// Example A: quantity 3, price: 5.00, discountRate: 0.20, minQty:2
-
-	specialOffers = Math.floor(quantity / minQty); //  1
-	originalSubtotalPrice = quantity * price // 15.00 (Original subtotal price if no discount applied)
-	discountedHalf = (specialOffers * minQty * price) * (1 - discountRate) // 8.00 , the discount applies to EACH item's price for every TWO item
-	regularHalf = (quantity - (specialoffers * minQty)) * price // 5.00 , since we have a total 3 of item, only 2 will get discounted pricing, the last one will have original price
-	discountedSubtotalPrice = discountedHalf + regularHalf // 13.00
-
-
-
-	// Example B: quantity: 4, price:5.00 discountRate: 0.20, minQty: 2
-
-	
-	specialOffers = Math.floor(quantity / minQty); //  2
-	originalSubtotalPrice = quantity * price // 20.00 (Original subtotal price if no discount applied)
-	discountedHalf = (specialOffers * minQty * price) * (1 - discountRate) // 16.00 , the discount applies to EACH item's price for every TWO item
-	regularHalf = (quantity - (specialoffers * minQty)) * price // 0.00 , since we have a total 4 of item, none of them are original price thanks to the discount
-	discountedSubtotalPrice = discountedHalf + regularHalf // 16.00
-
-
-	// Example C: quantity: 1, price:5.00 discountRate: 0.20, minQty: 2
-
-	
-	specialOffers = Math.floor(quantity / minQty); //  0
-	originalSubtotalPrice = quantity * price // 5.00 (Original subtotal price if no discount applied)
-	discountedHalf = (specialOffers * minQty * price) * (1 - discountRate) // (0 * 2 * 5.00) * (1-0.2) = 0  the discount applies to EACH item's price for every TWO item
-	regularHalf = (quantity - (specialoffers * minQty)) * price // 5.00 
-	discountedSubtotalPrice = discountedHalf + regularHalf // 5.00
-
-*/
 
 // Page that displays all the products
-router.get("/product-list", async (req, res) => {
+router.get("/product-list", async (req: Request, res: Response) => {
   try {
     const title = "Product Listing";
     const navStatusProduct = "active";
 
-    // Fetch all products, ordered by name
     const products = await productadmin.findAll({
       order: [["product_name", "ASC"]],
     });
 
-    // Convert Sequelize instances → plain JS objects
-    const plainProducts = products.map((p) => p.get({ plain: true }));
+    const plainProducts = products.map((p: any) => p.get({ plain: true }));
 
-    // Render using the same context variable
     res.render("products/product-list", {
       productadmin: plainProducts,
       navStatusProduct,
@@ -124,14 +88,12 @@ router.get("/product-list", async (req, res) => {
 });
 
 
-
 // Page that displays a single product's details
-router.get("/individual-product/:id", async (req, res) => {
+router.get("/individual-product/:id", async (req: Request, res: Response) => {
   try {
     const title = "Product Information";
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
 
-    // Fetch discount and product
     const disc = await Discount.findOne({ where: { target_id: id } });
     const product = await productadmin.findOne({ where: { id } });
 
@@ -151,21 +113,19 @@ router.get("/individual-product/:id", async (req, res) => {
   }
 });
 
-// Admin-only page that displays all the current products in the web store
+// Admin-only page that displays all current products
 router.get(
   "/product-list-admin",
   ensureAdminAuthenticated,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const title = "Product Admin List";
 
-      // Fetch all products, ordered by ID (ascending), and return raw data
       const product_details = await productadmin.findAll({
         order: [["id", "ASC"]],
         raw: true,
       });
 
-      // Render the admin product list page
       res.render("products/product-list-admin", {
         productadmin: product_details,
         title,
@@ -177,21 +137,17 @@ router.get(
   },
 );
 
-// Admin-only page that displays detail about a single product in the web store
+// Admin-only product detail page
 router.get(
   "/product-details-admin/:id",
   ensureAdminAuthenticated,
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const title = "Product Details";
-      const { id } = req.params;
+      const { id } = req.params as { id: string };
 
-      // Fetch the product by ID
-      const product = await productadmin.findOne({
-        where: { id },
-      });
+      const product = await productadmin.findOne({ where: { id } });
 
-      // Render the product details page
       res.render("products/product-details", {
         product,
         title,
@@ -203,91 +159,98 @@ router.get(
   },
 );
 
-// Admin-only page that displays the form to create a product entry in the web store
-router.get("/create-product", (req, res) => {
+// Admin-only page: form to create a product
+router.get("/create-product", (req: Request, res: Response) => {
   const title = "Create Product";
-  res.render("products/create-product", {
-    title,
-  });
+  res.render("products/create-product", { title });
 });
 
-// Admin-only request that creates a new product entry in the web store
-router.post("/create-product-admin", ensureAdminAuthenticated, (req, res) => {
-  let product_name = req.body.product_name;
-  console.log(product_name);
-  let author = req.body.author;
-  let publisher = req.body.publisher;
-  let genre = req.body.genre;
-  let price = req.body.price;
-  let stock = req.body.stock;
-  let details = req.body.details;
-  let rating = req.body.rating;
-  let weight = req.body.weight;
-  let product_image = req.body.product_image;
-  productadmin
-    .create({
-      product_name,
-      author,
-      publisher,
-      genre,
-      price,
-      stock,
-      details,
-      weight,
-      product_image,
-      rating,
-    })
-    .then((product) => {
+// Admin-only request: create a new product
+router.post(
+  "/create-product-admin",
+  ensureAdminAuthenticated,
+  async (req: Request, res: Response) => {
+    try {
+      const {
+        product_name,
+        author,
+        publisher,
+        genre,
+        price,
+        stock,
+        details,
+        rating,
+        weight,
+        product_image,
+      } = req.body as Record<string, any>;
+
+      await productadmin.create({
+        product_name,
+        author,
+        publisher,
+        genre,
+        price,
+        stock,
+        details,
+        weight,
+        product_image,
+        rating,
+      });
+
       alertMessage(
         res,
         "success",
-        ` ${product_name} was added into the shop.`,
+        `${product_name} was added into the shop.`,
         "fas fa-sign-in-alt",
         true,
       );
       res.redirect("/product/product-list-admin");
-    })
-    .catch((err) => console.log(err));
-});
-
-// Admin-only page that displays the form to update a product entry details in the web store
-router.get(
-  "/product-update-admin/:id",
-  ensureAdminAuthenticated,
-  (req, res) => {
-    const title = "Update Product";
-    productadmin
-      .findOne({
-        where: {
-          id: req.params.id,
-        },
-      })
-      .then((product) => {
-        res.render("products/product-update-admin", {
-          product,
-          title,
-        });
-      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Internal Server Error");
+    }
   },
 );
 
-// Admin-only request that updates product entry details in the web store
+// Admin-only page: form to update a product
+router.get(
+  "/product-update-admin/:id",
+  ensureAdminAuthenticated,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const title = "Update Product";
+      const product = await productadmin.findOne({ where: { id } });
+
+      res.render("products/product-update-admin", { product, title });
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Internal Server Error");
+    }
+  },
+);
+
+// Admin-only request: update product
 router.put(
   "/product-update-admin/:id",
   ensureAdminAuthenticated,
-  (req, res) => {
-    let product_name = req.body.product_name;
-    let author = req.body.author;
-    let publisher = req.body.publisher;
-    let genre = req.body.genre;
-    let price = req.body.price;
-    let stock = req.body.stock;
-    let details = req.body.details;
-    let weight = req.body.weight;
-    let rating = req.body.rating;
-    let product_image = req.body.product_image;
-    productadmin
-      .update(
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const {
+        product_name,
+        author,
+        publisher,
+        genre,
+        price,
+        stock,
+        details,
+        rating,
+        weight,
+        product_image,
+      } = req.body as Record<string, any>;
+
+      await productadmin.update(
         {
           product_name,
           author,
@@ -300,158 +263,121 @@ router.put(
           product_image,
           rating,
         },
-        {
-          where: {
-            id: req.params.id,
-          },
-        },
-      )
-      .then(() => {
-        alertMessage(
-          res,
-          "success",
-          ` ${product_name} was updated.`,
-          "fas fa-sign-in-alt",
-          true,
-        );
-        res.redirect("/product/product-list-admin");
-      })
-      .catch((err) => console.log(err));
+        { where: { id } },
+      );
+
+      alertMessage(
+        res,
+        "success",
+        `${product_name} was updated.`,
+        "fas fa-sign-in-alt",
+        true,
+      );
+      res.redirect("/product/product-list-admin");
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Internal Server Error");
+    }
   },
 );
 
-// Admin-only request that deletes a new product entry in the web store
-router.get("/delete/:id", ensureAdminAuthenticated, (req, res) => {
-  productadmin
-    .findOne({
-      where: {
-        id: req.params.id,
-      },
-    })
-    .then((productadmin) => {
-      productadmin
-        .destroy({
-          where: {
-            id: req.params.id,
-          },
-        })
-        .then((productadmin) => {
-          res.redirect("/product/product-list-admin");
-        });
-    });
-});
+// Admin-only request: delete a product
+router.get(
+  "/delete/:id",
+  ensureAdminAuthenticated,
+  async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params as { id: string };
+      const product = await productadmin.findOne({ where: { id } });
+      if (!product) return res.redirect("/product/product-list-admin");
 
-// Here is the start of Cart and Payment Features
+      await product.destroy(); // destroy on the instance
+      res.redirect("/product/product-list-admin");
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Internal Server Error");
+    }
+  },
+);
 
-router.get("/product-list/:id", async (req, res) => {
+
+router.get("/product-list/:id", async (req: Request, res: Response) => {
   try {
-    const productId = req.params.id;
-    // const discount = await carthelper.getProductDiscount(productId); // Get Discount Obj from DB
-    // const product = await productadmin.findOne({ where: { id: productId } }); // Get Product Obj from DB
-    // if (!product) {
-    //   return res.json({ success: false, message: "Product not found" });
-    // }
-    // carthelper.processCart(req, req.session.userCart, product, discount, 1); // Determine whether cart item already exist hence need to update merely qty or add new item
+    const productId = Number(req.params.id);
 
-    const discount = await carthelper.getProductDiscount(Number(productId));
-const product = await productadmin.findOne({ where: { id: Number(productId) }, raw: true });
+    const discount = await carthelper.getProductDiscount(productId);
+    const product = await productadmin.findOne({ where: { id: productId }, raw: true });
 
-if (!product) {
-  return res.json({ success: false, message: "Product not found" });
-}
+    if (!product) {
+      return res.json({ success: false, message: "Product not found" });
+    }
 
-// 🧠 Ensure we pass a plain object with valid id
-const productPlain = product.id ? product : { ...product, id: Number(productId) };
+    // 🧠 Ensure the session cart always exists
+    const userCart = (req.session.userCart ??= {});
 
-carthelper.processCart(req, req.session.userCart, productPlain, discount, true);
+    // 🧠 Ensure we pass a plain object with valid id
+    const productPlain = product.id ? product : { ...product, id: productId };
 
-    // Get quantity of cart items to display in the UI with ajax and use of cookie
-    const cartQty = Object.values(req.session.userCart).reduce(
-      (acc, item) => acc + item.Quantity,
+    carthelper.processCart(req, userCart, productPlain, discount, true);
+
+    // Get quantity of cart items
+    const cartQty = Object.values(userCart).reduce(
+      (acc: number, item: any) => acc + item.Quantity,
       0,
     );
+
     res.cookie("cartQty", cartQty, {
       expires: new Date(Date.now() + 900000),
       httpOnly: false,
     });
 
-    // Set a flashmessage to display client side
     const flashMessage_clientside = `${product.product_name} added to cart!`;
+    res.json({ success: true, flashMessage: [flashMessage_clientside] });
 
-    // Respond with JSON for AJAX request
-    res.json({
-      success: true,
-      flashMessage: [flashMessage_clientside],
-    });
-
-    logMagenta(
-      `[GET /product-list/:id] Current User Cart Contents After Adding item: ${JSON.stringify(req.session.userCart, null, 2)}`,
-    );
-    logMagenta(
-      `[GET /product-list/:id] Current Session Variables Contents After Adding Item: ${JSON.stringify(req.session, null, 2)}`,
-    );
+    logMagenta(`[GET /product-list/:id] ${JSON.stringify(req.session.userCart, null, 2)}`);
   } catch (err) {
     console.error(err);
-    res.json({
-      success: false,
-    });
+    res.json({ success: false });
   }
 });
 
-router.post("/individual-product/:id", async (req, res) => {
+router.post("/individual-product/:id", async (req: Request, res: Response) => {
   try {
-    const productId = req.params.id;
-    // const discount = await carthelper.getProductDiscount(productId);
-    // const product = await productadmin.findOne({ where: { id: productId } });
-    // if (!product) {
-    //   return res.json({ success: false, message: "Product not found" });
-    // }
-    // carthelper.processCart(req, req.session.userCart, product, discount, 1);
+    const productId = Number(req.params.id);
 
-    const discount = await carthelper.getProductDiscount(Number(productId));
-const product = await productadmin.findOne({ where: { id: Number(productId) }, raw: true });
+    const discount = await carthelper.getProductDiscount(productId);
+    const product = await productadmin.findOne({ where: { id: productId }, raw: true });
 
-if (!product) {
-  return res.json({ success: false, message: "Product not found" });
-}
+    if (!product) {
+      return res.json({ success: false, message: "Product not found" });
+    }
 
-// 🧠 Always pass plain object with numeric id
-const productPlain = product.id ? product : { ...product, id: Number(productId) };
+    const userCart = (req.session.userCart ??= {});
 
-carthelper.processCart(req, req.session.userCart, productPlain, discount, true);
+    const productPlain = product.id ? product : { ...product, id: productId };
 
-    // Get quantity of cart items to display in the UI with ajax and use of cookie
-    // Set cookie, our frontend will retrieve this later
-    const cartQty = Object.values(req.session.userCart).reduce(
-      (acc, item) => acc + item.Quantity,
+    carthelper.processCart(req, userCart, productPlain, discount, true);
+
+    const cartQty = Object.values(userCart).reduce(
+      (acc: number, item: any) => acc + item.Quantity,
       0,
     );
+
     res.cookie("cartQty", cartQty, {
       expires: new Date(Date.now() + 900000),
       httpOnly: false,
     });
 
-    // Set a flashmessage to display client side
     const flashMessage_clientside = `${product.product_name} added to cart!`;
+    res.json({ success: true, flashMessage: [flashMessage_clientside] });
 
-    // Respond with JSON for AJAX request
-    res.json({
-      success: true,
-      flashMessage: [flashMessage_clientside],
-    });
-
-    logMagenta(
-      `[POST /individual-product/:id] Current User Cart Contents After Adding item: ${JSON.stringify(req.session.userCart, null, 2)}`,
-    );
-    logMagenta(
-      `[POST /individual-product/:id] Current Session Variables Contents After Adding Item: ${JSON.stringify(req.session, null, 2)}`,
-    );
+    logMagenta(`[POST /individual-product/:id] ${JSON.stringify(req.session.userCart, null, 2)}`);
   } catch (error) {
+    console.error(error);
     res.json({
       success: false,
       message: "An error occurred while adding the product to the cart",
     });
-    console.error(error);
   }
 });
 
@@ -561,81 +487,56 @@ router.get("/delete-cart-item/:id", async (req, res) => {
   }
 });
 
-// router.get("/delete-cart-item/:id", async (req, res) => {
-//   try {
-//     const cartItem = req.session.userCart[req.params.id];
-//     console.log(`Deleting ${cartItem.Name}`);
-//     delete req.session.userCart[req.params.id];
-//     await helper.manualSessionSaveNoCaching(req, res);
-//     alertMessage(
-//       res,
-//       "success",
-//       "An item has been removed from the cart",
-//       "fas fa-sign-in-alt",
-//       true,
-//     );
-//     // Redirect with cache busting query so the page loaded on redirect wont have the deleted item
-//     const timestamp = Date.now();
-//     res.redirect(307, `/product/cart?page=1&cacheBust=${timestamp}`);
-//     // we may have deleted the item from userCart, but other session variables like cart_coupon_savings, cart_discount_savings and cart_subtotal_final, cart_subtotal_initial, cart_grandtotal are unchanged.
-//   } catch (err) {
-//     console.error("Error deleting item:", err);
-//     res.status(500).send("Internal Server Error");
-//   }
-// });
-
 // Retrieve Cart
 // Make sure to use POST request to handle updated cart info or you need to double refresh
 
-router.get("/cart", async (req, res) => {
-  let title = "Shopping Cart";
-  const page = req.query.page || 1; // Default to page 1 if not provided
+router.get("/cart", async (req: Request, res: Response) => {
+  const title = "Shopping Cart";
+  const page = Number(req.query.page) || 1;
 
-   // Clean up ghost / invalid cart items before recalculation
-  if (req.session.userCart) {
-    for (const key in req.session.userCart) {
-      if (!req.session.userCart[key]?.id) {
-        console.warn(`[GET /cart] Removing invalid cart entry:`, req.session.userCart[key]);
-        delete req.session.userCart[key];
-      }
+  // 🧠 Ensure session cart always exists
+  const userCart = (req.session.userCart ??= {});
+
+  // Clean up ghost / invalid cart items before recalculation
+  for (const key in userCart) {
+    if (!userCart[key]?.id) {
+      console.warn(`[GET /cart] Removing invalid cart entry:`, userCart[key]);
+      delete userCart[key];
     }
   }
 
+  await carthelper.refreshCartCalculations(req, userCart);
 
-  await carthelper.refreshCartCalculations(req, req.session.userCart);
-  logMagenta(
-    `[GET /cart/] CART PAGE REQ initialSubtotal = ${req.session.cart_subtotal_initial}`,
-  );
-  logMagenta(
-    `[GET /cart/] CART PAGE REQ discountedSubtotal = ${req.session.cart_subtotal_final}`,
-  );
-  logMagenta(
-    `[GET /cart/] CART PAGE REQ discountSavingsTotal = ${req.session.cart_discount_savings}`,
-  );
-  logMagenta(
-    `[GET /cart/] CART PAGE REQ couponSavingsTotal = ${req.session.cart_coupon_savings}`,
-  );
-  logMagenta(
-    `[GET /cart/] CART PAGE REQ grandTotal = ${req.session.cart_grandtotal}`,
-  );
-  res.locals.cart_subtotal_initial =
-    req.session.cart_subtotal_initial.toFixed(2);
-  res.locals.cart_subtotal_final = req.session.cart_subtotal_final.toFixed(2);
-  res.locals.cart_discount_savings =
-    req.session.cart_discount_savings.toFixed(2);
-  // this line might be volatile, to change if the decimal point function might still cause bug
-  res.locals.cart_coupon_savings = req.session.cart_coupon_savings.toFixed(2);
-  res.locals.cart_shipping_fee = req.session.cart_shipping_fee.toFixed(2);
-  res.locals.cart_grandtotal = req.session.cart_grandtotal.toFixed(2);
+  logMagenta(`[GET /cart/] initialSubtotal = ${req.session.cart_subtotal_initial}`);
+  logMagenta(`[GET /cart/] discountedSubtotal = ${req.session.cart_subtotal_final}`);
+  logMagenta(`[GET /cart/] discountSavingsTotal = ${req.session.cart_discount_savings}`);
+  logMagenta(`[GET /cart/] couponSavingsTotal = ${req.session.cart_coupon_savings}`);
+  logMagenta(`[GET /cart/] grandTotal = ${req.session.cart_grandtotal}`);
+
+  // 🧠 Guard against undefined numeric values
+  const subInit = Number(req.session.cart_subtotal_initial ?? 0);
+  const subFinal = Number(req.session.cart_subtotal_final ?? 0);
+  const discSave = Number(req.session.cart_discount_savings ?? 0);
+  const coupSave = Number(req.session.cart_coupon_savings ?? 0);
+  const shipFee = Number(req.session.cart_shipping_fee ?? 0);
+  const grandTotal = Number(req.session.cart_grandtotal ?? 0);
+
+  res.locals.cart_subtotal_initial = subInit.toFixed(2);
+  res.locals.cart_subtotal_final = subFinal.toFixed(2);
+  res.locals.cart_discount_savings = discSave.toFixed(2);
+  res.locals.cart_coupon_savings = coupSave.toFixed(2);
+  res.locals.cart_shipping_fee = shipFee.toFixed(2);
+  res.locals.cart_grandtotal = grandTotal.toFixed(2);
 
   logMagenta("[GET /cart/] === Show Session Variables ===");
   logMagenta(`[GET /cart/] ${JSON.stringify(req.session, null, 2)}`);
+
   res.render("checkout/cart", {
     title,
     results: {
-      pages: Number(page), // Set correctly based on your pagination logic
-      results: Object.keys(req.session.userCart).map((key) => ({
-        [key]: req.session.userCart[key],
+      pages: page,
+      results: Object.keys(userCart).map((key) => ({
+        [key]: userCart[key],
       })),
     },
   });
@@ -722,25 +623,46 @@ router.get("/checkout", checkCart, (req, res) => {
   }
 });
 
-router.post("/checkout", checkCart, async (req, res) => {
-  // Check Inputs
-  logMagenta(req.body.fullName);
-  logMagenta(req.body.phoneNumber);
-  logMagenta(req.body.address);
-  logMagenta(req.body.address1);
-  logMagenta(req.body.city);
-  logMagenta(req.body.country);
-  logMagenta(req.body.postalCode);
-  // Add to session variables
-  req.session.shipment_recipient_name = req.body.fullName;
-  req.session.shipment_recipient_phonenum = req.body.phoneNumber;
-  req.session.shipment_lineone = req.body.address;
-  req.session.shipment_linetwo = req.body.address1;
-  req.session.shipment_city = req.body.city;
-  req.session.shipment_country = req.body.country;
-  req.session.shipment_postal_code = req.body.postalCode;
-  // Log Ssn variables
-  logMagenta("=== New Ssn Variables ===");
+router.post("/checkout", checkCart, async (req: Request, res: Response) => {
+  // Destructure form fields from the body
+  const {
+    fullName,
+    phoneNumber,
+    address,
+    address1,
+    city,
+    country,
+    postalCode,
+  } = req.body as {
+    fullName: string;
+    phoneNumber: string;
+    address: string;
+    address1?: string;
+    city: string;
+    country: string;
+    postalCode: string;
+  };
+
+  // Debug logging
+  logMagenta(fullName);
+  logMagenta(phoneNumber);
+  logMagenta(address);
+  logMagenta(address1);
+  logMagenta(city);
+  logMagenta(country);
+  logMagenta(postalCode);
+
+  // 🧠 Assign to session variables safely
+  req.session.shipment_recipient_name = fullName;
+  req.session.shipment_recipient_phonenum = phoneNumber;
+  req.session.shipment_lineone = address;
+  req.session.shipment_linetwo = address1 ?? "";
+  req.session.shipment_city = city;
+  req.session.shipment_country = country;
+  req.session.shipment_postal_code = postalCode;
+
+  // Log session values
+  logMagenta("=== New Session Variables ===");
   logMagenta(req.session.shipment_recipient_name);
   logMagenta(req.session.shipment_recipient_phonenum);
   logMagenta(req.session.shipment_lineone);
@@ -748,7 +670,11 @@ router.post("/checkout", checkCart, async (req, res) => {
   logMagenta(req.session.shipment_city);
   logMagenta(req.session.shipment_country);
   logMagenta(req.session.shipment_postal_code);
-  res.locals.countryShipment == "asdads";
+
+  // 🧠 Fix: use assignment (=), not comparison (==)
+  res.locals.countryShipment = country;
+
+  // Save session asynchronously
   await helper.saveSession(req);
 
   res.redirect("select-payment");
@@ -771,167 +697,188 @@ router.post("/select-stripe-payment", checkCart, (req, res) => {
   res.redirect("stripe-payment");
 });
 
-router.get("/paynow", checkCart, (req, res) => {
-  var title = "PayNow Payment";
-  // let payNowString = paynow('proxyType','proxyValue','edit',price,'merchantName','additionalComments')
-  let payNowString = paynow.paynowGenerator(
-    "mobile",
-    "87558054",
-    "no",
-    req.session.cart_grandtotal,
-    "Test Merchant Name",
-    "Testing paynow",
-  );
-  let qr = QRCode.toDataURL(payNowString)
-    .then((url) => {
-      res.render("checkout/paynow", {
-        title,
-        payNowString,
-        qr,
-        url,
-      });
-    })
-    .catch((err) => {
-      console.error(err);
-    });
-});
+router.get("/paynow", checkCart, async (req, res) => {
+  const title = "PayNow Payment";
 
-router.get("/stripe-payment", checkCart, async (req, res) => {
-  // Function below will take in customer's stripeID (if it exists)
-  console.log("USER STRIPE ID IS " + req.user.stripeID);
-  console.log("USER ISADMIN IS " + req.user.isadmin);
-  if (req.user.stripeID != null) {
-    stripe.customers.retrieve(req.user.stripeID, function (err, customer) {
-      // asynchronously called
-      console.log(err);
-      console.log("CUSTOMER IS " + customer);
-    });
-  } else {
-    // Create a stripe customer
-    const customer = await stripe.customers.create({
-      name: req.user.name,
-      email: req.user.email,
-      phone: req.user.PhoneNo,
-      shipping: {
-        address: {
-          line1: req.user.address,
-          line2: req.user.address1,
-          city: req.user.city,
-          country: req.user.country,
-          postal_code: req.user.postalCode,
-        },
-        name: req.user.name,
-        phone: req.user.PhoneNo,
-      },
-    });
-    console.log("CUST ID IS + " + customer.id);
-    console.log(req.user.stripeID);
-    console.log(req.user.random);
-    const current_user = await User.findOne({ where: { id: req.user.id } });
-    console.log(current_user);
-    current_user.stripeID = customer.id;
-    current_user.save();
-  }
-
-  var title = "Stripe Payment";
-  console.log("Full total price is " + req.session.cart_grandtotal);
-  const paymentIntent = stripe.paymentIntents
-    .create({
-      amount: Math.ceil(req.session.cart_grandtotal * 100),
-      currency: "sgd",
-      payment_method_types: ["card"],
-      receipt_email: "whjw1536@gmail.com",
-      setup_future_usage: "on_session",
-      description: `Order worth $${req.session.cart_grandtotal} by ${req.user.name}`,
-    })
-    .then((paymentIntent) => {
-      console.log(paymentIntent);
-      console.log("Client secret is " + paymentIntent.client_secret);
-      res.render("checkout/stripe", {
-        client_secret: paymentIntent.client_secret,
-        title,
-      });
-    });
-});
-
-router.post("/paynow", async (req, res) => {
-  let the_date = moment().format("D MMM YYYY");
-  let dateStart = the_date.toString();
-  console.log("dateStart is " + dateStart);
-
-  // Create a unconfirmed order
-  const new_pending_order = await PendingOrder.create({
-    fullName: req.session.shipment_recipient_name,
-    phoneNumber: req.session.shipment_recipient_phonenum,
-    address: req.session.shipment_lineone,
-    address1: req.session.shipment_linetwo,
-    city: req.session.shipment_city,
-    country: req.session.shipment_country,
-    postalCode: req.session.shipment_postal_code,
-    deliverFee: 0,
-    subtotalPrice: parseFloat(req.session.cart_subtotal_final).toFixed(2),
-    totalPrice: parseFloat(req.session.cart_grandtotal).toFixed(2),
-    dateStart: dateStart,
-    userId: req.user.id,
-  }).catch((err) => {
-    console.log("Cannot create pending order");
-    console.log(err);
+  const payNowString = paynow({
+    amount: req.session.cart_grandtotal ?? 0,
+    reference: "Testing paynow",
+    company: "Test Merchant Name",
+    editable: false,
+    uen: "87558054",
   });
 
-  // Store unconfirmed order's order items
-  for (var i in req.session.userCart) {
-    let product_name = req.session.userCart[i].Name;
-    let author = req.session.userCart[i].Author;
-    let publisher = req.session.userCart[i].Publisher;
-    let genre = req.session.userCart[i].Genre;
-    let price = req.session.userCart[i].SubtotalPrice;
-    let stock = req.session.userCart[i].Quantity;
-    let details = "placeholder details";
-    let weight = req.session.userCart[i].SubtotalWeight;
-    let product_image = req.session.userCart[i].Image;
-    let PorderId = new_pending_order.id;
-    const new_pi = await PendingOrderItem.create({
-      product_name,
-      author,
-      publisher,
-      genre,
-      price,
-      stock,
-      details,
-      weight,
-      product_image,
-      pendingOrderId: PorderId,
-    }).catch((err) => {
-      console.log("Cannot create pending order item");
-      console.log(err);
-    });
+  const qr = await QRCode.toDataURL(payNowString.qrString);
+
+  res.render("checkout/paynow", {
+    title,
+    payNowString,
+    qr,
+  });
+});
+
+
+router.get("/stripe-payment", checkCart, async (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) {
+    console.error("User not authenticated");
+    return res.status(401).send("Not authenticated");
   }
 
-  // This block of code below will send a message
-  client.messages
-    .create({
-      body: "You made an order with BookStore via payNow/payLah!, you will be notified again when your order is confirmed",
-      from: process.env.TWILIO_ACCOUNT_PHONENO,
-      to: process.env.DEV_PHONENO,
-    })
-    .then((message) => console.log(message.sid));
+  console.log("USER STRIPE ID IS", user.stripeID);
+  console.log("USER ISADMIN IS", user.isadmin);
 
-  // Empty the cart
-  req.session.userCart = {};
-  console.log(chalk.red(req.session));
-  alertMessage(
-    res,
-    "success",
-    "Order placed, the administrator will shortly confirm your payment",
-    "fas fa-exclamation-circle",
-    true,
-  );
-  res.redirect("paynow-txn-end");
+  try {
+    // ✅ Retrieve or create Stripe customer
+    if (user.stripeID) {
+      const customer = await stripe.customers.retrieve(user.stripeID);
+      console.log("Retrieved customer:", customer);
+    } else {
+      const customer = await stripe.customers.create(
+        {
+          name: user.name ?? undefined,
+          email: user.email ?? undefined,
+          phone: user.PhoneNo ?? undefined,
+          shipping: {
+            name: user.name ?? undefined,
+            phone: user.PhoneNo ?? undefined,
+            address: {
+              line1: user.address ?? undefined,
+              line2: user.address1 ?? undefined,
+              city: user.city ?? undefined,
+              country: user.country ?? undefined,
+              postal_code: user.postalCode ?? undefined,
+            },
+          },
+        } as Stripe.CustomerCreateParams // 👈 cast fixes the overload issue
+      );
+
+      console.log("Created Stripe customer:", customer.id);
+
+      const current_user = await User.findOne({ where: { id: user.id } });
+      if (current_user) {
+        (current_user as any).stripeID = customer.id;
+        await current_user.save();
+      }
+    }
+
+    // ✅ Create payment intent
+    const total = Number(req.session.cart_grandtotal ?? 0);
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: Math.ceil(total * 100),
+        currency: "sgd",
+        payment_method_types: ["card"],
+        receipt_email: user.email ?? "default@example.com",
+        setup_future_usage: "on_session",
+        description: `Order worth $${total.toFixed(2)} by ${user.name ?? "Guest"}`,
+      } as Stripe.PaymentIntentCreateParams // 👈 cast avoids same issue here
+    );
+
+    console.log("Created payment intent:", paymentIntent.id);
+
+    res.render("checkout/stripe", {
+      client_secret: paymentIntent.client_secret,
+      title: "Stripe Payment",
+    });
+  } catch (err: any) {
+    console.error("Stripe payment error:", err.message ?? err);
+    res.status(500).send("Payment processing error");
+  }
 });
+
+router.post("/paynow", async (req: Request, res: Response) => {
+  try {
+    const the_date = moment().format("D MMM YYYY");
+    const dateStart = the_date.toString();
+
+    // ✅ subtotal / total must be numeric, not string
+    const subtotal = Number(req.session.cart_subtotal_final ?? 0);
+    const total = Number(req.session.cart_grandtotal ?? 0);
+
+    // ✅ Sequelize expects numbers, not strings — use numeric types directly
+const new_pending_order = await PendingOrder.create({
+  fullName: req.session.shipment_recipient_name ?? "Unknown",
+  phoneNumber: req.session.shipment_recipient_phonenum ?? "",
+  address: req.session.shipment_lineone ?? "",
+  address1: req.session.shipment_linetwo ?? "",
+  city: req.session.shipment_city ?? "",
+  country: req.session.shipment_country ?? "",
+  postalCode: req.session.shipment_postal_code ?? "",
+  deliverFee: 0,
+  subtotalPrice: subtotal,
+  totalPrice: total,
+  dateStart,
+  userId: req.user ? Number(req.user.id) : null, // ✅ fix here
+});
+
+    // ✅ Order items
+    const userCart = req.session.userCart ?? {};
+    for (const key in userCart) {
+      const item = userCart[key];
+      if (!item) continue;
+
+      await PendingOrderItem.create({
+        product_name: item.Name,
+        author: item.Author,
+        publisher: item.Publisher,
+        genre: item.Genre,
+        price: item.SubtotalPrice,
+        stock: item.Quantity,
+        details: "placeholder details",
+        weight: item.SubtotalWeight,
+        product_image: item.Image,
+        // ✅ Fix: match actual foreign key field name in your model
+        pendingOrder_id: new_pending_order.id, // check model: might be `pendingOrder_id` or `pending_order_id`
+      } as any); // 👈 if the model typing differs, use a cast
+    }
+
+    // ✅ Twilio requires both 'to' and 'from' to be non-undefined strings
+    const fromNum = process.env.TWILIO_ACCOUNT_PHONENO ?? "";
+    const toNum = process.env.DEV_PHONENO ?? "";
+
+    if (!fromNum || !toNum) {
+      console.warn("⚠️ Missing Twilio phone numbers in environment variables");
+    } else {
+      await client.messages.create({
+        body: "You made an order with BookStore via PayNow/PayLah!, you will be notified again when your order is confirmed.",
+        from: fromNum,
+        to: toNum,
+      });
+    }
+
+    // ✅ Clear cart safely
+    req.session.userCart = {};
+    console.log(chalk.red(JSON.stringify(req.session, null, 2)));
+
+    alertMessage(
+      res,
+      "success",
+      "Order placed! The administrator will shortly confirm your payment.",
+      "fas fa-exclamation-circle",
+      true,
+    );
+
+    res.redirect("paynow-txn-end");
+  } catch (err: any) {
+    console.error("PayNow error:", err.message ?? err);
+    res.status(500).send("Error while processing PayNow payment");
+  }
+});
+
 
 router.post("/stripe-payment", async (req, res) => {
   try {
-    // 1. Create and verify the address
+    // ✅ Ensure the user is authenticated
+    if (!req.user) {
+      return res.status(401).send("User not authenticated");
+    }
+    const userId = Number(req.user.id); // TS-safe number conversion
+
+    // ✅ Helper to normalize undefined → null
+    const nullify = <T>(v: T | undefined): T | null => (v === undefined ? null : v);
+
+    // 1️⃣ Create and verify addresses
     const toAddress = await api.Address.createAndVerify({
       name: "John Doe",
       street1: "123 Main St",
@@ -953,139 +900,106 @@ router.post("/stripe-payment", async (req, res) => {
       phone: "2125555555",
     });
 
-    // 2. Create the parcel with valid dimensions
+    // 2️⃣ Create the parcel
     const parcel = await api.Parcel.create({
       length: 10,
       width: 8,
       height: 4,
-      weight: 15.7, // weight in ounces
+      weight: 15.7,
     });
 
-    // 3. Create the shipment
+    // 3️⃣ Create the shipment
     const shipment = await api.Shipment.create({
       to_address: toAddress,
       from_address: fromAddress,
-      parcel: parcel,
-      // carrier_accounts: ['ca_dhl_account_id'], // Optional: Specify your DHL carrier account ID if needed
+      parcel,
     });
 
-    // 4. Log available rates to debug the issue
-    logCyan(JSON.stringify(shipment, null, 2));
-    console.log("Available rates:", shipment.rates);
-
-    // Check if any rates are returned
     if (shipment.rates.length === 0) {
       throw new Error("No rates found for this shipment.");
     }
 
-    // 5. Buy the shipment
+    // 4️⃣ Buy the shipment
     const boughtShipment = await api.Shipment.buy(
       shipment.id,
-      shipment.lowestRate(["USPS"]),
+      shipment.lowestRate(["USPS"])
     );
-    console.log("Bought Shipment:", boughtShipment);
 
-    logMagenta("=== Test SSN variable ===");
-    logMagenta(req.session.shipment_recipient_name);
-    logMagenta(req.session.shipment_recipient_phonenum);
-    logMagenta(req.session.shipment_lineone);
-    logMagenta(req.session.shipment_linetwo);
-    logMagenta(req.session.shipment_city);
-    logMagenta(req.session.shipment_country);
-    logMagenta(req.session.shipment_postal_code);
+    // Debug logs
+    console.log("=== Bought Shipment ===");
+    console.log(JSON.stringify(boughtShipment, null, 2));
 
-    // 6. Create Order
-    // Make sure variables declared are same as sql column names
-    let fullName = req.session.shipment_recipient_name;
-    let phoneNumber = req.session.shipment_recipient_phonenum;
-    let address = req.session.shipment_lineone;
-    let address1 = req.session.shipment_linetwo;
-    let city = req.session.shipment_city;
-    let country = req.session.shipment_country;
-    let postalCode = req.session.shipment_postal_code;
-    //
-    let deliverFee = 0;
-    let subtotalPrice = req.session.cart_subtotal_final;
-    let totalPrice = req.session.cart_grandtotal;
-    //
-    let shippingId = boughtShipment.id;
-    let addressId = toAddress.id; // Use the address ID from the created address
-    let trackingId = boughtShipment.tracker?.id || "";
-    let trackingCode = boughtShipment.tracker?.tracking_code || "";
-    let dateStart = boughtShipment.created_at;
-    console.log(`Date Start Data: ${dateStart}  Data Type ${typeof(dateStart)}`);
-    let dateEnd = boughtShipment.tracker?.est_delivery_date || null;
-    console.log(`Date Start Data: ${dateEnd}  Data Type ${typeof(dateEnd)}`);
-    let deliveryStatus = boughtShipment.tracker?.status || "";
-    let userId = req.user.id;
+    // 5️⃣ Extract session info (shipping details)
+    const fullName = req.session.shipment_recipient_name;
+    const phoneNumber = req.session.shipment_recipient_phonenum;
+    const address = req.session.shipment_lineone;
+    const address1 = req.session.shipment_linetwo;
+    const city = req.session.shipment_city;
+    const country = req.session.shipment_country;
+    const postalCode = req.session.shipment_postal_code;
 
-    const newOrder = await order.create({
-      fullName,
-      phoneNumber,
-      address,
-      address1,
-      city,
-      country,
-      postalCode,
-      deliverFee,
-      subtotalPrice,
-      totalPrice,
-      shippingId,
-      addressId,
-      trackingId,
-      trackingCode,
-      dateStart,
-      dateEnd,
-      deliveryStatus,
-      userId
-    });
+    const deliverFee = 0;
+    const subtotalPrice = req.session.cart_subtotal_final;
+    const totalPrice = req.session.cart_grandtotal;
+
+    const shippingId = boughtShipment.id;
+    const addressId = toAddress.id;
+    const trackingId = boughtShipment.tracker?.id || "";
+    const trackingCode = boughtShipment.tracker?.tracking_code || "";
+    const dateStart = boughtShipment.created_at;
+    const dateEnd = boughtShipment.tracker?.est_delivery_date || null;
+    const deliveryStatus = boughtShipment.tracker?.status || "";
+
+    // 6️⃣ Create the order (fixes undefined → null)
+const newOrder = await order.create({
+  fullName: nullify(fullName),
+  phoneNumber: nullify(phoneNumber),
+  address: nullify(address),
+  address1: nullify(address1),
+  city: nullify(city),
+  country: nullify(country),
+  postalCode: nullify(postalCode),
+  deliverFee,
+  subtotalPrice: nullify(subtotalPrice),
+  totalPrice: nullify(totalPrice),
+  shippingId: nullify(shippingId),
+  addressId: nullify(addressId),
+  trackingId: nullify(trackingId),
+  trackingCode: nullify(trackingCode),
+  dateStart: nullify(dateStart),
+  dateEnd: nullify(dateEnd),
+  deliveryStatus: nullify(deliveryStatus),
+  userId,
+});
 
 
-    console.log("=== order obj ===");
-    console.log(newOrder);
-    console.log(JSON.stringify(newOrder));
+    console.log("=== Order Created ===");
+    console.log(JSON.stringify(newOrder, null, 2));
 
-    let orderId = newOrder.id;
-    // Create individual OrderItem entry into DB
-    for (var i in req.session.userCart) {
-      let product_name = req.session.userCart[i].Name;
-      let author = req.session.userCart[i].Author;
-      let publisher = req.session.userCart[i].Publisher;
-      let genre = req.session.userCart[i].Genre;
-      let price = req.session.userCart[i].SubtotalPrice;
-      let stock = req.session.userCart[i].Quantity;
-      let details = "placeholder details";
-      let weight = req.session.userCart[i].SubtotalWeight;
-      let product_image = req.session.userCart[i].Image;
+    const orderId = newOrder.id ?? null; // TS-safe number | null
 
+    // 7️⃣ Create individual order items
+    for (const key in req.session.userCart) {
+      const item = req.session.userCart[key];
+      await order_item.create({
+        product_name: item.Name,
+        author: item.Author,
+        publisher: item.Publisher,
+        genre: item.Genre,
+        price: item.SubtotalPrice,
+        stock: item.Quantity,
+        details: "placeholder details",
+        weight: item.SubtotalWeight,
+        product_image: item.Image,
+        orderId, // ✅ matches number | null type
+      });
+    }
 
-    await order_item.create({
-      product_name,
-      author,
-      publisher,
-      genre,
-      price,
-      stock,
-      details,
-      weight,
-      product_image,
-      orderId,
-    });
-  }
+    // 8️⃣ Optional: tracking URL (Twilio send disabled)
+    const trackingUrl = boughtShipment.tracker?.public_url;
+    console.log(`Tracking URL: ${trackingUrl}`);
 
-
-
-    // 7. Send the tracking URL via SMS
-    let trackingUrl = boughtShipment.tracker?.public_url;
-    logMagenta(`tracking url is ${trackingUrl}`)
-    // Twilio MSG
-    //             await client.messages.create({
-    //                 body: `Thank you for your purchase from the Book Store. Your tracking code is ${trackingCode} and you can check your delivery here: ${trackingURL}`,
-    //                 from: process.env.TWILIO_ACCOUNT_PHONENO,
-    //                 to: process.env.DEV_PHONENO,
-    //             }).then((message) => console.log(message.sid));
-
-    // 8. Empty the cart
+    // 9️⃣ Empty the cart + reset totals
     req.session.userCart = {};
     req.session.coupon_object = null;
     req.session.coupon_type = null;
@@ -1095,14 +1009,18 @@ router.post("/stripe-payment", async (req, res) => {
     req.session.cart_coupon_savings = 0;
     req.session.cart_shipping_fee = 0;
     req.session.cart_grandtotal = 0;
+
     await helper.saveSession(req);
 
+    // ✅ Redirect after successful payment
     res.redirect("/product/stripe-txn-end");
-  } catch (error) {
-    console.error(`Error Code ${error.code} :`, error.message);
+  } catch (error: any) {
+    console.error(`Error Code ${error.code ?? "?"}:`, error.message);
     res.status(500).send("An error occurred while processing your request.");
   }
 });
+
+
 
 router.get("/stripe-txn-end", (req, res) => {
   var title = "Thank you!";
@@ -1143,317 +1061,6 @@ router.get(
     });
   },
 ),
-
-
-router.get(
-  "/confirm-pending-order/:id",
-  ensureAdminAuthenticated,
-  async (req, res) => {
-    try {
-      // Fetch the pending order
-      const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
-      if (!PO) {
-        alertMessage(res, "danger", "Pending Order not found", "fas fa-exclamation-circle", true);
-        return res.redirect("/product/view-pending-orders");
-      }
-
-      // Fetch the pending order items
-      const Pi = await PendingOrderItem.findAll({
-        where: { pendingOrderId: PO.id },
-      });
-
-      // Create and save the parcel
-      const parcel = await api.Parcel.create({
-        length: 10, // update according to the total dimensions
-        width: 8,
-        height: 4,
-        weight: 15.7, // weight in ounces
-      });
-
-      // Create and verify the to address
-      const toAddress = await api.Address.createAndVerify({
-        name: "George Costanza",
-        company: "Vandelay Industries",
-        street1: "1 E 161st St.",
-        phone: PO.phoneNumber,
-        city: "Bronx",
-        state: "NY",
-        zip: "12412352551",
-        verify: ["delivery"], // Address verification
-      });
-
-      // Check if the address verification was successful
-      if (!toAddress.verifications.delivery.success) {
-        alertMessage(res, "danger", "Invalid delivery address", "fas fa-exclamation-circle", true);
-        return res.redirect("/product/view-pending-orders");
-      }
-
-      // Create and save the from address
-      const fromAddress = await api.Address.create({
-        name: "Bookstore",
-        street1: "118 2nd Street",
-        street2: "4th Floor",
-        city: "San Francisco",
-        state: "CA",
-        country: "US",
-        zip: "94105",
-        phone: "415-123-4567",
-        email: "example@example.com",
-      });
-
-      // Create and save the shipment
-      const shipment = await api.Shipment.create({
-        to_address: toAddress,
-        from_address: fromAddress,
-        parcel: parcel,
-      });
-
-      // Buy the shipment
-      const boughtShipment = await api.Shipment.buy(
-        shipment.id,
-        shipment.lowestRate(["USPS"])
-      );
-
-      // Create the order
-      const newOrder = await order.create({
-        fullName: PO.id,
-        phoneNumber: PO.phoneNumber,
-        address: PO.address,
-        address1: PO.address1,
-        city: PO.city,
-        country: PO.country,
-        postalCode: PO.postalCode,
-        deliverFee: PO.deliverFee,
-        subtotalPrice: PO.subtotalPrice,
-        totalPrice: PO.totalPrice,
-        shippingId: boughtShipment.id,
-        addressId: toAddress.id,
-        trackingId: boughtShipment.tracker?.id || "",
-        trackingCode: boughtShipment.tracker?.tracking_code || "",
-        dateStart: boughtShipment.created_at,
-        dateEnd: boughtShipment.tracker?.est_delivery_date || null,
-        deliveryStatus: boughtShipment.tracker?.status || "",
-        userId: PO.userId,
-      });
-
-      // Create individual OrderItem entries
-      for (const item of Pi) {
-        await order_item.create({
-          product_name: item.product_name,
-          author: item.author,
-          publisher: item.publisher,
-          genre: item.genre,
-          price: item.price,
-          stock: item.stock,
-          details: item.details || "No details provided",
-          weight: item.weight,
-          product_image: item.product_image,
-          orderId: newOrder.id,
-        });
-      }
-
-      // Delete the pending order and items
-      await PO.destroy();
-      await Promise.all(Pi.map(item => item.destroy()));
-
-      // Notify the user via SMS
-      const trackingURL = boughtShipment.tracker?.public_url || "";
-      await client.messages.create({
-        body: `Your order has been confirmed! Thank you for your purchase from the Book Store. Your tracking code is ${boughtShipment.tracker?.tracking_code} and check your delivery here: ${trackingURL}`,
-        from: process.env.TWILIO_ACCOUNT_PHONENO,
-        to: `+65${PO.phoneNumber}`, // Adjust country code as needed
-      });
-
-      // Redirect to the orders page with success message
-      alertMessage(
-        res,
-        "success",
-        `Confirmed Order ${newOrder.id} for user ID ${newOrder.userId}`,
-        "fas fa-exclamation-circle",
-        true
-      );
-      res.redirect("/product/view-pending-orders");
-      
-    } catch (error) {
-      console.error("Error confirming pending order:", error);
-      res.status(500).send("An error occurred while processing your request.");
-    }
-  }
-);
-
-
-  // router.get(
-  //   "/confirm-pending-order/:id",
-  //   ensureAdminAuthenticated,
-  //   async (req, res) => {
-  //     const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
-  //     const Pi = await PendingOrderItem.findAll({
-  //       where: { pendingOrderId: PO.id },
-  //     });
-
-  //     const parcel = new api.Parcel({
-  //       predefined_package: "Parcel",
-  //       weight: 10, //change number according to weight of total books
-  //     });
-
-  //     parcel.save();
-
-  //     const fromAddress = new api.Address({
-  //       //default address of company
-  //       name: "Bookstore",
-  //       street1: "118 2nd Street",
-  //       street2: "4th Floor",
-  //       city: "San Francisco",
-  //       state: "CA",
-  //       country: "US",
-  //       zip: "94105",
-  //       phone: "415-123-4567",
-  //       email: "example@example.com",
-  //     });
-
-  //     const toAddress = new api.Address({
-  //       verify: ["delivery"],
-  //       name: "George Costanza",
-  //       company: "Vandelay Industries",
-  //       street1: "1 E 161st St.",
-  //       phone: PO.phoneNumber,
-  //       city: "Bronx",
-  //       state: "NY",
-  //       zip: "12412352551",
-  //     });
-  //     toAddress
-  //       .save()
-  //       .then((addr) => {
-  //         let checkAddress = addr.verifications.delivery.success;
-  //         if (checkAddress == true) {
-  //           const shipment = new api.Shipment({
-  //             to_address: toAddress,
-  //             from_address: fromAddress,
-  //             parcel: parcel,
-  //           });
-  //           shipment.save().then((s) => {
-  //             s.buy(shipment.lowestRate(["USPS"], ["First"])).then((t) => {
-  //               console.log("=============");
-  //               console.log(t.id);
-  //               let fullName = PO.id;
-  //               let phoneNumber = PO.phoneNumber;
-  //               let address = PO.address;
-  //               let address1 = PO.address1;
-  //               let city = PO.city;
-  //               let country = PO.country;
-  //               let postalCode = PO.postalCode;
-  //               let deliverFee = PO.deliverFee;
-  //               let subtotalPrice = PO.subtotalPrice;
-  //               let totalPrice = PO.totalPrice;
-  //               let shippingId = t.id;
-  //               let addressId = t.to_address.id;
-  //               let trackingId = t.tracker.id;
-  //               let trackingCode = t.tracker.tracking_code;
-  //               let dateStart = t.created_at;
-  //               let dateEnd = t.tracker.est_delivery_date;
-  //               let deliveryStatus = t.tracker.status;
-  //               let userId = PO.userId;
-  //               order
-  //                 .create({
-  //                   fullName,
-  //                   phoneNumber,
-  //                   address,
-  //                   address1,
-  //                   city,
-  //                   country,
-  //                   postalCode,
-  //                   deliverFee,
-  //                   subtotalPrice,
-  //                   totalPrice,
-  //                   shippingId,
-  //                   addressId,
-  //                   trackingId,
-  //                   trackingCode,
-  //                   dateStart,
-  //                   dateEnd,
-  //                   deliveryStatus,
-  //                   userId,
-  //                 })
-
-  //                 .then((order) => {
-  //                   for (var i in Pi) {
-  //                     let product_name = Pi[i].product_name;
-  //                     let author = Pi[i].author;
-  //                     let publisher = Pi[i].publisher;
-  //                     let genre = Pi[i].genre;
-  //                     let price = Pi[i].price;
-  //                     let stock = Pi[i].stock;
-  //                     let details = "";
-  //                     let weight = Pi[i].weight;
-  //                     let product_image = Pi[i].product_image;
-  //                     let orderId = order.id;
-  //                     order_item.create({
-  //                       product_name,
-  //                       author,
-  //                       publisher,
-  //                       genre,
-  //                       price,
-  //                       stock,
-  //                       details,
-  //                       weight,
-  //                       product_image,
-  //                       orderId,
-  //                     });
-  //                   }
-  //                   console.log(order);
-  //                   PO.destroy();
-  //                   for (i in Pi) {
-  //                     console.log(`Deleting Product ${i}`);
-  //                     Pi[i].destroy();
-  //                   }
-  //                   alertMessage(
-  //                     res,
-  //                     "success",
-  //                     `Confirmed Order ${order.id} which belongs to user of id ${order.userId}`,
-  //                     "fas fa-exclamation-circle",
-  //                     true,
-  //                   );
-  //                   res.redirect("/product/view-pending-orders");
-  //                   let trackingCode = order.dataValues.trackingCode;
-  //                   api.Tracker.retrieve(trackingCode).then((t) => {
-  //                     console.log(t.public_url);
-  //                     let trackingURL = t.public_url;
-  //                     client.messages
-  //                       .create({
-  //                         body:
-  //                           "Your order has been confirmed!" +
-  //                           "Thank you for your purchase from the Book Store. Your tracking code is " +
-  //                           trackingCode +
-  //                           " and check your delivery here!\n" +
-  //                           trackingURL,
-  //                         from: process.env.TWILIO_ACCOUNT_PHONENO,
-  //                         to: `+65${order.phoneNumber}`,
-  //                       })
-  //                       .then((message) => console.log(message.sid));
-  //                   });
-  //                 });
-  //             });
-  //           });
-
-  //           console.log("its true");
-  //         } else {
-  //           console.log("its false");
-  //           alertMessage(
-  //             res,
-  //             "danger",
-  //             "Please enter a valid address",
-  //             "fas faexclamation-circle",
-  //             true,
-  //           );
-  //           res.redirect("/product/view-pending-orders");
-  //         }
-  //       })
-  //       .catch((e) => {
-  //         console.log(e); //check errors
-  //       });
-  //   },
-  // );
-
   router.get(
     "/delete-pending-order/:id",
     ensureAdminAuthenticated,
@@ -1469,23 +1076,28 @@ router.get(
           where: { pendingOrderId: PO.id },
         });
   
-        // Sending a message using Twilio
-        await client.messages.create({
-          body: "From BookStore: We are sorry to inform you that your order has been cancelled by the administrator due to lack of payment.",
-          from: process.env.TWILIO_ACCOUNT_PHONENO,
-          to: `+65${PO.phoneNumber}`,
-        });
-  
+  // Sending a message using Twilio
+if (!process.env.TWILIO_ACCOUNT_PHONENO) {
+  throw new Error("TWILIO_ACCOUNT_PHONENO is not set in environment variables");
+}
+
+await client.messages.create({
+  body: "From BookStore: We are sorry to inform you that your order has been cancelled by the administrator due to lack of payment.",
+  from: process.env.TWILIO_ACCOUNT_PHONENO, // ✅ now guaranteed string
+  to: `+65${PO.phoneNumber}`,
+});
+
         alertMessage(res, "success", `Pending Order with ID ${PO.id} Deleted`, "fas fa-exclamation-circle", true);
   
         // Destroy the order
         await PO.destroy();
   
         // Destroy each pending order item
-        for (let i = 0; i < Pi.length; i++) {
-          console.log(`Deleting Product ${i + 1}`);
-          await Pi[i].destroy();
-        }
+for (const item of Pi) {
+  console.log(`Deleting Product ${item.id}`);
+  await item.destroy();
+}
+
   
         res.redirect("/product/view-pending-orders");
       } catch (err) {
@@ -1497,37 +1109,6 @@ router.get(
   );
 
   
-// router.get(
-//   "/delete-pending-order/:id",
-//   ensureAdminAuthenticated,
-//   async (req, res) => {
-//     const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
-//     const Pi = await PendingOrderItem.findAll({
-//       where: { pendingOrderId: PO.id },
-//     });
-//     client.messages
-//       .create({
-//         body: "From BookStore: We are sorry to inform you that your order has cancelled by the administrator due to lack of payment",
-//         from: process.env.TWILIO_ACCOUNT_PHONENO,
-//         to: PO.phoneNumber,
-//       })
-//       .then((message) => console.log(message.sid));
-//     alertMessage(
-//       res,
-//       "success",
-//       `Pending Order with ID ${PO.id} Deleted`,
-//       "fas fa-exclamation-circle",
-//       true,
-//     );
-//     PO.destroy();
-//     for (i in Pi) {
-//       console.log(`Deleting Product ${i}`);
-//       Pi[i].destroy();
-//     }
-//     res.redirect("/product/view-pending-orders");
-//   },
-// );
-
 router.get("/create-coupon", ensureAdminAuthenticated, (req, res) => {
   // if (!req.session.public_coupon) {
   //     req.session.public_coupon = "NULL";
@@ -1547,101 +1128,65 @@ router.get("/create-coupon", ensureAdminAuthenticated, (req, res) => {
   });
 });
 
-router.post("/create-coupon", ensureAdminAuthenticated, (req, res) => {
-  // Retrieve the inputs from the create coupon form
-  let coupon_code = req.body.coupon_code;
-  let coupon_type = req.body.coupon_type;
-  let coupon_discount = req.body.coupon_discount;
-  let coupon_limit = req.body.coupon_limit;
-  let coupon_public = req.body.coupon_public;
-  let coupon_msg = req.body.coupon_msg;
-  // let coupon_expire_date = req.body.coupon_expire_date;
-  // let coupon_expire_time = req.body.coupon_expire_time;
-  let full_time =
-    req.body.coupon_expire_date + " " + req.body.coupon_expire_time;
+router.post("/create-coupon", ensureAdminAuthenticated, async (req, res) => {
+  const {
+    coupon_code,
+    coupon_type,
+    coupon_discount,
+    coupon_limit,
+    coupon_public: publicInput,
+    coupon_msg,
+    coupon_expire_date,
+    coupon_expire_time,
+  } = req.body;
 
-  // Note that the date/time stored in mySQL will be GMT althought date/time is based on our server(SGT)
-  // E.g Coupon expiry date and time is SGT (GMT+8) 09/08/2020, 06:00 -> GMT 08/08/2020, 22:00
-  let expiry_date_time = moment(full_time, "DD/MM/YYYY, hh:mm:ss a");
+  const coupon_public = publicInput === "YES"; // boolean
+  const expiry_date_time = moment(
+    `${coupon_expire_date} ${coupon_expire_time}`,
+    "DD/MM/YYYY, hh:mm:ss a"
+  );
 
-  let current_time = moment();
-  let et = moment(expiry_date_time); // format into the same way as current_time (in ms)
+  const current_time = moment();
 
-  // Set BOOLEAN value of 'public' column
-  if (coupon_public == "YES") {
-    coupon_public = 1;
-  } else {
-    coupon_public = 0;
+  const existing = await Coupon.findOne({ where: { code: coupon_code } });
+  if (existing) {
+    alertMessage(res, "danger", `Code ${existing.code} already exists!`, "fas fa-exclamation-circle", true);
+    return res.redirect("create-coupon");
   }
 
-  Coupon.findOne({
-    where: { code: coupon_code },
-  }).then((c) => {
-    // Duplicate case
-    if (c) {
-      console.log("Coupon of the same code already exist");
-      alertMessage(
-        res,
-        "danger",
-        `Code ${c.code} already exists!`,
-        "fas fa-exclamation-circle",
-        true,
-      );
-      res.redirect("create-coupon");
-    }
+  if (expiry_date_time.isBefore(current_time)) {
+    alertMessage(res, "danger", `Date or Time entered invalid!`, "fas fa-exclamation-circle", true);
+    return res.redirect("create-coupon");
+  }
 
-    // Invalid/Expired time case
-    if (et.isBefore(current_time)) {
-      // prevent user from inputting a date/time that has already passed
-      alertMessage(
-        res,
-        "danger",
-        `Date or Time entered invalid!`,
-        "fas fa-exclamation-circle",
-        true,
-      );
-      res.redirect("create-coupon");
-    }
-
-    // No problem, create
-    else {
-      Coupon.create({
-        code: coupon_code,
-        type: coupon_type,
-        discount: coupon_discount,
-        limit: coupon_limit,
-        public: coupon_public,
-        message: coupon_msg,
-        expiry: expiry_date_time,
-      })
-        .then((coupon_object) => {
-          // If new coupon is public and there are existing public coupon, override it
-          if (coupon_object.public == 1 && req.session.public_coupon != null) {
-            let oc = req.session.public_coupon;
-            console.log(oc.code);
-            req.session.public_coupon = coupon_object;
-            Coupon.destroy({
-              where: { id: oc.id },
-            });
-            // oc.destroy(); -> doesnt work 'oc doesnt have function 'destroy'
-          }
-
-          req.session.save();
-          alertMessage(
-            res,
-            "success",
-            `Coupon Code ${coupon_object.code} Created, it expires on ${coupon_object.expiry}`,
-            "fas fa-exclamation-circle",
-            true,
-          );
-          res.redirect("/product/create-coupon");
-        })
-        .catch(() => {
-          console.log("Something went wrong with creating the coupon");
-        });
-    }
+  const coupon_object = await Coupon.create({
+    code: coupon_code,
+    type: coupon_type,
+    discount: coupon_discount,
+    limit: coupon_limit,
+    public: coupon_public,
+    message: coupon_msg,
+    expiry: expiry_date_time.toDate(), // ← key fix
   });
+
+  if (coupon_object.public && req.session.public_coupon) {
+    const old = req.session.public_coupon;
+    req.session.public_coupon = coupon_object;
+    await Coupon.destroy({ where: { id: old.id } });
+  }
+
+  req.session.save();
+  alertMessage(
+    res,
+    "success",
+    `Coupon Code ${coupon_object.code} created, expires on ${coupon_object.expiry}`,
+    "fas fa-check-circle",
+    true
+  );
+
+  res.redirect("/product/create-coupon");
 });
+
 
 // Create Discount Page
 router.get("/create-discount", ensureAdminAuthenticated, async (req, res) => {
@@ -1659,75 +1204,51 @@ router.get("/create-discount", ensureAdminAuthenticated, async (req, res) => {
   });
 });
 
-router.post("/create-discount", ensureAdminAuthenticated, async (req, res) => {
-  // Retrieve the inputs from the create discount form
-  let target_id = req.body.target_id;
-  let product_discount = req.body.product_discount;
-  let min_qty = req.body.min_qty;
-  let discount_msg = req.body.discount_msg;
-  let discount_expire_date = req.body.discount_expire_date;
-  let discount_expire_time = req.body.discount_expire_time;
-  let stackable = 0;
-  let full_time =
-    req.body.discount_expire_date + " " + req.body.discount_expire_time;
+router.post("/create-discount", ensureAdminAuthenticated, async (req: Request, res: Response) => {
+  const target_id = req.body.target_id;
+  const product_discount = req.body.product_discount;
+  const min_qty = req.body.min_qty;
+  const discount_msg = req.body.discount_msg;
+  const discount_expire_date = req.body.discount_expire_date;
+  const discount_expire_time = req.body.discount_expire_time;
 
-  // Note that the date/time stored in mySQL will be GMT althought date/time is based on our server(SGT)
-  // E.g Coupon expiry date and time is SGT (GMT+8) 09/08/2020, 06:00 -> GMT 08/08/2020, 22:00
-  let expiry_date_time = moment(full_time, "DD/MM/YYYY, hh:mm:ss a");
+  // ✅ boolean, not number
+  const stackable = req.body.stackable === "on" || req.body.stackable === "true";
 
-  let current_time = moment();
-  let et = moment(expiry_date_time); // format into the same way as current_time (in ms)
+  const full_time = `${discount_expire_date} ${discount_expire_time}`;
+  const expiry_date_time = moment(full_time, "DD/MM/YYYY, hh:mm:ss a");
 
-  let d = await Discount.findOne({ where: { target_id: target_id } });
+  const current_time = moment();
+  const et = moment(expiry_date_time);
 
-  // Duplicate case
-  if (d != null) {
-    console.log("Discount of the same code already exist");
-    alertMessage(
-      res,
-      "danger",
-      `Discount for ID: ${d.target_id} already exists!`,
-      "fas fa-exclamation-circle",
-      true,
-    );
-    // res.redirect('create-discount')
-  }
+  const d = await Discount.findOne({ where: { target_id } });
 
-  // Invalid/Expired time case
-  else if (et.isBefore(current_time)) {
-    // prevent user from inputting a date/time that has already passed
-    alertMessage(
-      res,
-      "danger",
-      `Date or Time entered invalid!`,
-      "fas fa-exclamation-circle",
-      true,
-    );
-    // res.redirect('create-discount')
-  }
-
-  // No problem, create
-  else if (d == null) {
-    let new_d = await Discount.create({
+  if (d) {
+    alertMessage(res, "danger", `Discount for ID: ${d.target_id} already exists!`, "fas fa-exclamation-circle", true);
+  } else if (et.isBefore(current_time)) {
+    alertMessage(res, "danger", `Date or Time entered invalid!`, "fas fa-exclamation-circle", true);
+  } else {
+    const new_d = await Discount.create({
       discount_rate: product_discount,
-      min_qty: min_qty,
-      expiry: expiry_date_time,
-      stackable: stackable,
+      min_qty,
+      expiry: expiry_date_time.toDate(), // ✅ cast to Date
+      stackable,                         // ✅ boolean
       message: discount_msg,
-      target_id: target_id,
+      target_id,
     });
 
     alertMessage(
       res,
       "success",
-      `Discount for Product ID: ${new_d.target_id} Created, it expires on ${new_d.expiry}`,
-      "fas fa-exclamation-circle",
+      `Discount for Product ID: ${new_d.target_id} created, expires on ${new_d.expiry}`,
+      "fas fa-check-circle",
       true,
     );
   }
 
   res.redirect("/product/create-discount");
 });
+
 
 // Admin - View Discounts and Coupons and Delete together
 
@@ -1802,159 +1323,135 @@ router.get("/deleteCoupon/:id", ensureAdminAuthenticated, async (req, res) => {
   res.redirect(url);
 });
 
-router.get("/testing", (req, res) => {
-  let title = "Testing 123";
-  var obj2 = { 0: { num: 1 }, 1: { num: 2 }, 2: { num: 3 }, 3: { num: 4 } };
+router.get("/testing", (req: Request, res: Response) => {
+  const title = "Testing 123";
 
-  const page = parseInt(req.query.page);
-  const limit = parseInt(req.query.limit);
+  // Explicitly type obj2 so we can index it safely later
+  const obj2: Record<string, { num: number }> = {
+    0: { num: 1 },
+    1: { num: 2 },
+    2: { num: 3 },
+    3: { num: 4 },
+  };
 
-  // page - 1 because index start on 0
+  // ✅ Safe parse with default fallbacks
+  const page = parseInt((req.query.page as string) || "1", 10);
+  const limit = parseInt((req.query.limit as string) || "2", 10);
+
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
 
-  // we want to let user know if there is a page after or before
-  const results = {};
+  // ✅ Declare expected shape up front
+  const results: {
+    next?: { page: number; limit: number };
+    previous?: { page: number; limit: number };
+    results?: Record<string, any>[];
+  } = {};
 
-  // Retrieve next page data
-  if (endIndex < Object.keys(obj2).length) {
-    results.next = {
-      page: page + 1,
-      limit: limit,
-    };
+  const keys = Object.keys(obj2);
+
+  if (endIndex < keys.length) {
+    results.next = { page: page + 1, limit };
   }
 
-  // Retrieve previous page data
   if (startIndex > 0) {
-    results.previous = {
-      page: page - 1,
-      limit: limit,
-    };
+    results.previous = { page: page - 1, limit };
   }
 
-  var obj = { 0: "zero", 1: "one", 2: "two", 3: "three", 4: "four" };
-  // results.results = Object.keys(cart_items).slice(startIndex,endIndex).map(key => ({[key]:cart_items[key]}));
-  results.results = Object.keys(obj2)
+  results.results = keys
     .slice(startIndex, endIndex)
-    .map((key) => ({ [key]: obj2[key] }));
-
-  // test that it works with this
-  // https://localhost:5000/product/getjson?page=2&limit=5
+    .map((key) => ({ [key]: obj2[key] })); // ✅ now legal: obj2 is Record<string, ...>
 
   console.log(results);
 
-  res.render("checkout/testing123", {
-    title,
-    results,
-  });
-  // res.json(results)
-  // https://localhost:5000/product/testing?page=1&limit=5
+  res.render("checkout/testing123", { title, results });
 });
 
-router.get("/testing2", (req, res) => {
-  title = "Pagination";
-  const cart_items = req.session.userCart;
-  // user cart is an object that stores product ids as key containing all value (product object) e.g
-  // {1:{Name:cab}, 2:{Name: abc}}
-  // the inputs
-  const page = parseInt(req.query.page);
-  const limit = 3;
-  // const limit = parseInt(req.query.limit)
+router.get("/testing2", (req: Request, res: Response) => {
+  const title = "Pagination";
 
-  // page - 1 because index start on 0
-  // e.g page 1 start index (0* 5 = 0 , end index = 1 * 5 = 5)
-  // page 2 start: (2-1) * 5 = 5 , end: 2*5 = 10
+  // Ensure userCart is always at least an empty object
+  const cart_items = (req.session?.userCart || {}) as Record<string, any>;
+
+  // Ensure query param is string and default to page 1
+  const page = parseInt((req.query.page as string) || "1", 10);
+  const limit = 3;
+
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
 
-  // we want to let user know if there is a page after or before
-  const results = {};
+  // define full shape to avoid "Property does not exist" errors
+  const results: {
+    next?: { page: number; limit: number };
+    previous?: { page: number; limit: number };
+    pages?: number;
+    results?: Record<string, any>[];
+  } = {};
 
-  // Retrieve next page data
-  // if statement to check if there should be a 'next', when the end index is lesser than the length of object
-  if (endIndex < Object.keys(cart_items).length) {
-    results.next = {
-      page: page + 1,
-      limit: limit,
-    };
+  const keys = Object.keys(cart_items);
+
+  // Next page info
+  if (endIndex < keys.length) {
+    results.next = { page: page + 1, limit };
   }
 
-  // Retrieve previous page data
-  // works similary for the next
+  // Previous page info
   if (startIndex > 0) {
-    results.previous = {
-      page: page - 1,
-      limit: limit,
-    };
+    results.previous = { page: page - 1, limit };
   }
 
-  results.pages = Math.ceil(Object.keys(cart_items).length / limit);
-  console.log("");
-  // console.log("=== PAGES ===", results.pages)
-  // console.log("=== PREVIOUS === ", results.previous.page)
-  // The line with the magic happening
-  // Object.keys(cart_items) will return an array of the product ids in the cart
-  // Then we slice it based on the input for the page & limit,
-  // finally we apply map() on it to retrieve the cart_items with the segmented product ids
-  results.results = Object.keys(cart_items)
+  // Total number of pages
+  results.pages = Math.ceil(keys.length / limit);
+
+  // Paginated results
+  results.results = keys
     .slice(startIndex, endIndex)
     .map((key) => ({ [key]: cart_items[key] }));
 
   console.log(results.results);
+
   res.render("checkout/testing1234", {
     title,
     results,
   });
-  // https://localhost:5000/product/testing2?page=1&limit=5
 });
 
 // Testing new stuff 18 Aug
 
-router.get("/getjson", (req, res) => {
-  // const myusers = await User.findAll({})
-  // res.json(myusers)
-  const cart_items = req.session.userCart;
-  const page = parseInt(req.query.page);
-  const limit = parseInt(req.query.limit);
+router.get("/getjson", (req: Request, res: Response) => {
+  // session and query can be undefined → add safe fallbacks
+  const cart_items = (req.session?.userCart || {}) as Record<string, any>;
 
-  // page - 1 because index start on 0
+  // query params come in as string | string[] | undefined
+  const page = parseInt((req.query.page as string) || "1", 10);
+  const limit = parseInt((req.query.limit as string) || "5", 10);
+
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
 
-  // we want to let user know if there is a page after or before
-  const results = {};
+  // declare results type to allow adding properties dynamically
+  const results: {
+    next?: { page: number; limit: number };
+    previous?: { page: number; limit: number };
+    results?: Record<string, any>[];
+  } = {};
 
-  // Retrieve next page data
-  if (endIndex < Object.keys(cart_items).length) {
-    results.next = {
-      page: page + 1,
-      limit: limit,
-    };
+  const keys = Object.keys(cart_items);
+
+  if (endIndex < keys.length) {
+    results.next = { page: page + 1, limit };
   }
 
-  // Retrieve previous page data
   if (startIndex > 0) {
-    results.previous = {
-      page: page - 1,
-      limit: limit,
-    };
+    results.previous = { page: page - 1, limit };
   }
 
-  var obj = { 0: "zero", 1: "one", 2: "two", 3: "three", 4: "four" };
-  var obj2 = { 0: { num: 1 }, 1: { num: 2 }, 2: { num: 3 }, 3: { num: 4 } };
-  results.results = Object.keys(cart_items)
+  results.results = keys
     .slice(startIndex, endIndex)
     .map((key) => ({ [key]: cart_items[key] }));
 
-  // test that it works with this
-  // https://localhost:5000/product/getjson?page=2&limit=5
-
-  // Object.keys() returns array of an object's internal properties
-  // var result = Object.keys(obj).slice(0,2).map(key => ({[key]:obj[key]}));
-  // console.log(result);
   console.log(results.results);
   res.json(results);
-  // res.render('checkout/json')
 });
 
 
