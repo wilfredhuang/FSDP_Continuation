@@ -120,3 +120,61 @@ declare module "*.handlebars" {
  *  EXPORT GLOBALS
  * -------------------------------------------------------------------------- */
 // export {};
+
+
+//
+// === Added Express / Passport / Session Typings (for userRoutes.ts compatibility) ===
+//
+
+import "express-session";
+import "express";
+
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      GOOGLE_RECAPTCHA_SECRET_KEY: string;
+      GOOGLE_RECAPTCHA_SITE_KEY: string;
+      JWT_SECRETKEY: string;
+      BOOKSTORE_EMAIL_USERNAME: string;
+      BOOKSTORE_EMAIL_PASSWORD: string;
+    }
+  }
+
+  namespace Express {
+interface User {
+  id: string;
+  email: string;
+  name?: string | null;
+  facebookId?: string | null;
+  isadmin?: boolean;
+  confirmed?: boolean;
+  address?: string | null;
+  address1?: string | null;
+  city?: string | null;
+  country?: string | null;
+  postalCode?: string | null;
+  PhoneNo?: string | null;
+}
+
+
+    interface Request {
+      user?: User;
+      cookies: Record<string, string>;
+      signedCookies: Record<string, string>;
+      session: {
+        userCart?: Record<string, any>;
+        coupon_object?: any;
+        coupon_type?: string | null;
+        cart_subtotal_initial?: number;
+        cart_subtotal_final?: number;
+        cart_discount_savings?: number;
+        cart_coupon_savings?: number;
+        cart_shipping_fee?: number;
+        cart_grandtotal?: number;
+        destroy(callback: (err?: any) => void): void;
+      };
+    }
+  }
+}
+
+export {}
