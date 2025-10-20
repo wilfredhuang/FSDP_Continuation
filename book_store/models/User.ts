@@ -1,8 +1,12 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db_connection.js";
 
+/* -------------------------------------------------------------------------- */
+/*                               Type Definitions                             */
+/* -------------------------------------------------------------------------- */
+
 export interface UserAttributes {
-  id?: number;
+  id: string; // ✅ UUID instead of number
   name: string | null;
   email: string | null;
   password: string | null;
@@ -19,11 +23,18 @@ export interface UserAttributes {
   stripeID: string | null;
 }
 
+/** All fields except id are optional at creation time */
 export type UserCreationAttributes = Optional<UserAttributes, "id">;
 
-class User extends Model<UserAttributes, UserCreationAttributes>
-  implements UserAttributes {
-  declare id?: number;
+/* -------------------------------------------------------------------------- */
+/*                                 Model Class                                */
+/* -------------------------------------------------------------------------- */
+
+class User
+  extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes
+{
+  declare id: string; // ✅ UUID
   declare name: string | null;
   declare email: string | null;
   declare password: string | null;
@@ -40,12 +51,16 @@ class User extends Model<UserAttributes, UserCreationAttributes>
   declare stripeID: string | null;
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                  Init Block                                */
+/* -------------------------------------------------------------------------- */
+
 User.init(
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED, // ✅ numeric PK
-      autoIncrement: true,
+      type: DataTypes.STRING(36), // ✅ UUID string
       primaryKey: true,
+      allowNull: false,
     },
     name: { type: DataTypes.STRING },
     email: { type: DataTypes.STRING },
@@ -62,7 +77,13 @@ User.init(
     postalCode: { type: DataTypes.STRING },
     stripeID: { type: DataTypes.STRING },
   },
-  { sequelize, modelName: "user", tableName: "users", timestamps: false }
+  {
+    sequelize,
+    modelName: "user",
+    tableName: "users",
+    timestamps: false,
+    indexes: [{ fields: ["id"] }], // optional performance index
+  },
 );
 
 export default User;

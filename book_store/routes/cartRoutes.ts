@@ -23,7 +23,9 @@ const router = express.Router();
 // ------------------------------------------------------------
 // 3. Setup external services
 // ------------------------------------------------------------
-const apiKey = process.env.EASYPOST_API_KEY ?? "EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg";
+const apiKey =
+  process.env.EASYPOST_API_KEY ??
+  "EZTKe61fa8e438e34413acce28f504e9d8ee9lUMxw7QLbFHvI2SZgpUqg";
 const api = new EasyPost(apiKey);
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID ?? "";
@@ -31,52 +33,95 @@ const authToken = process.env.TWILIO_ACCOUNT_AUTHTOKEN ?? "";
 //const client = new Client(accountSid, authToken);
 const client = twilio(accountSid, authToken);
 
-
 const secretKey = process.env.GOOGLE_RECAPTCHA_SECRET_KEY ?? "";
 
 // ------------------------------------------------------------
 // 4. View order details (user)
 // ------------------------------------------------------------
-router.get("/view-order-details/:id", ensureAuthenticated, async (req: Request, res: Response) => {
-  const title = "Order Details";
-  try {
-    const order = await order_.findOne({
-      where: { userId: (req.user as any).id, id: req.params.id },
-      include: [{ model: orderItem }],
-    });
+router.get(
+  "/view-order-details/:id",
+  ensureAuthenticated,
+  async (req: Request, res: Response) => {
+    const title = "Order Details";
+    try {
+      const order = await order_.findOne({
+        where: { userId: (req.user as any).id, id: req.params.id },
+        include: [{ model: orderItem }],
+      });
 
-    const { shippingId } = order as any;
-    const shipment = await api.Shipment.retrieve(shippingId);
-    const { status: deliveryStatus, public_url: trackingURL } = shipment.tracker;
+      const { shippingId } = order as any;
+      const shipment = await api.Shipment.retrieve(shippingId);
+      const { status: deliveryStatus, public_url: trackingURL } =
+        shipment.tracker;
 
-    const statusMapping: Record<string, any> = {
-      pre_transit: { progressPercentage: 25, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Pre-transit" },
-      in_transit: { progressPercentage: 50, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "In-transit" },
-      out_for_delivery: { progressPercentage: 75, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Out for delivery" },
-      delivered: { progressPercentage: 100, progressColour: "bg-success", progressColourText: "text-success", deliveryStatusResult: "Delivered" },
-      return_to_sender: { progressPercentage: 0, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Return to sender" },
-      failure: { progressPercentage: 100, progressColour: "bg-danger", progressColourText: "text-danger", deliveryStatusResult: "Failure" },
-      default: { progressPercentage: 0, progressColour: "bg-dark", progressColourText: "text-dark", deliveryStatusResult: "Unknown" },
-    };
+      const statusMapping: Record<string, any> = {
+        pre_transit: {
+          progressPercentage: 25,
+          progressColour: "bg-info",
+          progressColourText: "text-info",
+          deliveryStatusResult: "Pre-transit",
+        },
+        in_transit: {
+          progressPercentage: 50,
+          progressColour: "bg-info",
+          progressColourText: "text-info",
+          deliveryStatusResult: "In-transit",
+        },
+        out_for_delivery: {
+          progressPercentage: 75,
+          progressColour: "bg-info",
+          progressColourText: "text-info",
+          deliveryStatusResult: "Out for delivery",
+        },
+        delivered: {
+          progressPercentage: 100,
+          progressColour: "bg-success",
+          progressColourText: "text-success",
+          deliveryStatusResult: "Delivered",
+        },
+        return_to_sender: {
+          progressPercentage: 0,
+          progressColour: "bg-info",
+          progressColourText: "text-info",
+          deliveryStatusResult: "Return to sender",
+        },
+        failure: {
+          progressPercentage: 100,
+          progressColour: "bg-danger",
+          progressColourText: "text-danger",
+          deliveryStatusResult: "Failure",
+        },
+        default: {
+          progressPercentage: 0,
+          progressColour: "bg-dark",
+          progressColourText: "text-dark",
+          deliveryStatusResult: "Unknown",
+        },
+      };
 
-    const { progressPercentage, progressColour, progressColourText, deliveryStatusResult } =
-      statusMapping[deliveryStatus] || statusMapping.default;
+      const {
+        progressPercentage,
+        progressColour,
+        progressColourText,
+        deliveryStatusResult,
+      } = statusMapping[deliveryStatus] || statusMapping.default;
 
-    res.render("user/view-order-details", {
-      order,
-      orderitems: (order as any).orderitems,
-      title,
-      deliveryStatusResult,
-      trackingURL,
-      progressPercentage,
-      progressColour,
-      progressColourText,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send(`Internal Server Error ${error}`);
-  }
-});
+      res.render("user/view-order-details", {
+        order,
+        orderitems: (order as any).orderitems,
+        title,
+        deliveryStatusResult,
+        trackingURL,
+        progressPercentage,
+        progressColour,
+        progressColourText,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).send(`Internal Server Error ${error}`);
+    }
+  },
+);
 
 // ------------------------------------------------------------
 // 5. View order details (admin)
@@ -95,20 +140,60 @@ router.get(
 
       const { shippingId } = order as any;
       const shipment = await api.Shipment.retrieve(shippingId);
-      const { status: deliveryStatus, public_url: trackingURL } = shipment.tracker;
+      const { status: deliveryStatus, public_url: trackingURL } =
+        shipment.tracker;
 
       const statusMapping: Record<string, any> = {
-        pre_transit: { progressPercentage: 25, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Pre-transit" },
-        in_transit: { progressPercentage: 50, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "In-transit" },
-        out_for_delivery: { progressPercentage: 75, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Out for delivery" },
-        delivered: { progressPercentage: 100, progressColour: "bg-success", progressColourText: "text-success", deliveryStatusResult: "Delivered" },
-        return_to_sender: { progressPercentage: 0, progressColour: "bg-info", progressColourText: "text-info", deliveryStatusResult: "Return to sender" },
-        failure: { progressPercentage: 100, progressColour: "bg-danger", progressColourText: "text-danger", deliveryStatusResult: "Failure" },
-        default: { progressPercentage: 0, progressColour: "bg-dark", progressColourText: "text-dark", deliveryStatusResult: "Unknown" },
+        pre_transit: {
+          progressPercentage: 25,
+          progressColour: "bg-info",
+          progressColourText: "text-info",
+          deliveryStatusResult: "Pre-transit",
+        },
+        in_transit: {
+          progressPercentage: 50,
+          progressColour: "bg-info",
+          progressColourText: "text-info",
+          deliveryStatusResult: "In-transit",
+        },
+        out_for_delivery: {
+          progressPercentage: 75,
+          progressColour: "bg-info",
+          progressColourText: "text-info",
+          deliveryStatusResult: "Out for delivery",
+        },
+        delivered: {
+          progressPercentage: 100,
+          progressColour: "bg-success",
+          progressColourText: "text-success",
+          deliveryStatusResult: "Delivered",
+        },
+        return_to_sender: {
+          progressPercentage: 0,
+          progressColour: "bg-info",
+          progressColourText: "text-info",
+          deliveryStatusResult: "Return to sender",
+        },
+        failure: {
+          progressPercentage: 100,
+          progressColour: "bg-danger",
+          progressColourText: "text-danger",
+          deliveryStatusResult: "Failure",
+        },
+        default: {
+          progressPercentage: 0,
+          progressColour: "bg-dark",
+          progressColourText: "text-dark",
+          deliveryStatusResult: "Unknown",
+        },
       };
 
-      const { progressPercentage, progressColour, progressColourText, deliveryStatusResult } =
-        statusMapping[deliveryStatus] || statusMapping.default;
+      const {
+        progressPercentage,
+        progressColour,
+        progressColourText,
+        deliveryStatusResult,
+      } = statusMapping[deliveryStatus] || statusMapping.default;
 
       res.render("user/view-order-details-admin", {
         order,
@@ -124,7 +209,7 @@ router.get(
       console.error(error);
       res.status(500).send(`Internal Server Error ${error}`);
     }
-  }
+  },
 );
 
 // ------------------------------------------------------------
@@ -150,13 +235,14 @@ router.get(
       const labelUrl = (sr as { postage_label?: { label_pdf_url?: string } })
         ?.postage_label?.label_pdf_url;
 
-      if (!labelUrl) return res.status(502).send("No label URL found from EasyPost");
+      if (!labelUrl)
+        return res.status(502).send("No label URL found from EasyPost");
       res.redirect(labelUrl);
     } catch (err) {
       console.error(err);
       res.status(500).send("Error retrieving shipping label.");
     }
-  }
+  },
 );
 
 // router.get(
@@ -193,11 +279,16 @@ router.get(
 
       // ❌ was: await shipment.convertLabelFormat("PDF");
       // ✅ use the static helper:
-      const shipmentResponse = await api.Shipment.convertLabelFormat(shipment.id, "PDF");
+      const shipmentResponse = await api.Shipment.convertLabelFormat(
+        shipment.id,
+        "PDF",
+      );
 
-      const postageLabelUrlPDF = (shipmentResponse as {
-        postage_label?: { label_pdf_url?: string };
-      })?.postage_label?.label_pdf_url;
+      const postageLabelUrlPDF = (
+        shipmentResponse as {
+          postage_label?: { label_pdf_url?: string };
+        }
+      )?.postage_label?.label_pdf_url;
 
       if (!postageLabelUrlPDF) {
         return res.status(502).send("EasyPost did not return a PDF label URL");
@@ -207,7 +298,8 @@ router.get(
         method: "POST",
         url: "https://api.printnode.com/printjobs",
         headers: {
-          Authorization: "Basic REdqckZpUFVnUndGckdxbFNFSmpHbnRpUmotREhqb3FPeFhlUlg3UlYtbw==",
+          Authorization:
+            "Basic REdqckZpUFVnUndGckdxbFNFSmpHbnRpUmotREhqb3FPeFhlUlg3UlYtbw==",
         },
         data: {
           printerId: "69642287",
@@ -218,13 +310,19 @@ router.get(
         },
       });
 
-      alertMessage(res, "success", "PrintNode ID: " + response.data, "fas fa-exclamation-circle", true);
+      alertMessage(
+        res,
+        "success",
+        "PrintNode ID: " + response.data,
+        "fas fa-exclamation-circle",
+        true,
+      );
       res.redirect("/user/orderHistoryAdmin");
     } catch (err) {
       console.error(err);
       res.status(500).send("Error while printing label.");
     }
-  }
+  },
 );
 
 // router.get(
@@ -275,18 +373,32 @@ router.post("/checkingDelivery", async (req: Request, res: Response) => {
   const trackingId = req.body.trackingIdInput;
   const captcha = req.body["g-recaptcha-response"];
 
-  if (!captcha) return res.json({ success: false, msg: "Please select captcha" });
+  if (!captcha)
+    return res.json({ success: false, msg: "Please select captcha" });
 
   const verifyURL = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${captcha}`;
   try {
     const { data: body } = await axios.get(verifyURL);
     if (!body.success) {
-      alertMessage(res, "danger", "Please re-enter the recaptcha", "fas fa-exclamation-circle", true);
+      alertMessage(
+        res,
+        "danger",
+        "Please re-enter the recaptcha",
+        "fas fa-exclamation-circle",
+        true,
+      );
       return res.redirect("/delivery/check-delivery");
     }
 
     const s = await api.Tracker.retrieve(trackingId);
-    const { status: deliveryStatus, public_url: URL, status_detail, carrier, created_at, updated_at } = s;
+    const {
+      status: deliveryStatus,
+      public_url: URL,
+      status_detail,
+      carrier,
+      created_at,
+      updated_at,
+    } = s;
 
     const carrierService = s.carrier_detail?.service ?? "";
     const mapping: Record<string, any> = {
@@ -297,8 +409,12 @@ router.post("/checkingDelivery", async (req: Request, res: Response) => {
       return_to_sender: [0, "bg-info", "text-info", "Return to sender"],
       failure: [100, "bg-danger", "text-danger", "Failure"],
     };
-    const [progressPercentage, progressColour, progressColourText, deliveryStatusResult] =
-      mapping[deliveryStatus] ?? [0, "bg-dark", "text-dark", "Unknown"];
+    const [
+      progressPercentage,
+      progressColour,
+      progressColourText,
+      deliveryStatusResult,
+    ] = mapping[deliveryStatus] ?? [0, "bg-dark", "text-dark", "Unknown"];
 
     const showQRCODE = await QRCode.toDataURL(URL);
     res.render("delivery/delivery-status-page", {
@@ -318,7 +434,13 @@ router.post("/checkingDelivery", async (req: Request, res: Response) => {
     });
   } catch (e: any) {
     if (e.response?.data?.error?.code === "TRACKER.NOT_FOUND") {
-      alertMessage(res, "danger", "Please enter a valid tracking number", "fas fa-exclamation-circle", true);
+      alertMessage(
+        res,
+        "danger",
+        "Please enter a valid tracking number",
+        "fas fa-exclamation-circle",
+        true,
+      );
       return res.redirect("check-delivery");
     }
     res.status(500).send("An error occurred while checking delivery status.");

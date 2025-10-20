@@ -27,7 +27,7 @@ const sequelize = new Sequelize(
     define: {
       timestamps: true,
     },
-  }
+  },
 );
 
 export default sequelize;

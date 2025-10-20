@@ -25,8 +25,10 @@ export interface OrderAttributes {
 
 export type OrderCreationAttributes = Optional<OrderAttributes, "id">;
 
-class Order extends Model<OrderAttributes, OrderCreationAttributes>
-  implements OrderAttributes {
+class Order
+  extends Model<OrderAttributes, OrderCreationAttributes>
+  implements OrderAttributes
+{
   declare id?: number;
   declare fullName: string | null;
   declare phoneNumber: string | null;
@@ -51,7 +53,7 @@ class Order extends Model<OrderAttributes, OrderCreationAttributes>
 Order.init(
   {
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,  // ✅ unsigned primary key
+      type: DataTypes.INTEGER.UNSIGNED, // ✅ unsigned primary key
       autoIncrement: true,
       primaryKey: true,
     },
@@ -73,14 +75,14 @@ Order.init(
     dateEnd: { type: DataTypes.STRING },
     deliveryStatus: { type: DataTypes.STRING },
     userId: {
-      type: DataTypes.INTEGER.UNSIGNED,   // ✅ must also be UNSIGNED
+      type: DataTypes.STRING(36),
       allowNull: false,
       references: { model: "users", key: "id" },
       onUpdate: "CASCADE",
       onDelete: "CASCADE",
     },
   },
-  { sequelize, modelName: "order", tableName: "orders", timestamps: false }
+  { sequelize, modelName: "order", tableName: "orders", timestamps: false },
 );
 
 export default Order;

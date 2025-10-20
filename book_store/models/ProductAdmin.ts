@@ -15,7 +15,10 @@ export interface ProductAdminAttributes {
   product_image: string | null;
 }
 
-export type ProductAdminCreationAttributes = Optional<ProductAdminAttributes, "id">;
+export type ProductAdminCreationAttributes = Optional<
+  ProductAdminAttributes,
+  "id"
+>;
 
 class ProductAdmin
   extends Model<ProductAdminAttributes, ProductAdminCreationAttributes>
@@ -36,7 +39,11 @@ class ProductAdmin
 
 ProductAdmin.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     product_name: { type: DataTypes.STRING },
     author: { type: DataTypes.STRING },
     publisher: { type: DataTypes.STRING },
@@ -48,7 +55,12 @@ ProductAdmin.init(
     rating: { type: DataTypes.STRING },
     product_image: { type: DataTypes.STRING },
   },
-  { sequelize, modelName: "productadmin", tableName: "productadmins", timestamps: false }
+  {
+    sequelize,
+    modelName: "productadmin",
+    tableName: "productadmins",
+    timestamps: false,
+  },
 );
 
 export default ProductAdmin;

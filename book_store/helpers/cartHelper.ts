@@ -5,7 +5,6 @@ import Discount from "../models/Discount.js";
 import helper from "./hbs.js";
 import chalk from "chalk";
 
-
 type NumLike = number | string;
 
 export type CartItem = {
@@ -29,7 +28,6 @@ export type DiscountLike = {
   discount_rate?: NumLike | null;
   min_qty?: NumLike | null;
 } | null;
-
 
 const n = (v: NumLike | undefined | null, fallback = 0): number => {
   const num = Number(v);
@@ -78,7 +76,7 @@ export const checkShipmentCountrySingapore = (country?: string): boolean => {
 export const checkProductPriceDiscounted = (
   qty: number | undefined,
   price: number | undefined,
-  newSub: number | string | undefined
+  newSub: number | string | undefined,
 ): string | undefined => {
   if (
     qty == null ||
@@ -102,13 +100,11 @@ export const checkProductPriceDiscounted = (
   return undefined;
 };
 
-
-
 // ------------------- COUPON CALCULATION -------------------
 
 export const calculate_cart_total_coupon_savings = async (
   req: Request,
-  coupon_input: string
+  coupon_input: string,
 ): Promise<number> => {
   const cart_shipping_fee = req.session.cart_shipping_fee || 0;
   const initialSubTotal = req.session.cart_subtotal_initial || 0;
@@ -143,8 +139,7 @@ export const calculate_cart_total_coupon_savings = async (
 
       case "SUB":
         couponSavingsTotal =
-          initialSubTotal -
-          discountedSubtotal * (1 - (coupon.discount ?? 0));
+          initialSubTotal - discountedSubtotal * (1 - (coupon.discount ?? 0));
         break;
 
       default:
@@ -154,9 +149,7 @@ export const calculate_cart_total_coupon_savings = async (
     if (couponSavingsTotal > (coupon.limit ?? 0))
       couponSavingsTotal = coupon.limit ?? 0;
 
-    req.session.cart_coupon_savings = parseFloat(
-      couponSavingsTotal.toFixed(2)
-    );
+    req.session.cart_coupon_savings = parseFloat(couponSavingsTotal.toFixed(2));
     await helper.saveSession(req);
     return couponSavingsTotal;
   } catch (err) {
@@ -172,7 +165,7 @@ export const calculateDiscountedPrice = (
   quantity: number,
   price: number,
   discountRate: number,
-  minQty: number
+  minQty: number,
 ) => {
   const qty = Math.max(0, quantity);
   const p = n(price);
@@ -197,7 +190,6 @@ export const calculateDiscountedPrice = (
   };
 };
 
-
 // ------------------- CART ITEM UPDATES -------------------
 
 export const updateCartItem = (
@@ -205,7 +197,7 @@ export const updateCartItem = (
   cartItem: CartItem,
   product: ProductLike,
   discount: DiscountLike,
-  increment: boolean
+  increment: boolean,
 ): void => {
   if (increment) cartItem.Quantity = n(cartItem.Quantity, 0) + 1;
 
@@ -220,7 +212,7 @@ export const updateCartItem = (
       qty,
       price,
       rate,
-      minQty
+      minQty,
     );
     cartItem.SubtotalPrice = discountedSubtotalPrice;
   } else {
@@ -235,7 +227,7 @@ export const updateCartItem = (
 
 export const refreshCartCalculations = async (
   req: Request,
-  cart: Record<string, any>
+  cart: Record<string, any>,
 ) => {
   let initialSubtotal = 0;
   let discountedSubtotal = 0;
@@ -247,7 +239,10 @@ export const refreshCartCalculations = async (
   for (const key in cart) {
     const item = cart[key];
     if (!item?.ID && !item?.id) {
-      console.warn(`[refreshCartCalculations] Skipping invalid cart item`, item);
+      console.warn(
+        `[refreshCartCalculations] Skipping invalid cart item`,
+        item,
+      );
       continue;
     }
 
@@ -304,14 +299,12 @@ export const refreshCartCalculations = async (
         break;
 
       case "SHIP":
-        couponSavingsTotal =
-          cart_shipping_fee * (1 - (coupon?.discount ?? 0));
+        couponSavingsTotal = cart_shipping_fee * (1 - (coupon?.discount ?? 0));
         break;
 
       case "SUB":
         couponSavingsTotal =
-          initialSubtotal -
-          discountedSubtotal * (1 - (coupon?.discount ?? 0));
+          initialSubtotal - discountedSubtotal * (1 - (coupon?.discount ?? 0));
         break;
 
       default:
@@ -343,18 +336,15 @@ export const refreshCartCalculations = async (
   await helper.saveSession(req);
 };
 
-
 // ------------------- CART ADDITION / DISCOUNT -------------------
 
 export const addNewCartItem = (
   req: Request,
   cart: Record<string, any>,
   product: any,
-  discount: any
+  discount: any,
 ) => {
-  const currentQty = cart[product.id]
-    ? cart[product.id].Quantity + 1
-    : 1;
+  const currentQty = cart[product.id] ? cart[product.id].Quantity + 1 : 1;
 
   const subtotalPrice = discount
     ? currentQty >= discount.min_qty
@@ -396,7 +386,7 @@ export const processCart = (
   cart: Record<string, any>,
   product: any,
   discount: any,
-  increment: boolean
+  increment: boolean,
 ) => {
   if (cart[product.id]) {
     updateCartItem(req, cart[product.id], product, discount, increment);

@@ -63,7 +63,6 @@ import {
   logCyan,
 } from "../helpers/loggerHelper.js";
 
-
 // Page that displays all the products
 router.get("/product-list", async (req: Request, res: Response) => {
   try {
@@ -86,7 +85,6 @@ router.get("/product-list", async (req: Request, res: Response) => {
     res.status(500).send("Internal Server Error");
   }
 });
-
 
 // Page that displays a single product's details
 router.get("/individual-product/:id", async (req: Request, res: Response) => {
@@ -300,13 +298,15 @@ router.get(
   },
 );
 
-
 router.get("/product-list/:id", async (req: Request, res: Response) => {
   try {
     const productId = Number(req.params.id);
 
     const discount = await carthelper.getProductDiscount(productId);
-    const product = await productadmin.findOne({ where: { id: productId }, raw: true });
+    const product = await productadmin.findOne({
+      where: { id: productId },
+      raw: true,
+    });
 
     if (!product) {
       return res.json({ success: false, message: "Product not found" });
@@ -334,7 +334,9 @@ router.get("/product-list/:id", async (req: Request, res: Response) => {
     const flashMessage_clientside = `${product.product_name} added to cart!`;
     res.json({ success: true, flashMessage: [flashMessage_clientside] });
 
-    logMagenta(`[GET /product-list/:id] ${JSON.stringify(req.session.userCart, null, 2)}`);
+    logMagenta(
+      `[GET /product-list/:id] ${JSON.stringify(req.session.userCart, null, 2)}`,
+    );
   } catch (err) {
     console.error(err);
     res.json({ success: false });
@@ -346,7 +348,10 @@ router.post("/individual-product/:id", async (req: Request, res: Response) => {
     const productId = Number(req.params.id);
 
     const discount = await carthelper.getProductDiscount(productId);
-    const product = await productadmin.findOne({ where: { id: productId }, raw: true });
+    const product = await productadmin.findOne({
+      where: { id: productId },
+      raw: true,
+    });
 
     if (!product) {
       return res.json({ success: false, message: "Product not found" });
@@ -371,7 +376,9 @@ router.post("/individual-product/:id", async (req: Request, res: Response) => {
     const flashMessage_clientside = `${product.product_name} added to cart!`;
     res.json({ success: true, flashMessage: [flashMessage_clientside] });
 
-    logMagenta(`[POST /individual-product/:id] ${JSON.stringify(req.session.userCart, null, 2)}`);
+    logMagenta(
+      `[POST /individual-product/:id] ${JSON.stringify(req.session.userCart, null, 2)}`,
+    );
   } catch (error) {
     console.error(error);
     res.json({
@@ -409,7 +416,9 @@ router.post("/cart", async (req, res) => {
         ).toFixed(2);
 
         // 3) if a product/discount exists, let helper refine (e.g., bulk discount)
-        const product = await productadmin.findOne({ where: { id: productId } });
+        const product = await productadmin.findOne({
+          where: { id: productId },
+        });
         if (!product) continue;
 
         const discount = await carthelper.getProductDiscount(productId);
@@ -421,7 +430,7 @@ router.post("/cart", async (req, res) => {
       if (req.session.coupon_object) {
         await carthelper.calculate_cart_total_coupon_savings(
           req,
-          req.session.coupon_object.code
+          req.session.coupon_object.code,
         );
       } else {
         req.session.cart_coupon_savings = 0;
@@ -438,8 +447,6 @@ router.post("/cart", async (req, res) => {
   }
 });
 
-
-
 // Delete Item in Cart
 router.get("/delete-cart-item/:id", async (req, res) => {
   try {
@@ -447,15 +454,27 @@ router.get("/delete-cart-item/:id", async (req, res) => {
 
     // 🧱 Validate ID and cart
     if (Number.isNaN(id) || !req.session.userCart) {
-      console.warn("[DELETE /delete-cart-item] Invalid ID or empty cart:", req.params.id);
+      console.warn(
+        "[DELETE /delete-cart-item] Invalid ID or empty cart:",
+        req.params.id,
+      );
       return res.redirect("/product/cart?page=1");
     }
 
     const cartItem = req.session.userCart[id];
 
     if (!cartItem) {
-      console.warn("[DELETE /delete-cart-item] No such cart item found for id:", id);
-      alertMessage(res, "error", "Item not found in cart", "fas fa-sign-in-alt", true);
+      console.warn(
+        "[DELETE /delete-cart-item] No such cart item found for id:",
+        id,
+      );
+      alertMessage(
+        res,
+        "error",
+        "Item not found in cart",
+        "fas fa-sign-in-alt",
+        true,
+      );
       return res.redirect("/product/cart?page=1");
     }
 
@@ -475,7 +494,7 @@ router.get("/delete-cart-item/:id", async (req, res) => {
       "success",
       "An item has been removed from the cart",
       "fas fa-sign-in-alt",
-      true
+      true,
     );
 
     // ✅ Redirect with cache busting query
@@ -507,10 +526,18 @@ router.get("/cart", async (req: Request, res: Response) => {
 
   await carthelper.refreshCartCalculations(req, userCart);
 
-  logMagenta(`[GET /cart/] initialSubtotal = ${req.session.cart_subtotal_initial}`);
-  logMagenta(`[GET /cart/] discountedSubtotal = ${req.session.cart_subtotal_final}`);
-  logMagenta(`[GET /cart/] discountSavingsTotal = ${req.session.cart_discount_savings}`);
-  logMagenta(`[GET /cart/] couponSavingsTotal = ${req.session.cart_coupon_savings}`);
+  logMagenta(
+    `[GET /cart/] initialSubtotal = ${req.session.cart_subtotal_initial}`,
+  );
+  logMagenta(
+    `[GET /cart/] discountedSubtotal = ${req.session.cart_subtotal_final}`,
+  );
+  logMagenta(
+    `[GET /cart/] discountSavingsTotal = ${req.session.cart_discount_savings}`,
+  );
+  logMagenta(
+    `[GET /cart/] couponSavingsTotal = ${req.session.cart_coupon_savings}`,
+  );
   logMagenta(`[GET /cart/] grandTotal = ${req.session.cart_grandtotal}`);
 
   // 🧠 Guard against undefined numeric values
@@ -685,7 +712,7 @@ router.get("/select-payment", checkCart, (req, res) => {
   const title = "Select Payment";
   //const shipment_country = req.session.shipment_country;
   res.render("checkout/select-payment", {
-    title
+    title,
   });
 });
 
@@ -717,75 +744,78 @@ router.get("/paynow", checkCart, async (req, res) => {
   });
 });
 
-
-router.get("/stripe-payment", checkCart, async (req: Request, res: Response) => {
-  const user = req.user;
-  if (!user) {
-    console.error("User not authenticated");
-    return res.status(401).send("Not authenticated");
-  }
-
-  console.log("USER STRIPE ID IS", user.stripeID);
-  console.log("USER ISADMIN IS", user.isadmin);
-
-  try {
-    // ✅ Retrieve or create Stripe customer
-    if (user.stripeID) {
-      const customer = await stripe.customers.retrieve(user.stripeID);
-      console.log("Retrieved customer:", customer);
-    } else {
-      const customer = await stripe.customers.create(
-        {
-          name: user.name ?? undefined,
-          email: user.email ?? undefined,
-          phone: user.PhoneNo ?? undefined,
-          shipping: {
-            name: user.name ?? undefined,
-            phone: user.PhoneNo ?? undefined,
-            address: {
-              line1: user.address ?? undefined,
-              line2: user.address1 ?? undefined,
-              city: user.city ?? undefined,
-              country: user.country ?? undefined,
-              postal_code: user.postalCode ?? undefined,
-            },
-          },
-        } as Stripe.CustomerCreateParams // 👈 cast fixes the overload issue
-      );
-
-      console.log("Created Stripe customer:", customer.id);
-
-      const current_user = await User.findOne({ where: { id: user.id } });
-      if (current_user) {
-        (current_user as any).stripeID = customer.id;
-        await current_user.save();
-      }
+router.get(
+  "/stripe-payment",
+  checkCart,
+  async (req: Request, res: Response) => {
+    const user = req.user;
+    if (!user) {
+      console.error("User not authenticated");
+      return res.status(401).send("Not authenticated");
     }
 
-    // ✅ Create payment intent
-    const total = Number(req.session.cart_grandtotal ?? 0);
-    const paymentIntent = await stripe.paymentIntents.create(
-      {
-        amount: Math.ceil(total * 100),
-        currency: "sgd",
-        payment_method_types: ["card"],
-        receipt_email: user.email ?? "default@example.com",
-        setup_future_usage: "on_session",
-        description: `Order worth $${total.toFixed(2)} by ${user.name ?? "Guest"}`,
-      } as Stripe.PaymentIntentCreateParams // 👈 cast avoids same issue here
-    );
+    console.log("USER STRIPE ID IS", user.stripeID);
+    console.log("USER ISADMIN IS", user.isadmin);
 
-    console.log("Created payment intent:", paymentIntent.id);
+    try {
+      // ✅ Retrieve or create Stripe customer
+      if (user.stripeID) {
+        const customer = await stripe.customers.retrieve(user.stripeID);
+        console.log("Retrieved customer:", customer);
+      } else {
+        const customer = await stripe.customers.create(
+          {
+            name: user.name ?? undefined,
+            email: user.email ?? undefined,
+            phone: user.PhoneNo ?? undefined,
+            shipping: {
+              name: user.name ?? undefined,
+              phone: user.PhoneNo ?? undefined,
+              address: {
+                line1: user.address ?? undefined,
+                line2: user.address1 ?? undefined,
+                city: user.city ?? undefined,
+                country: user.country ?? undefined,
+                postal_code: user.postalCode ?? undefined,
+              },
+            },
+          } as Stripe.CustomerCreateParams, // 👈 cast fixes the overload issue
+        );
 
-    res.render("checkout/stripe", {
-      client_secret: paymentIntent.client_secret,
-      title: "Stripe Payment",
-    });
-  } catch (err: any) {
-    console.error("Stripe payment error:", err.message ?? err);
-    res.status(500).send("Payment processing error");
-  }
-});
+        console.log("Created Stripe customer:", customer.id);
+
+        const current_user = await User.findOne({ where: { id: user.id } });
+        if (current_user) {
+          (current_user as any).stripeID = customer.id;
+          await current_user.save();
+        }
+      }
+
+      // ✅ Create payment intent
+      const total = Number(req.session.cart_grandtotal ?? 0);
+      const paymentIntent = await stripe.paymentIntents.create(
+        {
+          amount: Math.ceil(total * 100),
+          currency: "sgd",
+          payment_method_types: ["card"],
+          receipt_email: user.email ?? "default@example.com",
+          setup_future_usage: "on_session",
+          description: `Order worth $${total.toFixed(2)} by ${user.name ?? "Guest"}`,
+        } as Stripe.PaymentIntentCreateParams, // 👈 cast avoids same issue here
+      );
+
+      console.log("Created payment intent:", paymentIntent.id);
+
+      res.render("checkout/stripe", {
+        client_secret: paymentIntent.client_secret,
+        title: "Stripe Payment",
+      });
+    } catch (err: any) {
+      console.error("Stripe payment error:", err.message ?? err);
+      res.status(500).send("Payment processing error");
+    }
+  },
+);
 
 router.post("/paynow", async (req: Request, res: Response) => {
   try {
@@ -797,20 +827,20 @@ router.post("/paynow", async (req: Request, res: Response) => {
     const total = Number(req.session.cart_grandtotal ?? 0);
 
     // ✅ Sequelize expects numbers, not strings — use numeric types directly
-const new_pending_order = await PendingOrder.create({
-  fullName: req.session.shipment_recipient_name ?? "Unknown",
-  phoneNumber: req.session.shipment_recipient_phonenum ?? "",
-  address: req.session.shipment_lineone ?? "",
-  address1: req.session.shipment_linetwo ?? "",
-  city: req.session.shipment_city ?? "",
-  country: req.session.shipment_country ?? "",
-  postalCode: req.session.shipment_postal_code ?? "",
-  deliverFee: 0,
-  subtotalPrice: subtotal,
-  totalPrice: total,
-  dateStart,
-  userId: req.user ? Number(req.user.id) : null, // ✅ fix here
-});
+    const new_pending_order = await PendingOrder.create({
+      fullName: req.session.shipment_recipient_name ?? "Unknown",
+      phoneNumber: req.session.shipment_recipient_phonenum ?? "",
+      address: req.session.shipment_lineone ?? "",
+      address1: req.session.shipment_linetwo ?? "",
+      city: req.session.shipment_city ?? "",
+      country: req.session.shipment_country ?? "",
+      postalCode: req.session.shipment_postal_code ?? "",
+      deliverFee: 0,
+      subtotalPrice: subtotal,
+      totalPrice: total,
+      dateStart,
+      userId: req.user ? Number(req.user.id) : null, // ✅ fix here
+    });
 
     // ✅ Order items
     const userCart = req.session.userCart ?? {};
@@ -866,7 +896,6 @@ const new_pending_order = await PendingOrder.create({
   }
 });
 
-
 router.post("/stripe-payment", async (req, res) => {
   try {
     // ✅ Ensure the user is authenticated
@@ -876,7 +905,8 @@ router.post("/stripe-payment", async (req, res) => {
     const userId = Number(req.user.id); // TS-safe number conversion
 
     // ✅ Helper to normalize undefined → null
-    const nullify = <T>(v: T | undefined): T | null => (v === undefined ? null : v);
+    const nullify = <T>(v: T | undefined): T | null =>
+      v === undefined ? null : v;
 
     // 1️⃣ Create and verify addresses
     const toAddress = await api.Address.createAndVerify({
@@ -922,7 +952,7 @@ router.post("/stripe-payment", async (req, res) => {
     // 4️⃣ Buy the shipment
     const boughtShipment = await api.Shipment.buy(
       shipment.id,
-      shipment.lowestRate(["USPS"])
+      shipment.lowestRate(["USPS"]),
     );
 
     // Debug logs
@@ -951,27 +981,26 @@ router.post("/stripe-payment", async (req, res) => {
     const deliveryStatus = boughtShipment.tracker?.status || "";
 
     // 6️⃣ Create the order (fixes undefined → null)
-const newOrder = await order.create({
-  fullName: nullify(fullName),
-  phoneNumber: nullify(phoneNumber),
-  address: nullify(address),
-  address1: nullify(address1),
-  city: nullify(city),
-  country: nullify(country),
-  postalCode: nullify(postalCode),
-  deliverFee,
-  subtotalPrice: nullify(subtotalPrice),
-  totalPrice: nullify(totalPrice),
-  shippingId: nullify(shippingId),
-  addressId: nullify(addressId),
-  trackingId: nullify(trackingId),
-  trackingCode: nullify(trackingCode),
-  dateStart: nullify(dateStart),
-  dateEnd: nullify(dateEnd),
-  deliveryStatus: nullify(deliveryStatus),
-  userId,
-});
-
+    const newOrder = await order.create({
+      fullName: nullify(fullName),
+      phoneNumber: nullify(phoneNumber),
+      address: nullify(address),
+      address1: nullify(address1),
+      city: nullify(city),
+      country: nullify(country),
+      postalCode: nullify(postalCode),
+      deliverFee,
+      subtotalPrice: nullify(subtotalPrice),
+      totalPrice: nullify(totalPrice),
+      shippingId: nullify(shippingId),
+      addressId: nullify(addressId),
+      trackingId: nullify(trackingId),
+      trackingCode: nullify(trackingCode),
+      dateStart: nullify(dateStart),
+      dateEnd: nullify(dateEnd),
+      deliveryStatus: nullify(deliveryStatus),
+      userId,
+    });
 
     console.log("=== Order Created ===");
     console.log(JSON.stringify(newOrder, null, 2));
@@ -1020,8 +1049,6 @@ const newOrder = await order.create({
   }
 });
 
-
-
 router.get("/stripe-txn-end", (req, res) => {
   var title = "Thank you!";
   res.render("checkout/thank-you-stripe", {
@@ -1044,7 +1071,7 @@ router.get("/discount-menu", ensureAdminAuthenticated, (req, res) => {
   });
 });
 
-router.get(
+(router.get(
   "/view-pending-orders",
   ensureAdminAuthenticated,
   async (req, res) => {
@@ -1068,47 +1095,65 @@ router.get(
       try {
         const PO = await PendingOrder.findOne({ where: { id: req.params.id } });
         if (!PO) {
-          alertMessage(res, "danger", "Pending Order not found", "fas fa-exclamation-circle", true);
+          alertMessage(
+            res,
+            "danger",
+            "Pending Order not found",
+            "fas fa-exclamation-circle",
+            true,
+          );
           return res.redirect("/product/view-pending-orders");
         }
-  
+
         const Pi = await PendingOrderItem.findAll({
           where: { pendingOrderId: PO.id },
         });
-  
-  // Sending a message using Twilio
-if (!process.env.TWILIO_ACCOUNT_PHONENO) {
-  throw new Error("TWILIO_ACCOUNT_PHONENO is not set in environment variables");
-}
 
-await client.messages.create({
-  body: "From BookStore: We are sorry to inform you that your order has been cancelled by the administrator due to lack of payment.",
-  from: process.env.TWILIO_ACCOUNT_PHONENO, // ✅ now guaranteed string
-  to: `+65${PO.phoneNumber}`,
-});
+        // Sending a message using Twilio
+        if (!process.env.TWILIO_ACCOUNT_PHONENO) {
+          throw new Error(
+            "TWILIO_ACCOUNT_PHONENO is not set in environment variables",
+          );
+        }
 
-        alertMessage(res, "success", `Pending Order with ID ${PO.id} Deleted`, "fas fa-exclamation-circle", true);
-  
+        await client.messages.create({
+          body: "From BookStore: We are sorry to inform you that your order has been cancelled by the administrator due to lack of payment.",
+          from: process.env.TWILIO_ACCOUNT_PHONENO, // ✅ now guaranteed string
+          to: `+65${PO.phoneNumber}`,
+        });
+
+        alertMessage(
+          res,
+          "success",
+          `Pending Order with ID ${PO.id} Deleted`,
+          "fas fa-exclamation-circle",
+          true,
+        );
+
         // Destroy the order
         await PO.destroy();
-  
-        // Destroy each pending order item
-for (const item of Pi) {
-  console.log(`Deleting Product ${item.id}`);
-  await item.destroy();
-}
 
-  
+        // Destroy each pending order item
+        for (const item of Pi) {
+          console.log(`Deleting Product ${item.id}`);
+          await item.destroy();
+        }
+
         res.redirect("/product/view-pending-orders");
       } catch (err) {
         console.error(err);
-        alertMessage(res, "danger", "An error occurred while deleting the order", "fas fa-exclamation-circle", true);
+        alertMessage(
+          res,
+          "danger",
+          "An error occurred while deleting the order",
+          "fas fa-exclamation-circle",
+          true,
+        );
         res.redirect("/product/view-pending-orders");
       }
-    }
-  );
+    },
+  ));
 
-  
 router.get("/create-coupon", ensureAdminAuthenticated, (req, res) => {
   // if (!req.session.public_coupon) {
   //     req.session.public_coupon = "NULL";
@@ -1143,19 +1188,31 @@ router.post("/create-coupon", ensureAdminAuthenticated, async (req, res) => {
   const coupon_public = publicInput === "YES"; // boolean
   const expiry_date_time = moment(
     `${coupon_expire_date} ${coupon_expire_time}`,
-    "DD/MM/YYYY, hh:mm:ss a"
+    "DD/MM/YYYY, hh:mm:ss a",
   );
 
   const current_time = moment();
 
   const existing = await Coupon.findOne({ where: { code: coupon_code } });
   if (existing) {
-    alertMessage(res, "danger", `Code ${existing.code} already exists!`, "fas fa-exclamation-circle", true);
+    alertMessage(
+      res,
+      "danger",
+      `Code ${existing.code} already exists!`,
+      "fas fa-exclamation-circle",
+      true,
+    );
     return res.redirect("create-coupon");
   }
 
   if (expiry_date_time.isBefore(current_time)) {
-    alertMessage(res, "danger", `Date or Time entered invalid!`, "fas fa-exclamation-circle", true);
+    alertMessage(
+      res,
+      "danger",
+      `Date or Time entered invalid!`,
+      "fas fa-exclamation-circle",
+      true,
+    );
     return res.redirect("create-coupon");
   }
 
@@ -1181,12 +1238,11 @@ router.post("/create-coupon", ensureAdminAuthenticated, async (req, res) => {
     "success",
     `Coupon Code ${coupon_object.code} created, expires on ${coupon_object.expiry}`,
     "fas fa-check-circle",
-    true
+    true,
   );
 
   res.redirect("/product/create-coupon");
 });
-
 
 // Create Discount Page
 router.get("/create-discount", ensureAdminAuthenticated, async (req, res) => {
@@ -1204,51 +1260,67 @@ router.get("/create-discount", ensureAdminAuthenticated, async (req, res) => {
   });
 });
 
-router.post("/create-discount", ensureAdminAuthenticated, async (req: Request, res: Response) => {
-  const target_id = req.body.target_id;
-  const product_discount = req.body.product_discount;
-  const min_qty = req.body.min_qty;
-  const discount_msg = req.body.discount_msg;
-  const discount_expire_date = req.body.discount_expire_date;
-  const discount_expire_time = req.body.discount_expire_time;
+router.post(
+  "/create-discount",
+  ensureAdminAuthenticated,
+  async (req: Request, res: Response) => {
+    const target_id = req.body.target_id;
+    const product_discount = req.body.product_discount;
+    const min_qty = req.body.min_qty;
+    const discount_msg = req.body.discount_msg;
+    const discount_expire_date = req.body.discount_expire_date;
+    const discount_expire_time = req.body.discount_expire_time;
 
-  // ✅ boolean, not number
-  const stackable = req.body.stackable === "on" || req.body.stackable === "true";
+    // ✅ boolean, not number
+    const stackable =
+      req.body.stackable === "on" || req.body.stackable === "true";
 
-  const full_time = `${discount_expire_date} ${discount_expire_time}`;
-  const expiry_date_time = moment(full_time, "DD/MM/YYYY, hh:mm:ss a");
+    const full_time = `${discount_expire_date} ${discount_expire_time}`;
+    const expiry_date_time = moment(full_time, "DD/MM/YYYY, hh:mm:ss a");
 
-  const current_time = moment();
-  const et = moment(expiry_date_time);
+    const current_time = moment();
+    const et = moment(expiry_date_time);
 
-  const d = await Discount.findOne({ where: { target_id } });
+    const d = await Discount.findOne({ where: { target_id } });
 
-  if (d) {
-    alertMessage(res, "danger", `Discount for ID: ${d.target_id} already exists!`, "fas fa-exclamation-circle", true);
-  } else if (et.isBefore(current_time)) {
-    alertMessage(res, "danger", `Date or Time entered invalid!`, "fas fa-exclamation-circle", true);
-  } else {
-    const new_d = await Discount.create({
-      discount_rate: product_discount,
-      min_qty,
-      expiry: expiry_date_time.toDate(), // ✅ cast to Date
-      stackable,                         // ✅ boolean
-      message: discount_msg,
-      target_id,
-    });
+    if (d) {
+      alertMessage(
+        res,
+        "danger",
+        `Discount for ID: ${d.target_id} already exists!`,
+        "fas fa-exclamation-circle",
+        true,
+      );
+    } else if (et.isBefore(current_time)) {
+      alertMessage(
+        res,
+        "danger",
+        `Date or Time entered invalid!`,
+        "fas fa-exclamation-circle",
+        true,
+      );
+    } else {
+      const new_d = await Discount.create({
+        discount_rate: product_discount,
+        min_qty,
+        expiry: expiry_date_time.toDate(), // ✅ cast to Date
+        stackable, // ✅ boolean
+        message: discount_msg,
+        target_id,
+      });
 
-    alertMessage(
-      res,
-      "success",
-      `Discount for Product ID: ${new_d.target_id} created, expires on ${new_d.expiry}`,
-      "fas fa-check-circle",
-      true,
-    );
-  }
+      alertMessage(
+        res,
+        "success",
+        `Discount for Product ID: ${new_d.target_id} created, expires on ${new_d.expiry}`,
+        "fas fa-check-circle",
+        true,
+      );
+    }
 
-  res.redirect("/product/create-discount");
-});
-
+    res.redirect("/product/create-discount");
+  },
+);
 
 // Admin - View Discounts and Coupons and Delete together
 
@@ -1453,7 +1525,5 @@ router.get("/getjson", (req: Request, res: Response) => {
   console.log(results.results);
   res.json(results);
 });
-
-
 
 export { router };

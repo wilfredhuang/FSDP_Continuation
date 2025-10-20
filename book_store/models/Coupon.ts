@@ -14,7 +14,10 @@ export interface CouponAttributes {
 
 export type CouponCreationAttributes = Optional<CouponAttributes, "id">;
 
-class Coupon extends Model<CouponAttributes, CouponCreationAttributes> implements CouponAttributes {
+class Coupon
+  extends Model<CouponAttributes, CouponCreationAttributes>
+  implements CouponAttributes
+{
   public id?: number;
   public code!: string | null;
   public type!: string | null;
@@ -27,7 +30,11 @@ class Coupon extends Model<CouponAttributes, CouponCreationAttributes> implement
 
 Coupon.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     code: { type: DataTypes.STRING },
     type: { type: DataTypes.STRING },
     discount: { type: DataTypes.DECIMAL(3, 2) },
@@ -36,7 +43,7 @@ Coupon.init(
     message: { type: DataTypes.STRING },
     expiry: { type: DataTypes.DATE },
   },
-  { sequelize, modelName: "coupon", tableName: "coupons", timestamps: false }
+  { sequelize, modelName: "coupon", tableName: "coupons", timestamps: false },
 );
 
 export default Coupon;

@@ -7,7 +7,7 @@ const flashMessage = (
   messageType: FlashType,
   message: string,
   icon: string,
-  dismissable: boolean
+  dismissable: boolean,
 ): void => {
   let alert: any;
   switch (messageType) {

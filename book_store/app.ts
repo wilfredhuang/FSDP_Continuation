@@ -55,7 +55,9 @@ dotenv.config({ path: path.resolve(__dirname, "./.env") });
    ⚙️ 2. Core Modules
    ============================================================ */
 import session, { SessionOptions } from "express-session";
-import connectMySQL, { Options as MySQLStoreOptions } from "express-mysql-session";
+import connectMySQL, {
+  Options as MySQLStoreOptions,
+} from "express-mysql-session";
 import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import methodOverride from "method-override";
@@ -130,7 +132,7 @@ app.engine(
       displayCouponType: carthelper.displayCouponType,
       checkProductPriceDiscounted: carthelper.checkProductPriceDiscounted,
     },
-  })
+  }),
 );
 app.set("view engine", "handlebars");
 
@@ -234,7 +236,9 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
     }
 
     // Handle public coupon
-    const existingCoupon = await (Coupon as any).findOne({ where: { public: 1 } });
+    const existingCoupon = await (Coupon as any).findOne({
+      where: { public: 1 },
+    });
     if (!existingCoupon) {
       req.session.public_coupon = null;
     } else if (moment().isAfter(existingCoupon.expiry)) {
@@ -248,7 +252,10 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
 
     req.session.save(() => {});
   } catch (error) {
-    logRed("❌ Error initializing session variables:", (error as Error).message);
+    logRed(
+      "❌ Error initializing session variables:",
+      (error as Error).message,
+    );
   }
   next();
 });

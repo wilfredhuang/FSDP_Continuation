@@ -4,12 +4,16 @@ import alertMessage from "../helpers/messenger.js";
 export const checkCart = (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void => {
   if (req.isAuthenticated && req.isAuthenticated()) {
     console.log(req.user?.confirmed);
 
-    if (req.user && req.session?.cart_grandtotal && req.session.cart_grandtotal > 0) {
+    if (
+      req.user &&
+      req.session?.cart_grandtotal &&
+      req.session.cart_grandtotal > 0
+    ) {
       return next();
     } else {
       alertMessage(
@@ -17,12 +21,18 @@ export const checkCart = (
         "danger",
         "Access denied. No items found in cart",
         "fas fa-exclamation-circle",
-        true
+        true,
       );
       return res.redirect("/product/product-list");
     }
   }
 
-  alertMessage(res, "danger", "Please Log in to purchase", "fas fa-exclamation-circle", true);
+  alertMessage(
+    res,
+    "danger",
+    "Please Log in to purchase",
+    "fas fa-exclamation-circle",
+    true,
+  );
   res.redirect("/user/login");
 };

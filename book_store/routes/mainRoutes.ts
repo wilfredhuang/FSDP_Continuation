@@ -27,21 +27,24 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-router.get("/index", async (req: Request, res: Response, next: NextFunction) => {
-  const title = "Bookstore Home Page";
-  const navStatusHome = "active";
+router.get(
+  "/index",
+  async (req: Request, res: Response, next: NextFunction) => {
+    const title = "Bookstore Home Page";
+    const navStatusHome = "active";
 
-  if (req.user) logGreen(`[GET /index] LOGGED IN as ${req.user.email}`);
-  else logYellow("[GET /index] NOT LOGGED IN");
+    if (req.user) logGreen(`[GET /index] LOGGED IN as ${req.user.email}`);
+    else logYellow("[GET /index] NOT LOGGED IN");
 
-  try {
-    const pa = await productadmin.findAll({ order: [["rating", "DESC"]] });
-    res.render("index", { title, navStatusHome, productadmin: pa });
-  } catch (error) {
-    console.error("Error rendering index page:", error);
-    next(error);
-  }
-});
+    try {
+      const pa = await productadmin.findAll({ order: [["rating", "DESC"]] });
+      res.render("index", { title, navStatusHome, productadmin: pa });
+    } catch (error) {
+      console.error("Error rendering index page:", error);
+      next(error);
+    }
+  },
+);
 
 router.get("/about", (req: Request, res: Response) => {
   res.render("about", { title: "About Us", navStatusAbout: "active" });

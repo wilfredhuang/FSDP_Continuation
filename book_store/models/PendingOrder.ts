@@ -17,7 +17,10 @@ export interface PendingOrderAttributes {
   userId: number | null;
 }
 
-export type PendingOrderCreationAttributes = Optional<PendingOrderAttributes, "id">;
+export type PendingOrderCreationAttributes = Optional<
+  PendingOrderAttributes,
+  "id"
+>;
 
 class PendingOrder
   extends Model<PendingOrderAttributes, PendingOrderCreationAttributes>
@@ -40,7 +43,11 @@ class PendingOrder
 
 PendingOrder.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     fullName: { type: DataTypes.STRING },
     phoneNumber: { type: DataTypes.STRING },
     address: { type: DataTypes.STRING },
@@ -53,11 +60,11 @@ PendingOrder.init(
     totalPrice: { type: DataTypes.DECIMAL(10, 2) },
     dateStart: { type: DataTypes.STRING },
     userId: {
-      type: DataTypes.INTEGER.UNSIGNED, // ✅ must match User.id type
+      type: DataTypes.STRING(36), // ✅ must match User.id type
       allowNull: true,
       references: { model: "users", key: "id" },
-      onDelete: "SET NULL",
-      onUpdate: "CASCADE",
+      onDelete: "CASCADE",
+      onUpdate: "SET NULL",
     },
   },
   {
@@ -65,7 +72,7 @@ PendingOrder.init(
     modelName: "pending_order",
     tableName: "pending_orders",
     timestamps: false,
-  }
+  },
 );
 
 export default PendingOrder;

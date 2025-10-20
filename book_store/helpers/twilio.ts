@@ -26,7 +26,10 @@ export const verifyTwilioConnection = async (): Promise<void> => {
     const response = await client.api.accounts(accountSid).fetch();
     console.log(`[Twilio] Account SID verified: ${response.sid}`);
   } catch (error: any) {
-    console.error("[Twilio] Error verifying Twilio account:", error.message || error);
+    console.error(
+      "[Twilio] Error verifying Twilio account:",
+      error.message || error,
+    );
   }
 };
 

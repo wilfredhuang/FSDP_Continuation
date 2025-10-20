@@ -41,7 +41,9 @@ const setUpDB = async (drop: boolean) => {
     const { default: Order } = await import("../models/Order.js");
     const { default: OrderItem } = await import("../models/OrderItem.js");
     const { default: PendingOrder } = await import("../models/PendingOrder.js");
-    const { default: PendingOrderItem } = await import("../models/PendingOrderItem.js");
+    const { default: PendingOrderItem } = await import(
+      "../models/PendingOrderItem.js"
+    );
     const { default: ProductAdmin } = await import("../models/ProductAdmin.js");
     const { default: Discount } = await import("../models/Discount.js");
 
@@ -88,7 +90,7 @@ const setUpDB = async (drop: boolean) => {
       Object.entries(sequelize.models).map(([key, model]) => ({
         name: key,
         tableName: (model as any).getTableName?.()?.toString?.() ?? "unknown",
-      }))
+      })),
     );
 
     // ------------------------------------------------------------

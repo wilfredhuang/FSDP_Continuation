@@ -19,7 +19,8 @@ export type OrderItemCreationAttributes = Optional<OrderItemAttributes, "id">;
 
 class OrderItem
   extends Model<OrderItemAttributes, OrderItemCreationAttributes>
-  implements OrderItemAttributes {
+  implements OrderItemAttributes
+{
   public id?: number;
   public product_name!: string | null;
   public author!: string | null;
@@ -62,7 +63,7 @@ OrderItem.init(
     modelName: "order_item",
     tableName: "order_items",
     timestamps: false,
-  }
+  },
 );
 
 export default OrderItem;

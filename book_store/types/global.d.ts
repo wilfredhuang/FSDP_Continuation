@@ -47,7 +47,7 @@ declare global {
   namespace Express {
     /** Passport user object stored in req.user */
     interface User {
-      id: string;
+      id: string | number;
       email?: string | null;
       username?: string;
       role?: string;
@@ -119,7 +119,7 @@ declare module "flash-messenger" {
       type: string,
       message: string,
       icon?: string,
-      toast?: boolean
+      toast?: boolean,
     ): void;
     middleware: RequestHandler;
   }
@@ -143,7 +143,7 @@ declare module "qrcode" {
   }
   export function toDataURL(
     text: string,
-    options?: QRCodeToDataURLOptions
+    options?: QRCodeToDataURLOptions,
   ): Promise<string>;
   const QRCode: { toDataURL: typeof toDataURL };
   export default QRCode;

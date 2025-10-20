@@ -13,7 +13,10 @@ export interface ProductAttributes {
 
 export type ProductCreationAttributes = Optional<ProductAttributes, "id">;
 
-class Product extends Model<ProductAttributes, ProductCreationAttributes> implements ProductAttributes {
+class Product
+  extends Model<ProductAttributes, ProductCreationAttributes>
+  implements ProductAttributes
+{
   public id?: number;
   public product_name!: string | null;
   public author!: string | null;
@@ -26,7 +29,11 @@ class Product extends Model<ProductAttributes, ProductCreationAttributes> implem
 
 Product.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     product_name: { type: DataTypes.STRING },
     author: { type: DataTypes.STRING },
     publisher: { type: DataTypes.STRING },
@@ -35,7 +42,7 @@ Product.init(
     stock: { type: DataTypes.STRING },
     details: { type: DataTypes.STRING(2000) },
   },
-  { sequelize, modelName: "product", tableName: "products", timestamps: false }
+  { sequelize, modelName: "product", tableName: "products", timestamps: false },
 );
 
 export default Product;

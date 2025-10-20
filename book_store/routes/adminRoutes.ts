@@ -9,7 +9,6 @@ import { Database, Resource } from "@adminjs/sequelize";
 //import { sequelize } from "../config/db_connection.js";
 import sequelize from "../config/db_connection.js"; // <-- default import
 
-
 import Product from "../models/Product.js";
 import User from "../models/User.js";
 import Order from "../models/Order.js";

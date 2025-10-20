@@ -40,7 +40,7 @@
     "method-override": "^3.0.0",
     "mysql2": "^3.11.0",
     "node-fetch": "^3.3.2",
-    "nodemailer": "^6.9.14",
+    "nodemailer": "^7.0.9",
     "nodemon": "^3.1.4",
     "openssl-nodejs": "^1.0.5",
     "passport": "^0.7.0",

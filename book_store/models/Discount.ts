@@ -9,7 +9,7 @@ export interface DiscountAttributes {
   stackable: boolean | null;
   message: string | null;
   target_id: number | null;
-  uid: number; // 👈 foreign key reference to ProductAdmin.id
+  uid: number | null; // 👈 foreign key reference to ProductAdmin.id
 }
 
 export type DiscountCreationAttributes = Optional<DiscountAttributes, "id">;
@@ -25,12 +25,16 @@ class Discount
   declare stackable: boolean | null;
   declare message: string | null;
   declare target_id: number | null;
-  declare uid: number;
+  declare uid: number | null; // 👈 foreign key reference to ProductAdmin.id
 }
 
 Discount.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     discount_rate: { type: DataTypes.DECIMAL(10, 2) },
     min_qty: { type: DataTypes.INTEGER },
     expiry: { type: DataTypes.DATE },
@@ -39,13 +43,18 @@ Discount.init(
     target_id: { type: DataTypes.INTEGER.UNSIGNED },
     uid: {
       type: DataTypes.INTEGER.UNSIGNED,
-      allowNull: false,
+      allowNull: true,
       references: { model: "productadmins", key: "id" },
       onUpdate: "CASCADE",
-      onDelete: "CASCADE",
+      onDelete: "SET NULL",
     },
   },
-  { sequelize, modelName: "discount", tableName: "discounts", timestamps: false }
+  {
+    sequelize,
+    modelName: "discount",
+    tableName: "discounts",
+    timestamps: false,
+  },
 );
 
 export default Discount;

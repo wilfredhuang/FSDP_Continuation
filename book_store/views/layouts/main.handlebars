@@ -43,6 +43,13 @@
 
   <!-- ===== FLASH MESSAGES ===== -->
   <div class="container" id="flash-container">
+      {{#if success_msg}}
+  <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <i class="fas fa-check-circle me-2"></i>
+    {{success_msg}}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+{{/if}}
     {{>_msg}}
     {{>_errors}}
     {{>_flash-msg}}

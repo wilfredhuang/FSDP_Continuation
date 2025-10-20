@@ -15,7 +15,10 @@ export interface PendingOrderItemAttributes {
   pendingOrderId: number | null;
 }
 
-export type PendingOrderItemCreationAttributes = Optional<PendingOrderItemAttributes, "id">;
+export type PendingOrderItemCreationAttributes = Optional<
+  PendingOrderItemAttributes,
+  "id"
+>;
 
 class PendingOrderItem
   extends Model<PendingOrderItemAttributes, PendingOrderItemCreationAttributes>
@@ -36,7 +39,11 @@ class PendingOrderItem
 
 PendingOrderItem.init(
   {
-    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     product_name: { type: DataTypes.STRING },
     author: { type: DataTypes.STRING },
     publisher: { type: DataTypes.STRING },
@@ -59,7 +66,7 @@ PendingOrderItem.init(
     modelName: "pending_orderitem",
     tableName: "pending_orderitems",
     timestamps: false,
-  }
+  },
 );
 
 export default PendingOrderItem;

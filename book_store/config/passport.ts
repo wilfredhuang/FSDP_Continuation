@@ -3,8 +3,11 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
 import type { Request } from "express";
-import User from "../models/User.js"; // ✅ default import
+import User from "../models/User.js";
 
+// ------------------------------------------------------------
+// LOCAL STRATEGY
+// ------------------------------------------------------------
 passport.use(
   new LocalStrategy(
     { usernameField: "email", passReqToCallback: false },
@@ -19,19 +22,17 @@ passport.use(
         }
 
         const passwordHash = user.password ?? "";
-        console.log("🧂 DB hash:", passwordHash);
-
         const isMatch = await bcrypt.compare(password, passwordHash);
-        console.log("🧩 Password match?", isMatch);
-
         if (!isMatch) {
           console.log("❌ Incorrect password");
           return done(null, false, { message: "Incorrect password" });
         }
 
         console.log("✅ User authenticated:", user.email);
+
+        // ✅ Normalize user to Express.User (convert id to string)
         const expressUser: Express.User = {
-          id: user.id,
+          id: String(user.id), // 🔧 Cast number → string
           email: user.email ?? null,
           username: (user as any).username ?? undefined,
           role: (user as any).role ?? undefined,
@@ -41,27 +42,28 @@ passport.use(
 
         return done(null, expressUser);
       } catch (err) {
-        console.log("🔥 Strategy error:", err);
+        console.error("🔥 Strategy error:", err);
         return done(err as Error);
       }
-    }
-  )
+    },
+  ),
 );
 
-
-passport.serializeUser((user: any, done) => {
-  // store just the id in the session
-  done(null, user.id);
+// ------------------------------------------------------------
+// SESSION HANDLING
+// ------------------------------------------------------------
+passport.serializeUser((user: Express.User, done) => {
+  // ✅ Always store string id in session
+  done(null, String(user.id));
 });
 
 passport.deserializeUser(async (id: string, done) => {
   try {
-    const user = await User.findByPk(id);
+    const user = await User.findByPk(Number(id)); // 🔧 Convert back to number for DB lookup
     if (!user) return done(null, false);
 
-    // ✅ Normalize to Express.User again
     const expressUser: Express.User = {
-      id: user.id,
+      id: String(user.id),
       email: user.email ?? null,
       username: (user as any).username ?? undefined,
       role: (user as any).role ?? undefined,
