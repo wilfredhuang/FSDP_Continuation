@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 // ------------------------------------------------------------
-// Dynamically import all models to ensure evaluation (no tree-shake skip)
+// Dynamically import all models (use .ts to avoid stale .js definitions)
 // ------------------------------------------------------------
 async function importAllModels() {
   await import("../models/User.js");
@@ -22,7 +22,7 @@ async function importAllModels() {
   await import("../models/PendingOrderItem.js");
   await import("../models/ProductAdmin.js");
   await import("../models/Discount.js");
-  await import("../models/Coupon.js"); // 👈 this guarantees table creation
+  await import("../models/Coupon.js");
 }
 
 // ------------------------------------------------------------
@@ -33,9 +33,10 @@ const setUpDB = async (drop: boolean) => {
     await sequelize.authenticate();
     logGreen("✅ Database connection successful");
 
-    // Make sure models are imported before associations
+    // Ensure all models are evaluated
     await importAllModels();
 
+    // Import model classes directly
     const { default: User } = await import("../models/User.js");
     const { default: Order } = await import("../models/Order.js");
     const { default: OrderItem } = await import("../models/OrderItem.js");
@@ -44,12 +45,30 @@ const setUpDB = async (drop: boolean) => {
     const { default: ProductAdmin } = await import("../models/ProductAdmin.js");
     const { default: Discount } = await import("../models/Discount.js");
 
+    // ------------------------------------------------------------
     // Relationships
-    User.hasMany(Order, { foreignKey: "userId" });
-    Order.belongsTo(User, { foreignKey: "userId" });
+    // ------------------------------------------------------------
+    User.hasMany(Order, {
+      foreignKey: { name: "userId", allowNull: false },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    });
+    Order.belongsTo(User, {
+      foreignKey: { name: "userId", allowNull: false },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    });
 
-    Order.hasMany(OrderItem, { foreignKey: "orderId" });
-    OrderItem.belongsTo(Order, { foreignKey: "orderId" });
+    Order.hasMany(OrderItem, {
+      foreignKey: { name: "orderId", allowNull: false },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    });
+    OrderItem.belongsTo(Order, {
+      foreignKey: { name: "orderId", allowNull: false },
+      onDelete: "CASCADE",
+      onUpdate: "CASCADE",
+    });
 
     User.hasMany(PendingOrder, { foreignKey: "userId" });
     PendingOrder.belongsTo(User, { foreignKey: "userId" });
@@ -61,20 +80,22 @@ const setUpDB = async (drop: boolean) => {
       foreignKey: { name: "uid", allowNull: false },
     });
 
-      // ------------------------------------------------------------
-  // Debug: List all models registered in Sequelize
-  // ------------------------------------------------------------
-  logBlue("🧩 Registered Models before sync:");
-  console.table(
-    Object.entries(sequelize.models).map(([key, model]) => ({
-      name: key,
-      tableName: (model as any).getTableName?.()?.toString?.() ?? "unknown",
-    }))
-  );
+    // ------------------------------------------------------------
+    // Debug output
+    // ------------------------------------------------------------
+    logBlue("🧩 Registered Models before sync:");
+    console.table(
+      Object.entries(sequelize.models).map(([key, model]) => ({
+        name: key,
+        tableName: (model as any).getTableName?.()?.toString?.() ?? "unknown",
+      }))
+    );
 
-    // Sync
+    // ------------------------------------------------------------
+    // Sync database
+    // ------------------------------------------------------------
     await sequelize.sync({ alter: !drop, force: drop });
-    logBlue("✅ All models synchronized successfully (ordered).");
+    logBlue("✅ All models synchronized successfully.");
   } catch (err) {
     logRed("❌ Database setup failed:");
     console.error(err);

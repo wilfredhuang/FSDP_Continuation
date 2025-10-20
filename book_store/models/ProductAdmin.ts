@@ -36,7 +36,7 @@ class ProductAdmin
 
 ProductAdmin.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
     product_name: { type: DataTypes.STRING },
     author: { type: DataTypes.STRING },
     publisher: { type: DataTypes.STRING },

@@ -12,7 +12,7 @@ export interface OrderItemAttributes {
   details: string | null;
   weight: string | null;
   product_image: string | null;
-  orderId: number | null;  // ✅ foreign key to order
+  orderId: number | null; // FK → orders.id
 }
 
 export type OrderItemCreationAttributes = Optional<OrderItemAttributes, "id">;
@@ -35,7 +35,11 @@ class OrderItem
 
 OrderItem.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER, // signed to match orders.id
+      autoIncrement: true,
+      primaryKey: true,
+    },
     product_name: { type: DataTypes.STRING },
     author: { type: DataTypes.STRING },
     publisher: { type: DataTypes.STRING },
@@ -46,14 +50,19 @@ OrderItem.init(
     weight: { type: DataTypes.STRING },
     product_image: { type: DataTypes.STRING },
     orderId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+      type: DataTypes.INTEGER.UNSIGNED, // ✅ same as orders.id
+      allowNull: false,
       references: { model: "orders", key: "id" },
       onDelete: "CASCADE",
       onUpdate: "CASCADE",
     },
   },
-  { sequelize, modelName: "order_item", tableName: "order_items", timestamps: false }
+  {
+    sequelize,
+    modelName: "order_item",
+    tableName: "order_items",
+    timestamps: false,
+  }
 );
 
 export default OrderItem;

@@ -1,9 +1,8 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/db_connection.js";
 
-// ----- Interface for columns -----
 export interface UserAttributes {
-  id: string;
+  id?: number;
   name: string | null;
   email: string | null;
   password: string | null;
@@ -20,14 +19,11 @@ export interface UserAttributes {
   stripeID: string | null;
 }
 
-// ----- Interface for creation -----
 export type UserCreationAttributes = Optional<UserAttributes, "id">;
 
-// ----- Class Model -----
-class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-  // ❌ REMOVE all public fields!
-  // ✅ TypeScript will infer from interface
-  declare id: string;
+class User extends Model<UserAttributes, UserCreationAttributes>
+  implements UserAttributes {
+  declare id?: number;
   declare name: string | null;
   declare email: string | null;
   declare password: string | null;
@@ -44,10 +40,13 @@ class User extends Model<UserAttributes, UserCreationAttributes> implements User
   declare stripeID: string | null;
 }
 
-// ----- Model Initialization -----
 User.init(
   {
-    id: { type: DataTypes.STRING, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED, // ✅ numeric PK
+      autoIncrement: true,
+      primaryKey: true,
+    },
     name: { type: DataTypes.STRING },
     email: { type: DataTypes.STRING },
     password: { type: DataTypes.STRING },

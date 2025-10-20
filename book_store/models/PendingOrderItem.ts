@@ -12,8 +12,6 @@ export interface PendingOrderItemAttributes {
   details: string | null;
   weight: string | null;
   product_image: string | null;
-
-  /** 👇 Add foreign key reference */
   pendingOrderId: number | null;
 }
 
@@ -23,24 +21,22 @@ class PendingOrderItem
   extends Model<PendingOrderItemAttributes, PendingOrderItemCreationAttributes>
   implements PendingOrderItemAttributes
 {
-  public id?: number;
-  public product_name!: string | null;
-  public author!: string | null;
-  public publisher!: string | null;
-  public genre!: string | null;
-  public price!: number | null;
-  public stock!: string | null;
-  public details!: string | null;
-  public weight!: string | null;
-  public product_image!: string | null;
-
-  /** 👇 Added */
-  public pendingOrderId!: number | null;
+  declare id?: number;
+  declare product_name: string | null;
+  declare author: string | null;
+  declare publisher: string | null;
+  declare genre: string | null;
+  declare price: number | null;
+  declare stock: string | null;
+  declare details: string | null;
+  declare weight: string | null;
+  declare product_image: string | null;
+  declare pendingOrderId: number | null;
 }
 
 PendingOrderItem.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
     product_name: { type: DataTypes.STRING },
     author: { type: DataTypes.STRING },
     publisher: { type: DataTypes.STRING },
@@ -50,10 +46,8 @@ PendingOrderItem.init(
     details: { type: DataTypes.STRING(2000) },
     weight: { type: DataTypes.STRING },
     product_image: { type: DataTypes.STRING },
-
-    /** 👇 Added foreign key column */
     pendingOrderId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED, // ✅ must match pending_orders.id
       allowNull: true,
       references: { model: "pending_orders", key: "id" },
       onDelete: "CASCADE",

@@ -14,8 +14,6 @@ export interface PendingOrderAttributes {
   subtotalPrice: number | null;
   totalPrice: number | null;
   dateStart: string | null;
-
-  /** 👇 Add this */
   userId: number | null;
 }
 
@@ -25,26 +23,24 @@ class PendingOrder
   extends Model<PendingOrderAttributes, PendingOrderCreationAttributes>
   implements PendingOrderAttributes
 {
-  public id?: number;
-  public fullName!: string | null;
-  public phoneNumber!: string | null;
-  public address!: string | null;
-  public address1!: string | null;
-  public city!: string | null;
-  public country!: string | null;
-  public postalCode!: string | null;
-  public deliverFee!: number | null;
-  public subtotalPrice!: number | null;
-  public totalPrice!: number | null;
-  public dateStart!: string | null;
-
-  /** 👇 Add this */
-  public userId!: number | null;
+  declare id?: number;
+  declare fullName: string | null;
+  declare phoneNumber: string | null;
+  declare address: string | null;
+  declare address1: string | null;
+  declare city: string | null;
+  declare country: string | null;
+  declare postalCode: string | null;
+  declare deliverFee: number | null;
+  declare subtotalPrice: number | null;
+  declare totalPrice: number | null;
+  declare dateStart: string | null;
+  declare userId: number | null;
 }
 
 PendingOrder.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
     fullName: { type: DataTypes.STRING },
     phoneNumber: { type: DataTypes.STRING },
     address: { type: DataTypes.STRING },
@@ -56,12 +52,12 @@ PendingOrder.init(
     subtotalPrice: { type: DataTypes.DECIMAL(10, 2) },
     totalPrice: { type: DataTypes.DECIMAL(10, 2) },
     dateStart: { type: DataTypes.STRING },
-
-    /** 👇 Add this */
     userId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED, // ✅ must match User.id type
       allowNull: true,
-      references: { model: "users", key: "id" }, // assumes you have a "users" table
+      references: { model: "users", key: "id" },
+      onDelete: "SET NULL",
+      onUpdate: "CASCADE",
     },
   },
   {

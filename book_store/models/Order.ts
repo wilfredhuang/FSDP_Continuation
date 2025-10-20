@@ -27,30 +27,34 @@ export type OrderCreationAttributes = Optional<OrderAttributes, "id">;
 
 class Order extends Model<OrderAttributes, OrderCreationAttributes>
   implements OrderAttributes {
-  public id?: number;
-  public fullName!: string | null;
-  public phoneNumber!: string | null;
-  public address!: string | null;
-  public address1!: string | null;
-  public city!: string | null;
-  public country!: string | null;
-  public postalCode!: string | null;
-  public deliverFee!: number | null;
-  public subtotalPrice!: number | null;
-  public totalPrice!: number | null;
-  public shippingId!: string | null;
-  public addressId!: string | null;
-  public trackingId!: string | null;
-  public trackingCode!: string | null;
-  public dateStart!: string | null;
-  public dateEnd!: string | null;
-  public deliveryStatus!: string | null;
-  public userId!: number | null;
+  declare id?: number;
+  declare fullName: string | null;
+  declare phoneNumber: string | null;
+  declare address: string | null;
+  declare address1: string | null;
+  declare city: string | null;
+  declare country: string | null;
+  declare postalCode: string | null;
+  declare deliverFee: number | null;
+  declare subtotalPrice: number | null;
+  declare totalPrice: number | null;
+  declare shippingId: string | null;
+  declare addressId: string | null;
+  declare trackingId: string | null;
+  declare trackingCode: string | null;
+  declare dateStart: string | null;
+  declare dateEnd: string | null;
+  declare deliveryStatus: string | null;
+  declare userId: number | null;
 }
 
 Order.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,  // ✅ unsigned primary key
+      autoIncrement: true,
+      primaryKey: true,
+    },
     fullName: { type: DataTypes.STRING },
     phoneNumber: { type: DataTypes.STRING },
     address: { type: DataTypes.STRING },
@@ -69,11 +73,11 @@ Order.init(
     dateEnd: { type: DataTypes.STRING },
     deliveryStatus: { type: DataTypes.STRING },
     userId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+      type: DataTypes.INTEGER.UNSIGNED,   // ✅ must also be UNSIGNED
+      allowNull: false,
       references: { model: "users", key: "id" },
       onUpdate: "CASCADE",
-      onDelete: "SET NULL",
+      onDelete: "CASCADE",
     },
   },
   { sequelize, modelName: "order", tableName: "orders", timestamps: false }

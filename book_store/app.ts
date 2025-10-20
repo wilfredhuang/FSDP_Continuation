@@ -99,7 +99,7 @@ const app = express();
 /* ============================================================
    🗄️ 7. Database Connection
    ============================================================ */
-setUpDB(false); // Establishes Sequelize + MySQL connection
+setUpDB(false); // Establishes Sequelize + MySQL connection , do true to drop and re-sync tables, false to just sync
 
 /* ============================================================
    🖼️ 8. Handlebars View Engine Setup

@@ -27,7 +27,7 @@ class Coupon extends Model<CouponAttributes, CouponCreationAttributes> implement
 
 Coupon.init(
   {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    id: { type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true },
     code: { type: DataTypes.STRING },
     type: { type: DataTypes.STRING },
     discount: { type: DataTypes.DECIMAL(3, 2) },
