@@ -1,0 +1,40 @@
+@startuml
+title Acacia Bookstore - Use Case Diagram (Monolithic Architecture)
+
+left to right direction
+
+actor "Customer" as User
+actor "Admin"
+
+rectangle "Acacia Bookstore System" as System {
+    (Register Account)
+    (Login)
+    (Browse & Search Books)
+    (Add to Cart)
+    (Checkout & Payment)
+    (Apply Coupon / Discount)
+    (View Orders)
+    (Track Delivery)
+    (Receive Notifications)
+    (Manage Products)
+    (Manage Discounts / Coupons)
+    (View All Orders)
+}
+
+' --- Customer Use Cases ---
+User --> (Register Account)
+User --> (Login)
+User --> (Browse & Search Books)
+User --> (Add to Cart)
+User --> (Checkout & Payment)
+User --> (Apply Coupon / Discount)
+User --> (View Orders)
+User --> (Track Delivery)
+User --> (Receive Notifications)
+
+' --- Admin Use Cases ---
+Admin --> (Login)
+Admin --> (Manage Products)
+Admin --> (Manage Discounts / Coupons)
+Admin --> (View All Orders)
+@enduml

@@ -1,0 +1,63 @@
+@startuml
+title Acacia Bookstore - System Architecture Overview
+
+node "Client (Browser)" as Client {
+  [Handlebars Views\nHTML/CSS/JS]
+}
+
+node "Express Server (app.ts)" as Server {
+  component "Routes" as Routes {
+    [mainRoutes.ts]
+    [userRoutes.ts]
+    [cartRoutes.ts]
+    [productRoutes.ts]
+    [adminRoutes.ts]
+  }
+
+  component "Middleware" as Middleware {
+    [passport.ts]
+    [express-session]
+    [connect-flash]
+    [method-override]
+    [cookie-parser]
+  }
+
+  component "Helpers" as Helpers {
+    [cartHelper.ts]
+    [messenger.ts]
+    [twilio.ts]
+    [loggerHelper.ts]
+  }
+
+  component "Models (Sequelize)" as Models {
+    [User]
+    [Order]
+    [OrderItem]
+    [PendingOrder]
+    [PendingOrderItem]
+    [Product]
+    [ProductAdmin]
+    [Discount]
+    [Coupon]
+  }
+
+  component "Config" as Config {
+    [db_connection.ts]
+    [setUpDB.ts]
+  }
+}
+
+database "MySQL (acacia_bookstore)" as DB
+
+node "External Services" as External {
+  [Stripe API]
+  [Twilio API]
+  [EasyPost API]
+  [Passport-Facebook]
+}
+
+Client --> Server : HTTP Requests (GET/POST)
+Server --> DB : Sequelize Queries
+Server --> External : API Calls (Stripe, Twilio, etc.)
+Server --> Client : Rendered Handlebars Pages
+@enduml
