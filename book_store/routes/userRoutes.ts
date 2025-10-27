@@ -429,11 +429,15 @@ router.post("/login", (req: Request, res: Response, next: NextFunction) => {
       if (err) return next(err);
       if (!user) return res.redirect("/login");
 
-      req.logIn(user, (err) => {
-        if (err) return next(err);
-        if (user.isadmin === true) return res.redirect("/user/admin");
-        return res.redirect("/");
-      });
+req.logIn(user, (err) => {
+  if (err) return next(err);
+  console.log("🟢 After login, sessionID:", req.sessionID);
+  console.log("🟢 Session data now:", req.session);
+  req.session.save(() => res.redirect("/"));
+});
+
+
+
     },
   )(req, res, next);
 });

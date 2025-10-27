@@ -57,24 +57,22 @@ passport.serializeUser((user: Express.User, done) => {
   done(null, String(user.id));
 });
 
-passport.deserializeUser(async (id: string, done) => {
-  try {
-    const user = await User.findByPk(Number(id)); // 🔧 Convert back to number for DB lookup
-    if (!user) return done(null, false);
-
-    const expressUser: Express.User = {
-      id: String(user.id),
-      email: user.email ?? null,
-      username: (user as any).username ?? undefined,
-      role: (user as any).role ?? undefined,
-      isadmin: (user as any).isadmin ?? null,
-      confirmed: (user as any).confirmed ?? null,
-    };
-
-    done(null, expressUser);
-  } catch (err) {
-    done(err as Error);
-  }
+passport.deserializeUser((id: string, done) => {
+  User.findByPk(id)
+    .then((user) => {
+      if (!user) return done(null, false);
+      const expressUser: Express.User = {
+        id: String(user.id),
+        email: user.email ?? null,
+        name: (user as any).name ?? undefined,
+        isadmin: (user as any).isadmin ?? null,
+        confirmed: (user as any).confirmed ?? null,
+      };
+      return done(null, expressUser);
+    })
+    .catch((err) => done(err));
 });
+
+
 
 export default passport;

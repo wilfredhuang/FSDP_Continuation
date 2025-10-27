@@ -148,7 +148,8 @@ app.use(express.static(path.join(__dirname, "public")));
 /* ============================================================
    💾 10. Session Management (MySQL Store)
    ============================================================ */
-const MySQLStore = connectMySQL(session as any);
+const MySQLStore = (connectMySQL as unknown as (session: any) => any)(session);
+
 const dbOptions: MySQLStoreOptions = {
   host: process.env.DB_HOST,
   port: 3306,
@@ -159,18 +160,27 @@ const dbOptions: MySQLStoreOptions = {
   checkExpirationInterval: 900_000,
   expiration: 900_000,
 };
+
 const sessionStore = new MySQLStore(dbOptions);
-const sessionConfig: SessionOptions & { key: string } = {
-  key: "vidjot_session",
+
+const sessionConfig: SessionOptions = {
+  name: "vidjot_session",
   secret: "tojiv",
   store: sessionStore,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true, // Ensure HTTPS
+    secure: true,       // ✅ cookies only sent over HTTPS
+    httpOnly: true,     // protect from JS access
+    sameSite: "strict", // block CSRF-style leaks
+    maxAge: 900_000,    // 15 min expiry
+    path: "/",
   },
 };
+
+//app.set("trust proxy", 1);
 app.use(session(sessionConfig));
+
 
 /* ============================================================
    🧍 11. Passport Authentication
@@ -183,6 +193,7 @@ app.use(passport.session());
    ============================================================ */
 app.use(flash());
 app.use(FlashMessenger.middleware);
+
 
 /* ============================================================
    🧠 13. Global Template Variables (accessible in all views)
@@ -210,18 +221,17 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+
 /* ============================================================
    🛒 14. Initialize Session Defaults (Coupon + Cart)
    ============================================================ */
 import Coupon from "./models/Coupon.js";
 
-app.use(async (req: Request, res: Response, next: NextFunction) => {
+app.use(async (req, res, next) => {
   try {
-    logCyan(`[Session Init] Checking session variables...`);
+    let mutated = false;
 
-    // Ensure cart-related session vars exist
     if (!req.session.userCart) {
-      logYellow("🛍️ Initializing empty cart...");
       Object.assign(req.session, {
         userCart: {},
         coupon_object: null,
@@ -233,32 +243,30 @@ app.use(async (req: Request, res: Response, next: NextFunction) => {
         cart_shipping_fee: 0,
         cart_grandtotal: 0,
       });
+      mutated = true;
     }
 
-    // Handle public coupon
-    const existingCoupon = await (Coupon as any).findOne({
-      where: { public: 1 },
-    });
-    if (!existingCoupon) {
-      req.session.public_coupon = null;
-    } else if (moment().isAfter(existingCoupon.expiry)) {
-      await existingCoupon.destroy();
-      logRed(`🚫 Expired coupon ${existingCoupon.code} removed.`);
-      req.session.public_coupon = null;
+    const existingCoupon = await (Coupon as any).findOne({ where: { public: 1 } });
+    if (!existingCoupon || moment().isAfter(existingCoupon.expiry)) {
+      if (existingCoupon && moment().isAfter(existingCoupon.expiry)) await existingCoupon.destroy();
+      if (req.session.public_coupon) { req.session.public_coupon = null; mutated = true; }
     } else {
-      req.session.public_coupon = existingCoupon;
-      logGreen(`✅ Public coupon ${existingCoupon.code} active.`);
+      if (req.session.public_coupon?.id !== existingCoupon.id) {
+        req.session.public_coupon = existingCoupon;
+        mutated = true;
+      }
     }
 
-    req.session.save(() => {});
-  } catch (error) {
-    logRed(
-      "❌ Error initializing session variables:",
-      (error as Error).message,
-    );
+    if (mutated) return req.session.save(() => next());  // ✅ save only when changed
+    return next();
+  } catch (e) {
+    return next(e);
   }
-  next();
 });
+
+
+
+
 
 /* ============================================================
    🚏 15. Route Mounting

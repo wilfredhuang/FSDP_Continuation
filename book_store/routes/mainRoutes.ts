@@ -15,6 +15,10 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   const title = "Bookstore Home Page";
   const navStatusHome = "active";
 
+  console.log("🏠 On /, sessionID:", req.sessionID);
+console.log("🏠 req.user:", req.user);
+
+
   if (req.user) logGreen(`[GET /] LOGGED IN as ${req.user.email}`);
   else logYellow("[GET /] NOT LOGGED IN");
 
