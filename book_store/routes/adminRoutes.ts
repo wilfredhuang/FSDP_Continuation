@@ -2,7 +2,7 @@
 // routes/adminRoutes.ts (strictly typed)
 // ------------------------------------------------------------
 import express, { Request, Response, NextFunction } from "express";
-import AdminJS from "adminjs";
+import AdminJS, { ValidationError } from "adminjs";
 import AdminJSExpress from "@adminjs/express";
 import AdminJSSequelize from "@adminjs/sequelize";
 import { Database, Resource } from "@adminjs/sequelize";
@@ -14,6 +14,8 @@ import User from "../models/User.js";
 import Order from "../models/Order.js";
 import Coupon from "../models/Coupon.js";
 import Discount from "../models/Discount.js";
+import type { ActionRequest, ActionResponse, ActionContext } from "adminjs";
+
 
 import { logCyan, logGreen } from "../helpers/loggerHelper.js";
 
@@ -24,8 +26,9 @@ const router = express.Router();
 // ------------------------------------------------------------
 // Initialize AdminJS
 // ------------------------------------------------------------
+import AdminJS, { ValidationError } from "adminjs";
+
 const adminOptions = {
-  databases: [sequelize],
   rootPath: "/admin",
   branding: {
     companyName: "Acacia Bookstore Admin",
@@ -33,13 +36,40 @@ const adminOptions = {
     softwareBrothers: false,
   },
   resources: [
-    { resource: Product },
-    { resource: User },
-    { resource: Order },
-    { resource: Coupon },
-    { resource: Discount },
+    {
+      resource: User,
+      options: {
+        actions: {
+          new: {
+            before: async (request: any) => {
+              const { email, password } = request.payload;
+
+              if (!email) {
+                throw new ValidationError({
+                  email: { message: "Email is required" },
+                });
+              }
+
+              if (!password || password.length < 4) {
+                throw new ValidationError({
+                  password: { message: "Password must be at least 4 characters long" },
+                });
+              }
+
+              return request;
+            },
+
+            after: async (response: any, request: any, context: any) => {
+              console.log("✅ Created user:", context.record?.params);
+              return response;
+            },
+          },
+        },
+      },
+    },
   ],
 };
+
 
 const admin = new AdminJS(adminOptions);
 const adminRouter = AdminJSExpress.buildRouter(admin);
@@ -47,7 +77,34 @@ const adminRouter = AdminJSExpress.buildRouter(admin);
 // ------------------------------------------------------------
 // Mount under /admin
 // ------------------------------------------------------------
-router.use(admin.options.rootPath, adminRouter);
+router.use("/", adminRouter);
+
+// ------------------------------------------------------------
+// Log any Sequelize or AdminJS errors (with clear details)
+// ------------------------------------------------------------
+router.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err) {
+    // Sequelize model-level validation (e.g., NOT NULL, unique)
+    if (err.name === "SequelizeValidationError") {
+      console.error("❌ Sequelize validation error:");
+      err.errors.forEach((e: any) => {
+        console.error(`• ${e.path}: ${e.message}`);
+      });
+    }
+    // AdminJS validation (e.g., thrown via AdminJS.ValidationError)
+    else if (err.name === "ValidationError") {
+      console.error("❌ AdminJS validation error:");
+      console.error(err.message || JSON.stringify(err, null, 2));
+    }
+    // Generic fallback
+    else {
+      console.error("❌ Unknown AdminJS/Express error:", err);
+    }
+  }
+
+  next(err);
+});
+
 
 // ------------------------------------------------------------
 // Middleware logging for visibility

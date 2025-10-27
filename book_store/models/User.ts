@@ -59,6 +59,7 @@ User.init(
   {
     id: {
       type: DataTypes.STRING(36), // ✅ UUID string
+      defaultValue: DataTypes.UUIDV4,   // ✅ auto-generate UUID
       primaryKey: true,
       allowNull: false,
     },
